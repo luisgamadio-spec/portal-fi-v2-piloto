@@ -33,7 +33,20 @@
 
   var DEFAULT_TIMEOUT_MS = 15000;
 
+  // Trava de ambiente (piloto, 06/10/2026): fora do host de produção (oficial ou piloto) esta seção NÃO grava -- a
+  // chamada de escrita é recusada aqui, antes da rede, com o estado HOMOLOG_BLOCKED (mesmo critério de Gestão de
+  // Bases/Simuladores, Configurações, Períodos, Férias e Mudança de Loja: NX_ENVIRONMENT.name === 'AUTHORIZED_PRODUCTION').
+  function mwIsProductionEnvironment() {
+    return !!(window.NX_ENVIRONMENT && window.NX_ENVIRONMENT.name === 'AUTHORIZED_PRODUCTION');
+  }
+  var MW_WRITE_NAMES = { 'master_salvar_permissoes_modulos': true };
+  function mwBlockedWrite(name) {
+    if (mwIsProductionEnvironment() || !MW_WRITE_NAMES[name]) return null;
+    return Promise.reject({ state: 'HOMOLOG_BLOCKED', codigo: 'MODO_HOMOLOGACAO', message: 'MODO HOMOLOGAÇÃO — nenhuma alteração é gravada neste ambiente.' });
+  }
+
   function callRpc(fnName, params, signal) {
+    var bloqueio = mwBlockedWrite(fnName); if (bloqueio) return bloqueio;
     var cfg = window.NX_INTELLIGENCE_CONFIG || {};
     if (!cfg.supabaseUrl || !cfg.supabasePublishableKey) {
       return Promise.reject({ state: 'RPC_ERROR', message: 'Configuração real ausente neste ambiente.' });
@@ -132,6 +145,7 @@
   }
 
   window.NX_MASTER_ACESSOS_PROVIDER = {
+    isHomologationMode: function () { return !mwIsProductionEnvironment(); },
     loadAccessMatrix: loadAccessMatrix,
     saveAccessChanges: saveAccessChanges
   };

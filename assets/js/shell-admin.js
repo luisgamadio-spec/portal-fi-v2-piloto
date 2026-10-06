@@ -333,8 +333,22 @@
     MALFORMED_RESPONSE: { title: 'Não foi possível carregar', body: 'Resposta inesperada do servidor.' },
     VALIDATION_ERROR: { title: 'Dados inválidos', body: 'Verifique os campos destacados.' },
     DUPLICATE_USER: { title: 'Usuário já existe', body: 'Já existe um cadastro com este CPF ou e-mail.' },
-    CONFLICT: { title: 'Não foi possível concluir', body: 'Esta ação não pode ser concluída no estado atual do cadastro.' }
+    CONFLICT: { title: 'Não foi possível concluir', body: 'Esta ação não pode ser concluída no estado atual do cadastro.' },
+    HOMOLOG_BLOCKED: { title: 'Modo homologação', body: 'Nenhuma alteração é gravada neste ambiente. Para alterar dados, use o Portal oficial ou o piloto.' }
   };
+
+  // Trava de ambiente (piloto, 06/10/2026): Usuários, Acessos, Pendências, Fechamento e Histórico (reabrir) só gravam no
+  // host de produção (oficial ou piloto). Fora dele, os providers recusam a escrita (HOMOLOG_BLOCKED) e estas seções
+  // mostram o mesmo aviso das demais seções travadas.
+  var MA_SECOES_TRAVADAS = { usuarios: true, acessos: true, pendenciasCadastrais: true, fechamentoCompetencia: true, historicoCompetencias: true };
+  function maIsProductionEnvironment() {
+    return !!(window.NX_ENVIRONMENT && window.NX_ENVIRONMENT.name === 'AUTHORIZED_PRODUCTION');
+  }
+  function maAplicaAvisoHomolog() {
+    var panel = document.getElementById('maPanel');
+    if (!panel || maIsProductionEnvironment() || !MA_SECOES_TRAVADAS[currentSection] || panel.querySelector('.maHomologBanner')) return;
+    panel.insertAdjacentHTML('afterbegin', '<p class="note gbWarn gbHomologBanner maHomologBanner">🧪 MODO HOMOLOGAÇÃO — nenhuma alteração será gravada neste ambiente.</p>');
+  }
   function errorStateHtml(state, message) {
     // V2-SECURITY-02 (SEC-06): this is the single shared error-render
     // chokepoint for every section of Painel Master (Usuários, Acessos,
@@ -1704,6 +1718,7 @@
   // Gate 33: real backend codes normalized to controlled human copy,
   // never a raw SQL/stack trace surfaced to the Master.
   function pcMutationErrorCopy(err) {
+    if (err && err.state === 'HOMOLOG_BLOCKED') return STATE_COPY.HOMOLOG_BLOCKED.body;
     if (err && err.codigo) {
       return PC_NBS_ERROR_COPY[err.codigo] || PC_GENERIC_ERROR_COPY[err.codigo] || ('Não foi possível concluir: ' + err.codigo);
     }
@@ -4062,7 +4077,7 @@
     clearNxModal();
   }
   function hcSetReopenSimulate(value) {
-    historyState.reopenSimulate = value;
+    historyState.reopenSimulate = maIsProductionEnvironment() ? value : true; // fora da produção, sempre simulação
     renderHcReopenModalRoot();
   }
   function hcConfirmReopen() {
@@ -4171,7 +4186,8 @@
       '<div class="gbRow"><span>Versão atual</span><b>v' + esc(c.versao != null ? c.versao : '-') + '</b></div>' +
       '<div class="gbRow"><span>Status atual</span><b>' + hcStatusBadgeHtml(c.status) + '</b></div>' +
       '<div class="gbRow"><span>Fechado em</span><b>' + esc(HC_VM.fmtDateTimeBR(c.fechado_em)) + '</b></div>' +
-      '<div class="modField" style="max-width:420px"><label><input type="checkbox" id="hcReopenSimulateToggle"' + (historyState.reopenSimulate ? ' checked' : '') + (historyState.reopening ? ' disabled' : '') + '> Modo simulação (recomendado) -- nenhum dado real é alterado</label></div>' +
+      '<div class="modField" style="max-width:420px"><label><input type="checkbox" id="hcReopenSimulateToggle"' + (historyState.reopenSimulate ? ' checked' : '') + ((historyState.reopening || !maIsProductionEnvironment()) ? ' disabled' : '') + '> Modo simulação (recomendado) -- nenhum dado real é alterado</label>' +
+        (maIsProductionEnvironment() ? '' : '<span class="hint">Modo homologação: a reabertura real só existe no Portal oficial ou no piloto.</span>') + '</div>' +
       '<ul class="note">' +
       '<li>Este fechamento (v' + esc(c.versao != null ? c.versao : '-') + ') será marcado como <b>REABERTO</b> e deixará de ser o fechamento ativo desta competência.</li>' +
       '<li>O período "' + esc(c.nome_periodo || '') + '" voltará ao status <b>EM CONFERÊNCIA</b>.</li>' +
@@ -4726,7 +4742,7 @@
     clearNxModal();
   }
   function closingSetSimulate(value) {
-    closingState.simulate = value;
+    closingState.simulate = maIsProductionEnvironment() ? value : true; // fora da produção, sempre simulação
     renderPanel();
   }
 
@@ -4911,7 +4927,8 @@
         '<p class="maSubtle">' + (closingState.successResult.simulated ? 'Nenhum dado real foi alterado (modo simulação).' : 'Um snapshot real foi gravado.') + ' Consulte o Histórico de Competências para ver o resultado.</p></div>';
     }
 
-    html += '<div class="modField" style="max-width:420px"><label><input type="checkbox" id="clSimulateToggle"' + (closingState.simulate ? ' checked' : '') + '> Modo simulação (recomendado) -- nenhum dado real é alterado</label></div>';
+    html += '<div class="modField" style="max-width:420px"><label><input type="checkbox" id="clSimulateToggle"' + (closingState.simulate ? ' checked' : '') + (maIsProductionEnvironment() ? '' : ' disabled') + '> Modo simulação (recomendado) -- nenhum dado real é alterado</label>' +
+      (maIsProductionEnvironment() ? '' : '<span class="hint">Modo homologação: o fechamento real só existe no Portal oficial ou no piloto.</span>') + '</div>';
     if (!closingState.simulate) {
       html += '<div class="note gbWarn"><b>Atenção: modo real ativo.</b> Confirmar o fechamento abaixo grava um snapshot real e marca a competência como FECHADO no Supabase.</div>';
     }
@@ -5050,10 +5067,12 @@
 
     if (loadError) {
       panel.innerHTML = errorStateHtml(loadError.state, loadError.message);
+      maAplicaAvisoHomolog();
       return;
     }
     if (isLoading && currentView === 'list') {
       panel.innerHTML = loadingHtml();
+      maAplicaAvisoHomolog();
       return;
     }
 
@@ -5112,6 +5131,7 @@
   }
 
   function wireInteraction() {
+    maAplicaAvisoHomolog();
     document.querySelectorAll('.mamCell').forEach(function (el) {
       el.addEventListener('change', function () {
         var vm = window.NX_MASTER_ACESSOS_VIEW_MODEL;

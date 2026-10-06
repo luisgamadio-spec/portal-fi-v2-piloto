@@ -1,0 +1,675 @@
+/* PORTAL-NEXT V2 — Login (AUTH FOUNDATION Phase 2B).
+   BRABUS SIGNATURE LOGIN (LOGIN-SIGNATURE-01, reconciled in
+   LOGIN-SIGNATURE-02) — visual layer only. Built on the existing
+   BRABUS F&I DESIGN SYSTEM 2.0 tokens (design-tokens.css) — every
+   color/space/radius/duration below resolves to an already-approved
+   token, nothing invented outside this file's own composition.
+   Functional contract (ids, input name/type/autocomplete, form submit
+   target) is owned by assets/js/login.js and is unchanged by this
+   file — see that file's own header comment for the authentication
+   logic this CSS never touches.
+   Motion pattern (LOGIN-SIGNATURE-02): every entrance animation and
+   hover/focus transition is declared ONLY inside
+   @media(prefers-reduced-motion:no-preference), matching the
+   established convention used throughout the rest of the app
+   (landing.css/intelligence.css) — the base/resting rule is always the
+   final, fully-settled state, so reduced-motion needs no override
+   block. Never redeclare a color/space/duration value directly on an
+   element — go through the existing token instead. */
+
+#nxLoginRoot {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  background: var(--color-canvas);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+#nxLoginRoot:not([hidden]) {
+  display: block;
+}
+
+.loginStage {
+  min-height: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(340px, 1fr);
+}
+
+/* ===================================================================
+   INSTITUTIONAL PANEL — brand presence, never interactive.
+   =================================================================== */
+
+.loginInstitutional {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 140% at 8% 8%, rgba(193, 18, 31, .16), transparent 55%),
+    linear-gradient(165deg, var(--p-black-1) 0%, #0d0d0e 46%, var(--p-black-1) 100%);
+  padding: var(--space-8) var(--space-7);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-8);
+  min-height: 560px;
+}
+
+/* Blueprint hairlines — pure CSS, a single repeating linear-gradient
+   layer, never an image/SVG. Reveals via width on load (Section 8 #2/3
+   -- "revelação discreta"/"linhas arquitetônicas com movimento lento"). */
+.loginBlueprint {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(90deg, var(--color-hairline) 1px, transparent 1px),
+    linear-gradient(0deg, var(--color-hairline) 1px, transparent 1px);
+  background-size: 64px 64px;
+  -webkit-mask-image: linear-gradient(115deg, #000 0%, transparent 42%, transparent 58%, #000 100%);
+  mask-image: linear-gradient(115deg, #000 0%, transparent 42%, transparent 58%, #000 100%);
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .loginBlueprint {
+    opacity: 0;
+    animation: loginBlueprintReveal var(--duration-ambient) var(--ease-smooth) 120ms forwards;
+  }
+}
+
+@keyframes loginBlueprintReveal {
+  from { opacity: 0; transform: scale(1.02); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* LOGIN-SIGNATURE-03: replaces the Wave 01 atmospheric DNA helix
+   image. #loginMotionLayer/canvas are created and mounted by
+   login.js's mountLoginAmbient() -- the SAME window.MotionEngine +
+   'parametric_reactive' motion landing.js's mountLandingAmbient()
+   mounts inside the Portal, unmodified. Sizing/layering copied from
+   that real precedent (.ambientLayer/.ambientLayer canvas,
+   landing.css) so this reads as the identical effect, not a
+   reinterpretation. Opacity is set by login.js itself (not here) --
+   calibrated lower than landing's own 0.25, and to 0 under
+   prefers-reduced-motion (MotionEngine.reduce short-circuits the
+   mount entirely, matching the Portal's own reduced-motion behavior
+   for this exact effect). */
+.loginMotion {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.loginMotion canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.loginBrandRow {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .loginBrandRow {
+    opacity: 0;
+    animation: loginRise var(--duration-context) var(--ease-precise) 160ms forwards;
+  }
+}
+
+/* The DNA Brabus "plate" -- the official, complete, entirely
+   unmodified lockup (helix + wordmark, exact source pixels), housed on
+   its own small light plaque so the dark wordmark keeps full contrast
+   -- an automotive ID-plate motif (a manufacturer badge against dark
+   bodywork), never a generic white card. */
+.loginPlate {
+  background: linear-gradient(155deg, #f4f4f4, #dcdcdc);
+  border-radius: var(--radius-sm);
+  padding: 9px 14px;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .5) inset, 0 8px 20px rgba(0, 0, 0, .35);
+  line-height: 0;
+}
+
+.loginPlate img {
+  height: 22px;
+  width: auto;
+  display: block;
+}
+
+.loginPartner {
+  height: 18px;
+  width: auto;
+  opacity: .82;
+}
+
+/* Text-protection scrim -- guarantees the headline stays legible
+   regardless of exactly where the helix's own strokes fall behind it
+   (parented to this element's own box, never a guessed percentage
+   against the flex-positioned layout around it). Sits above the
+   helix, below the text (z-index 1 vs 2). */
+.loginHeadline {
+  position: relative;
+  z-index: 2;
+  max-width: 30ch;
+}
+
+.loginHeadline::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: -28px -32px -28px -64px;
+  background: radial-gradient(72% 100% at 28% 50%, rgba(8, 8, 9, .82) 0%, rgba(8, 8, 9, .55) 60%, transparent 100%);
+}
+
+.loginEyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--space-3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .loginEyebrow {
+    opacity: 0;
+    animation: loginRise var(--duration-context) var(--ease-precise) 260ms forwards;
+  }
+}
+
+.loginEyebrow::before {
+  content: '';
+  width: 14px;
+  height: 2px;
+  background: var(--color-accent-primary);
+  flex: none;
+}
+
+/* LOGIN-SIGNATURE-02: font-family/weight reconciled with the real
+   Design LAB -- 'Archivo' at 700 (Wave 01) had no precedent anywhere
+   else in the app; every large heading in the human-approved reference
+   (landing.css .fNavItem .label) and every module page header
+   (dashbi/gestao/score/shell/simuladores .*Header h1) uses
+   var(--font-ui) at font-weight:300. Matched here, same family/weight,
+   size tuned down from Wave 01's 64px toward that same precedent. */
+.loginDisplay {
+  font-family: var(--font-ui);
+  font-weight: 300;
+  font-size: clamp(36px, 4.2vw, 52px);
+  line-height: 1.05;
+  letter-spacing: -.01em;
+  color: var(--color-text-primary);
+  margin: 0;
+  text-wrap: balance;
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .loginDisplay {
+    opacity: 0;
+    animation: loginRise var(--duration-context) var(--ease-precise) 340ms forwards;
+  }
+}
+
+.loginDisplay em {
+  font-style: normal;
+  color: var(--color-brand-red);
+}
+
+@keyframes loginRise {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ===================================================================
+   AUTHENTICATION PANEL.
+   =================================================================== */
+
+.loginAuth {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface-1);
+  border-left: 1px solid var(--color-hairline);
+  padding: var(--space-6) var(--space-6);
+}
+
+.loginShell {
+  width: 100%;
+  max-width: 360px;
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .loginShell {
+    opacity: 0;
+    animation: loginRise var(--duration-context) var(--ease-precise) 200ms forwards;
+  }
+}
+
+.loginCard {
+  background: var(--color-elevated-surface);
+  border: 1px solid var(--color-hairline-strong);
+  border-radius: 14px;
+  padding: var(--space-7) var(--space-6) var(--space-6);
+  box-shadow: var(--shadow-elevated);
+}
+
+.loginCardHead {
+  margin: 0 0 var(--space-6);
+}
+
+.loginTitle {
+  font-family: var(--font-ui);
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0 0 4px;
+}
+
+.loginSubtitle {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+#loginForm {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  text-align: left;
+}
+
+.loginField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.loginField label {
+  font-family: var(--font-ui);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+.loginField input {
+  font-family: var(--font-ui);
+  font-size: 14.5px;
+  color: var(--color-text-primary);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-hairline-strong);
+  border-radius: 9px;
+  padding: 12px 14px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .loginField input {
+    transition: border-color var(--duration-standard) var(--ease-smooth), box-shadow var(--duration-standard) var(--ease-smooth);
+  }
+}
+
+.loginField input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.loginField input:hover:not(:disabled) {
+  border-color: var(--color-hairline-strong);
+}
+
+.loginField input:focus-visible {
+  outline: none;
+  border-color: var(--color-accent-primary);
+  box-shadow: 0 0 0 3px rgba(238, 75, 87, .16);
+}
+
+.loginField input:disabled {
+  opacity: .55;
+}
+
+.loginTurnstile {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.loginStatus {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  line-height: 1.45;
+  border-radius: 9px;
+  padding: 11px 13px;
+}
+
+.loginStatusError {
+  color: #ffc0c4;
+  background: var(--color-critical-soft);
+  border: 1px solid rgba(226, 84, 58, .35);
+}
+
+.loginStatusInfo {
+  color: var(--color-text-secondary);
+  background: rgba(255, 255, 255, .05);
+  border: 1px solid var(--color-hairline);
+}
+
+/* LOGIN-SIGNATURE-02: color role reconciled with the Design LAB.
+   Wave 01 used --color-brand-red here, but that token's own definition
+   (design-tokens.css) reserves it for "institutional: brand presence,
+   motion signature -- NEVER error/critical" and explicitly separates it
+   from --color-accent-primary ("functional: state, selection,
+   interactive emphasis, focus") -- the role this submit button actually
+   plays. Matched to the app's real primary-CTA precedent
+   (.fAnalystCtaBtn, landing.css): accent-primary background, dark
+   foreground for contrast, brightened hover, dimmed active. */
+.loginSubmit {
+  position: relative;
+  font-family: var(--font-ui);
+  font-size: 14.5px;
+  font-weight: 700;
+  letter-spacing: .01em;
+  color: #1a0506;
+  background: var(--color-accent-primary);
+  border: 1px solid var(--color-accent-primary);
+  border-radius: 9px;
+  padding: 13px 16px;
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .loginSubmit {
+    transition: background var(--duration-standard) var(--ease-smooth), border-color var(--duration-standard) var(--ease-smooth), transform var(--duration-fast) var(--ease-precise);
+  }
+}
+
+.loginSubmit:hover:not(:disabled) {
+  background: #f16571;
+  border-color: #f16571;
+}
+
+.loginSubmit:active:not(:disabled) {
+  filter: brightness(.92);
+  transform: scale(.98);
+}
+
+.loginSubmit:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+.loginSubmit:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+/* Loading state -- the button's own text/disabled state is already
+   set by login.js's existing, unchanged setSubmitting(); this spinner
+   keys off the SAME :disabled state (no new attribute, no JS change)
+   and is purely decorative, never causing layout shift (absolutely
+   positioned, the button keeps its own intrinsic size). */
+.loginSubmit:disabled::after {
+  content: '';
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  margin-top: -7px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, .35);
+  border-top-color: #fff;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .loginSubmit:disabled::after {
+    animation: loginSpin var(--duration-ambient) linear infinite;
+  }
+}
+
+@keyframes loginSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* ===================================================================
+   HONEST DISCLOSURES -- "Esqueci minha senha" / "Primeiro acesso?".
+   Native <details>/<summary>, zero JavaScript: assets/js/login.js's
+   own event wiring is completely unchanged by this wave (LOGIN-
+   SIGNATURE-01 report Section 18/21 -- functional layer untouched).
+   =================================================================== */
+
+.loginAssist {
+  margin-top: var(--space-5);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-hairline);
+}
+
+.loginAssist summary {
+  cursor: pointer;
+  list-style: none;
+  font-family: var(--font-ui);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.loginAssist summary::-webkit-details-marker { display: none; }
+
+.loginAssistLink {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .loginAssistLink { transition: color var(--duration-fast) var(--ease-smooth); }
+}
+
+.loginAssistLink:hover { color: var(--color-text-primary); }
+
+.loginAssistLink:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+.loginPrimeiroLabel {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin: 0 0 10px;
+}
+
+.loginAssistBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  background: transparent;
+  border: 1px solid var(--color-hairline-strong);
+  border-radius: 8px;
+  padding: 9px 14px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .loginAssistBtn {
+    transition: border-color var(--duration-standard) var(--ease-smooth), background var(--duration-standard) var(--ease-smooth);
+  }
+}
+
+.loginAssistBtn:hover {
+  border-color: var(--color-accent-primary);
+  background: rgba(238, 75, 87, .08);
+}
+
+.loginAssistBtn:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.loginAssistBtn::after {
+  content: '›';
+  font-weight: 700;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .loginAssistBtn::after { transition: transform var(--duration-standard) var(--ease-smooth); }
+}
+
+.loginAssist[open] .loginAssistBtn::after,
+.loginAssist[open] .loginAssistLink::after {
+  transform: rotate(90deg);
+}
+
+.loginAssistLink::after {
+  content: '›';
+  display: inline-block;
+  margin-left: 4px;
+  font-weight: 700;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .loginAssistLink::after { transition: transform var(--duration-standard) var(--ease-smooth); }
+}
+
+.loginAssistNote {
+  font-family: var(--font-ui);
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--color-text-muted);
+  background: rgba(255, 255, 255, .04);
+  border: 1px solid var(--color-hairline);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 10px 0 0;
+}
+
+/* ===================================================================
+   FIRST ACCESS (AUTH-ACCESS-06) -- #firstAccessPanel, populated by
+   assets/js/first-access.js. Every field/button reuses the same
+   .loginField/.loginStatus/token vocabulary already established by
+   the normal login form above -- no new component language invented.
+   =================================================================== */
+
+.firstAccessPanel {
+  margin-top: 10px;
+  text-align: left;
+}
+
+.firstAccessPanel .loginField {
+  margin-top: var(--space-3);
+}
+
+.firstAccessPanel .loginField:first-child {
+  margin-top: 0;
+}
+
+.firstAccessPanel .loginAssistNote:first-child {
+  margin-top: 0;
+}
+
+.firstAccessPanel .loginStatus {
+  margin-top: var(--space-3);
+}
+
+.firstAccessPanel .loginTurnstile {
+  margin-top: var(--space-3);
+}
+
+.faBtnPrimary,
+.faBtnSecondary {
+  width: 100%;
+  margin-top: var(--space-3);
+  font-family: var(--font-ui);
+  font-size: 13.5px;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+
+.faBtnPrimary {
+  color: #1a0506;
+  background: var(--color-accent-primary);
+  border: 1px solid var(--color-accent-primary);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .faBtnPrimary { transition: background var(--duration-standard) var(--ease-smooth), border-color var(--duration-standard) var(--ease-smooth); }
+}
+
+.faBtnPrimary:hover:not(:disabled) { background: #f16571; border-color: #f16571; }
+.faBtnPrimary:disabled { opacity: .6; cursor: not-allowed; }
+.faBtnPrimary:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-ring-offset); }
+
+.faBtnSecondary {
+  color: var(--color-text-secondary);
+  background: transparent;
+  border: 1px solid var(--color-hairline-strong);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .faBtnSecondary { transition: border-color var(--duration-standard) var(--ease-smooth), color var(--duration-standard) var(--ease-smooth); }
+}
+
+.faBtnSecondary:hover { border-color: var(--color-accent-primary); color: var(--color-text-primary); }
+.faBtnSecondary:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-ring-offset); }
+
+.loginFooter {
+  margin-top: var(--space-6);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-hairline);
+  text-align: center;
+  font-family: var(--font-ui);
+  font-size: 10.5px;
+  letter-spacing: .03em;
+  color: var(--color-text-muted);
+}
+
+.loginFooter b {
+  color: var(--color-text-secondary);
+  font-weight: 700;
+  letter-spacing: .04em;
+}
+
+/* ===================================================================
+   RESPONSIVE.
+   =================================================================== */
+
+@media (max-width: 1080px) {
+  .loginStage { grid-template-columns: 1fr; }
+  .loginInstitutional { min-height: 420px; padding: var(--space-6) var(--space-6); }
+  .loginAuth { border-left: none; border-top: 1px solid var(--color-hairline); padding: var(--space-6); }
+}
+
+@media (max-width: 720px) {
+  .loginInstitutional { min-height: 0; padding: var(--space-6) var(--space-5) var(--space-5); }
+  .loginDisplay { font-size: 30px; }
+  .loginAuth { padding: var(--space-5) var(--space-4) var(--space-6); }
+  .loginCard { padding: var(--space-6) var(--space-5) var(--space-5); }
+}
+
+@media (max-width: 420px) {
+  .loginBrandRow { gap: var(--space-3); }
+  .loginPartner { display: none; }
+}

@@ -1,0 +1,229 @@
+/* PORTAL-NEXT V2 — Red Precision MODULE DESIGN SYSTEM (Wave 3A).
+
+   FOUNDATION, not a rewrite. Every primitive below is EXTRACTED from
+   patterns already proven and human-approved across existing modules
+   (dashbi.css/gestao.css's page header, field, KPI card and table
+   grammar; simuladores.css's .btn/.segmented/.emptyState family) — not
+   invented fresh. Where a module already has its own prefixed class
+   (.dbKpiCardPrimary, .geField, .btn-primary, ...) doing the exact
+   same job, that class is UNCHANGED and untouched; these shared
+   classes exist so a FUTURE module (or a Wave that later consolidates
+   an existing one) has one vocabulary to reach for instead of
+   re-deriving the same rules under a new prefix.
+
+   Every value is a var() from design-system-2/tokens.css, linked
+   directly — nothing here duplicates a primitive value under a new
+   name for its own sake (Gate 2). Loaded after tokens.css, after
+   shell.css/landing.css, before any per-module stylesheet, so a
+   module can override a shared rule with its own higher-specificity
+   class if it ever genuinely needs to (none do as of this Wave). */
+
+/* ============================================================
+   1. TOKENS — semantic roles, aliased onto existing primitives
+   ============================================================ */
+:root{
+  /* spacing roles */
+  --mod-space-micro: var(--space-1);        /* 4px  — tight label-to-value gaps */
+  --mod-space-compact: var(--space-2);      /* 8px  — control internal padding, chip gaps */
+  --mod-space-control-gap: var(--space-4);  /* 16px — filter row gaps, header gaps */
+  --mod-space-card-gap: var(--space-3);     /* 12px — KPI/plan grid gaps */
+  --mod-space-section-gap: var(--space-5);  /* 24px — header-to-content, section-to-section */
+  --mod-space-major-gap: var(--space-6);    /* 32px — major region separation */
+
+  /* typography roles */
+  --mod-title-size: clamp(22px, 2.6vw, 30px);
+  --mod-title-weight: 300;
+  --mod-subtitle-size: 13px;
+  --mod-section-title-size: 17px;
+  --mod-eyebrow-size: 9.5px;
+  --mod-field-label-size: 10.5px;
+  --mod-body-size: 13px;
+  --mod-kpi-label-size: 10.5px;
+  --mod-kpi-value-size: 24px;
+  --mod-table-label-size: 10px;
+  --mod-metadata-size: 11px;
+
+  /* surface roles */
+  --mod-surface-page: var(--color-canvas);
+  --mod-surface-panel-2: var(--color-surface-2);
+  --mod-surface-elevated: var(--color-elevated-surface);
+  --mod-border: var(--color-hairline);
+  --mod-border-strong: var(--color-hairline-strong);
+  --mod-surface-hover: rgba(255,255,255,.028);
+  --mod-surface-active: rgba(238,75,87,.08);
+
+  /* semantic accents (Gate 2 — same roles the token file already
+     defines; aliased here only so module CSS never needs to remember
+     which primitive backs which idea) */
+  --mod-accent: var(--color-accent-primary);
+  --mod-success: var(--color-success);
+  --mod-warning: var(--color-warning);
+  --mod-info: var(--color-info);
+  --mod-critical: var(--color-critical);
+  --mod-muted: var(--color-text-muted);
+}
+
+/* ============================================================
+   2. PAGE HEADER — optional eyebrow, title, subtitle, action area
+   ============================================================ */
+.modPageHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--mod-space-control-gap);flex-wrap:wrap;margin-bottom:var(--mod-space-section-gap)}
+.modHeaderMain{min-width:0}
+.modEyebrow{display:inline-block;font-family:var(--font-mono);font-size:var(--mod-eyebrow-size);letter-spacing:.06em;text-transform:uppercase;color:var(--mod-accent);border:1px solid rgba(238,75,87,.35);border-radius:var(--radius-sm);padding:2px 7px;margin-bottom:var(--mod-space-compact)}
+.modTitle{font-family:var(--font-ui);font-weight:var(--mod-title-weight);font-size:var(--mod-title-size);letter-spacing:-.01em;margin:0}
+.modSubtitle{color:var(--color-text-secondary);margin:var(--mod-space-micro) 0 0;font-size:var(--mod-subtitle-size)}
+.modHeaderActions{display:flex;align-items:center;gap:var(--mod-space-compact);flex-shrink:0}
+.modSectionTitle{font-family:var(--font-ui);font-weight:400;font-size:var(--mod-section-title-size);margin:var(--mod-space-major-gap) 0 var(--mod-space-card-gap)}
+.modSectionTitle:first-child{margin-top:0}
+
+/* ============================================================
+   3. FILTER SYSTEM — reuses the exact .dbField/.geField contract
+   ============================================================ */
+.modFilters{display:flex;align-items:flex-end;gap:var(--mod-space-control-gap);flex-wrap:wrap;margin-bottom:var(--mod-space-control-gap);padding-bottom:var(--mod-space-control-gap);border-bottom:1px solid var(--mod-border)}
+.modField{display:flex;flex-direction:column;gap:var(--mod-space-micro);min-width:160px}
+.modField label{color:var(--mod-muted);font-size:var(--mod-field-label-size);font-weight:500;text-transform:uppercase;letter-spacing:.06em}
+.modField select,.modField input[type="date"],.modField input[type="text"],.modField input[type="number"]{background:var(--mod-surface-panel-2);border:1px solid var(--mod-border-strong);color:var(--color-text-primary);font-family:var(--font-ui);font-size:13px;padding:var(--mod-space-compact);border-radius:var(--radius-sm)}
+.modField select:focus-visible,.modField input:focus-visible{outline:var(--focus-ring);outline-offset:2px}
+@media(max-width:768px){.modField{min-width:130px}}
+
+/* ============================================================
+   4. BUTTON SYSTEM — action buttons: EXTRACTED VERBATIM from
+   simuladores.css's already-approved .btn family (Simulators are
+   frozen/human-approved; this reuses that decision rather than
+   inventing a second one, per Gate 2/17). Primary uses
+   --color-accent-primary (functional red), never --color-brand-red
+   (institutional-only per tokens.css's own comment).
+   ============================================================ */
+.modBtn{font-family:var(--font-ui);font-size:13px;font-weight:500;padding:9px 16px;border-radius:var(--radius-sm);cursor:pointer;display:inline-flex;align-items:center;gap:8px;border:1px solid transparent;line-height:1.2}
+.modBtnPrimary{background:var(--mod-accent);border-color:var(--mod-accent);color:#1a0506}
+.modBtnPrimary:hover:not(:disabled){background:#f16571}
+.modBtnSecondary{background:var(--mod-surface-panel-2);border-color:var(--mod-border-strong);color:var(--color-text-primary)}
+.modBtnGhost{background:none;border-color:transparent;color:var(--color-text-secondary);text-decoration:underline;padding:4px 2px}
+.modBtnDanger{background:none;border-color:var(--mod-critical);color:var(--mod-critical)}
+.modBtnDanger:hover:not(:disabled){background:var(--color-critical-soft)}
+.modBtnSm{padding:6px 12px;font-size:12px}
+.modBtn:disabled{opacity:.42;cursor:not-allowed}
+.modBtn:focus-visible{outline:2px solid var(--mod-accent);outline-offset:2px}
+
+/* ============================================================
+   5/6. SEGMENTED CONTROLS / TABS — two related but distinct
+   components (Gate 6). A SEGMENTED control is a filter (e.g.
+   Todos/Novos/Seminovos): each option is its own bordered toggle,
+   extracted from .dbBtn/.gePresetBtn. A TAB is a navigation-like
+   single-active-region switcher (e.g. Grupo/Modelos/Ranking):
+   underlined active indicator, extracted from .dbModeBtn.
+   ============================================================ */
+.modSegmentedGroup{display:flex;gap:var(--space-1);flex-wrap:wrap}
+.modSegItem{background:none;border:1px solid var(--mod-border-strong);color:var(--color-text-secondary);font-family:var(--font-ui);font-size:12.5px;font-weight:500;padding:var(--space-1) var(--mod-space-compact);border-radius:var(--radius-sm);cursor:pointer}
+.modSegItem:hover:not(.modSegItemActive){color:var(--color-text-primary)}
+.modSegItem:focus-visible{outline:var(--focus-ring);outline-offset:2px}
+.modSegItemActive{color:var(--color-canvas);background:var(--color-text-primary);border-color:var(--color-text-primary)}
+
+.modTabGroup{display:flex;gap:var(--space-1);flex-wrap:wrap;padding-top:var(--mod-space-compact);margin:var(--mod-space-compact) 0 var(--mod-space-control-gap);border-top:1px solid var(--mod-border)}
+.modTab{position:relative;background:none;border:1px solid var(--mod-border-strong);color:var(--color-text-secondary);font-family:var(--font-ui);font-size:12.5px;font-weight:500;padding:var(--space-1) var(--mod-space-compact);border-radius:var(--radius-sm);cursor:pointer}
+.modTab:hover:not(.modTabActive){color:var(--color-text-primary)}
+.modTab:focus-visible{outline:var(--focus-ring);outline-offset:2px}
+.modTabActive{color:var(--color-canvas);background:var(--color-text-primary);border-color:var(--color-text-primary)}
+.modTabActive::after{content:"";position:absolute;left:var(--mod-space-compact);right:var(--mod-space-compact);bottom:-7px;height:2px;background:var(--mod-accent)}
+
+/* ============================================================
+   7. KPI CARD SYSTEM — three materiality tiers + semantic modifiers.
+   No gradients, no glassmorphism, no shadow beyond the shared
+   --shadow-elevated (unused here — KPI cards stay flat per Gate 7).
+   ============================================================ */
+.modKpiGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:var(--mod-space-card-gap);margin-bottom:var(--mod-space-card-gap)}
+.modKpiCard{border:1px solid var(--mod-border);border-radius:var(--radius-md);padding:var(--mod-space-control-gap)}
+.modKpiCard .modKpiLabel{color:var(--mod-muted);font-size:var(--mod-kpi-label-size);font-weight:500;text-transform:uppercase;letter-spacing:.06em}
+.modKpiCard .modKpiValue{font-family:var(--font-mono);font-size:var(--mod-kpi-value-size);font-weight:500;margin-top:var(--mod-space-micro);font-variant-numeric:tabular-nums}
+.modKpiCard .modKpiHint{color:var(--mod-muted);font-size:var(--mod-metadata-size);margin-top:2px}
+
+/* tier 2 — secondary/executive KPI, smaller value */
+.modKpiCardExec .modKpiValue{font-size:20px}
+/* tier 3 — quiet/support KPI, no border-radius emphasis, tightest */
+.modKpiCardSecondary{border-radius:var(--radius-sm);padding:var(--mod-space-card-gap)}
+.modKpiCardSecondary .modKpiValue{font-size:15px;font-family:var(--font-ui);font-weight:500;margin-top:3px}
+.modKpiCardSecondary .modKpiLabel{font-size:10px}
+
+/* semantic modifiers — position/weight distinguish them from each
+   other too, never color alone (Gate 7/dashbi.css precedent) */
+.modKpiCardSuccess{border-left-width:3px;border-left-color:var(--mod-success)}
+.modKpiCardSuccess .modKpiValue{color:var(--mod-success)}
+.modKpiCardWarning{border-left-width:3px;border-left-color:var(--mod-warning)}
+.modKpiCardWarning .modKpiValue{color:var(--mod-warning)}
+.modKpiCardCritical{border-left-width:3px;border-left-color:var(--mod-critical)}
+.modKpiCardCritical .modKpiValue{color:var(--mod-critical)}
+.modKpiCardInfo{border-top-width:3px;border-top-color:var(--mod-info)}
+.modKpiCardInfo .modKpiValue{color:var(--mod-info);font-weight:700}
+
+@media(max-width:768px){.modKpiGrid{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){.modKpiGrid{grid-template-columns:1fr}}
+
+/* ============================================================
+   8. TABLE FOUNDATION — desktop/tablet dense table. Mobile
+   transformation stays module-owned (different modules already use
+   genuinely different strategies — data-th stacking vs. a fully
+   separate mobile-card renderer — neither is wrong, Gate 8).
+   ============================================================ */
+.modTableWrap{overflow-x:auto;border:1px solid var(--mod-border);border-radius:var(--radius-md);margin-bottom:var(--mod-space-control-gap)}
+.modTable{width:100%;border-collapse:collapse;font-size:12.5px}
+.modTable thead th{text-align:left;font-family:var(--font-mono);font-size:var(--mod-table-label-size);text-transform:uppercase;letter-spacing:.05em;color:var(--mod-muted);font-weight:500;padding:var(--mod-space-compact) var(--mod-space-card-gap);border-bottom:1px solid var(--mod-border-strong);white-space:nowrap}
+.modTable td{padding:var(--mod-space-compact) var(--mod-space-card-gap);border-bottom:1px solid var(--mod-border);white-space:nowrap}
+.modTable tbody tr:last-child td{border-bottom:none}
+.modTable tbody tr:hover td{background:var(--mod-surface-hover)}
+.modNumCol{font-family:var(--font-mono);text-align:right;font-variant-numeric:tabular-nums}
+.modCurrencyCol{font-family:var(--font-mono);text-align:right;font-variant-numeric:tabular-nums}
+.modPercentCol{font-family:var(--font-mono);text-align:right;font-variant-numeric:tabular-nums}
+.modActionCol{text-align:right;white-space:nowrap}
+.modStatusCell{display:inline-flex;align-items:center;gap:6px}
+.modTable thead th:first-child,.modTable td:first-child{position:sticky;left:0;background:var(--color-surface-1)}
+.modTable thead th:first-child{background:var(--mod-surface-panel-2);z-index:1}
+
+/* ============================================================
+   9. PANEL / SECTION FOUNDATION
+   ============================================================ */
+.modPanel{margin-bottom:var(--mod-space-section-gap)}
+.modPanelBordered{border:1px solid var(--mod-border-strong);border-radius:var(--radius-md);padding:var(--mod-space-control-gap);margin-bottom:var(--mod-space-section-gap)}
+.modPanelForm,.modPanelResult{background:var(--color-surface-1);border:1px solid var(--mod-border);border-radius:var(--radius-md);padding:var(--mod-space-section-gap)}
+
+/* ============================================================
+   10. EMPTY / LOADING / ERROR / INFO STATES — reuses simuladores
+   .emptyState/.errorState verbatim (already approved).
+   ============================================================ */
+.modEmptyState,.modErrorState,.modInfoState,.modSuccessState{text-align:center;padding:40px 20px;color:var(--color-text-secondary);font-size:var(--mod-body-size);border:1px dashed var(--mod-border-strong);border-radius:var(--radius-md)}
+.modEmptyState .modStateTitle,.modErrorState .modStateTitle,.modInfoState .modStateTitle{color:var(--color-text-primary);font-size:13.5px;font-weight:500;margin-bottom:6px}
+.modErrorState{border-color:rgba(226,84,58,.4);color:#f3c7ba}
+/* Painel Master Phase 2C, Gate 6 -- explicit mutation-success feedback
+   (e.g. "Convite reenviado com sucesso."), mirrors .modErrorState's
+   exact shape with --mod-success in place of the critical color. Not
+   color-only: paired with role="status" (announced) at the call site,
+   same non-color-dependent discipline already used by .modErrorState's
+   own title+body text pairing. */
+.modSuccessState{border-color:rgba(87,185,138,.4);color:#c2e8d4;padding:16px 20px;text-align:left}
+.modLoadingState{display:flex;align-items:center;gap:var(--mod-space-compact);color:var(--mod-muted);font-size:var(--mod-body-size);padding:var(--mod-space-control-gap) 0}
+.modLoadingDot{width:6px;height:6px;border-radius:50%;background:var(--mod-accent);flex-shrink:0}
+
+/* ============================================================
+   11. DEV/FIXTURE DATA BANNER — one coherent pattern replacing each
+   module's own near-identical .dbFixtureBar/.geFixtureBar/etc.
+   Diagnostic-only, visually subordinate, never confused with product
+   UI (dashed border, muted mono type — same visual family as the
+   Shell's own .nxDevBadge, never the Shell's exact markup/JS).
+   ============================================================ */
+.modFixtureBanner{display:flex;align-items:center;gap:var(--mod-space-compact);flex-wrap:wrap;padding:var(--mod-space-compact) var(--mod-space-card-gap);margin-bottom:var(--mod-space-control-gap);border:1px dashed var(--mod-border-strong);border-radius:var(--radius-sm);font-family:var(--font-mono);font-size:10.5px;color:var(--mod-muted)}
+.modFixtureBanner .modFixtureLabel{text-transform:uppercase;letter-spacing:.06em;color:var(--mod-warning)}
+.modFixtureBanner select{background:var(--mod-surface-panel-2);border:1px solid var(--mod-border-strong);color:var(--color-text-primary);font-family:var(--font-mono);font-size:11px;padding:3px var(--mod-space-compact);border-radius:var(--radius-sm)}
+.modFixtureBanner select:focus-visible{outline:var(--focus-ring);outline-offset:2px}
+
+/* ============================================================
+   12. Utility text roles
+   ============================================================ */
+.modMuted{color:var(--mod-muted);font-size:12px;margin:0 0 var(--mod-space-card-gap)}
+.modBadge{display:inline-block;font-family:var(--font-mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;border-radius:var(--radius-sm);padding:2px 7px}
+.modBadgeSuccess{color:var(--mod-success);border:1px solid var(--mod-success)}
+.modBadgeWarning{color:var(--mod-warning);border:1px solid var(--mod-warning)}
+.modBadgeCritical{color:var(--mod-critical);border:1px solid var(--mod-critical)}
+.modBadgeInfo{color:var(--mod-info);border:1px solid var(--mod-info)}
+/* Wave 3C — a status/reference value with no established business color
+   semantic (e.g. a raw backend status string with no authoritative
+   good/bad mapping) still benefits from the badge SHAPE for scannability
+   without inventing a color meaning that isn't there. */
+.modBadgeNeutral{color:var(--mod-muted);border:1px solid var(--mod-border-strong)}

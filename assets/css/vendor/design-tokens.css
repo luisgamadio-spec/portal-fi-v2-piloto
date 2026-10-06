@@ -1,0 +1,135 @@
+/* =====================================================================
+   BRABUS F&I DESIGN SYSTEM 2.0 — TOKENS
+   CANDIDATE / LAB ONLY
+
+   Architecture: PRIMITIVE -> SEMANTIC -> COMPONENT -> MOTION.
+   Every value here is traceable to an approved Lab decision (see
+   #evidence in the Live Spec, and design-system.json -> evidence).
+   Nothing here was invented for this phase — this file FORMALIZES,
+   it does not design.
+   ===================================================================== */
+
+:root{
+
+  /* ============================= PRIMITIVE =============================
+     Raw values. Never referenced directly by components — always through
+     a SEMANTIC token below. Source: DESIGN-SYSTEM-LAB-01 (final Theme
+     Studio config: typography:plex, accent:brabus_red, surfaceTemperature:
+     neutral, brandPresence:minimal, depth:balanced, motion:balanced,
+     contextBeam:expressive) + DESIGN-MOTION-LAB-03 (Parametric Reactive
+     human choice). */
+
+  --p-black-1: #0a0a0a;
+  --p-black-2: #111111;
+  --p-black-3: #161616;
+  --p-black-4: #1c1c1e;
+  --p-red-1: #ee4b57;   /* Accent Primary */
+  --p-red-2: #c1121f;   /* Brand Red */
+  --p-white-1: #eef0f1;
+  --p-white-2: #9a9da2;
+  --p-white-3: #808080;
+  --p-green-1: #57b98a;
+  --p-amber-1: #dba648;
+  --p-orange-1: #e2543a;
+  --p-blue-1: #6fa8c9;
+
+  --p-space-0: 2px;
+  --p-space-1: 4px;
+  --p-space-2: 8px;
+  --p-space-3: 12px;
+  --p-space-4: 16px;
+  --p-space-5: 24px;
+  --p-space-6: 32px;
+  --p-space-7: 48px;
+  --p-space-8: 64px;
+
+  --p-radius-1: 3px;
+  --p-radius-2: 6px;
+
+  --p-duration-1: 120ms;   /* Fast */
+  --p-duration-2: 200ms;   /* Standard */
+  --p-duration-3: 420ms;   /* Context (Context Beam) */
+  --p-duration-4: 900ms;   /* Ambient (Parametric Reactive reaction decay) */
+
+  /* ============================= SEMANTIC ============================= */
+
+  /* --- Color: surfaces --- */
+  --color-canvas: var(--p-black-1);
+  --color-surface-1: var(--p-black-2);
+  --color-surface-2: var(--p-black-3);
+  --color-elevated-surface: #191a1c;       /* derived: surface-2 +~3% luminance, for modal/drawer/toast body — DESIGN-SYSTEM-LAB-01 evidence */
+  --color-overlay-scrim: rgba(6,6,7,.72);   /* derived: canvas darkened + alpha, for modal/drawer backdrop */
+  --color-hairline: rgba(255,255,255,.085);
+  --color-hairline-strong: rgba(255,255,255,.16);
+
+  /* --- Color: text --- */
+  --color-text-primary: var(--p-white-1);
+  --color-text-secondary: var(--p-white-2);
+  --color-text-muted: var(--p-white-3);
+
+  /* --- Color: brand vs functional (DIFFERENT ROLES — do not merge) --- */
+  --color-accent-primary: var(--p-red-1);   /* functional: state, selection, interactive emphasis, focus */
+  --color-brand-red: var(--p-red-2);        /* institutional: brand presence, motion signature — NEVER error/critical */
+
+  /* --- Color: semantic (recovered from DESIGN-SYSTEM-LAB-01, not reinvented) --- */
+  --color-success: var(--p-green-1);
+  --color-success-soft: rgba(87,185,138,.12);
+  --color-warning: var(--p-amber-1);
+  --color-warning-soft: rgba(219,166,72,.12);
+  --color-critical: var(--p-orange-1);
+  --color-critical-soft: rgba(226,84,58,.13);
+  --color-info: var(--p-blue-1);
+  --color-info-soft: rgba(111,168,201,.12);
+
+  /* --- Typography --- */
+  --font-ui: 'IBM Plex Sans', "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+  --font-mono: 'IBM Plex Mono', Consolas, "SF Mono", monospace;
+
+  /* --- Spacing (formalized scale — see Foundations > Spacing for the
+     rationalization method) --- */
+  --space-0: var(--p-space-0);
+  --space-1: var(--p-space-1);
+  --space-2: var(--p-space-2);
+  --space-3: var(--p-space-3);
+  --space-4: var(--p-space-4);
+  --space-5: var(--p-space-5);
+  --space-6: var(--p-space-6);
+  --space-7: var(--p-space-7);
+  --space-8: var(--p-space-8);
+
+  /* --- Radius --- */
+  --radius-sm: var(--p-radius-1);   /* button, input, badge, chip */
+  --radius-md: var(--p-radius-2);   /* modal, drawer, toast, table wrap */
+
+  /* --- Shadow (restricted use — modal/drawer/toast only) --- */
+  --shadow-elevated: 0 12px 32px rgba(0,0,0,.45);
+
+  /* --- Focus --- */
+  --focus-ring: 2px solid var(--color-accent-primary);
+  --focus-ring-offset: 2px;
+
+  /* --- Motion: timing --- */
+  --duration-fast: var(--p-duration-1);
+  --duration-standard: var(--p-duration-2);
+  --duration-context: var(--p-duration-3);
+  --duration-ambient: var(--p-duration-4);
+  --ease-precise: cubic-bezier(.16,1,.3,1);
+  --ease-smooth: cubic-bezier(.4,0,.2,1);
+
+  /* --- Motion: Context Beam (EVENT motion) --- */
+  --beam-duration: var(--duration-context);
+  --beam-ease: var(--ease-precise);
+  --beam-color: var(--color-accent-primary);
+
+  /* --- Motion: Parametric Reactive (AMBIENT RESPONSE — human-approved
+     candidate config, DESIGN-MOTION-LAB-03) --- */
+  --signature-motion-id: 'parametric_reactive';
+  --signature-motion-color: var(--color-brand-red);   /* colorMode:brand_red -> #c1121f */
+  --signature-motion-opacity: 0.25;
+  --signature-motion-speed: 0.75;
+  --signature-motion-scale: 1.5;
+  --signature-motion-blend: normal;
+  --signature-motion-position: center;
+  --signature-motion-reaction: expressive;
+  --signature-motion-reaction-duration: var(--duration-ambient);
+}

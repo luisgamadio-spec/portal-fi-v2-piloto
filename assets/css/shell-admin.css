@@ -1,0 +1,767 @@
+/* PORTAL-NEXT V2 -- Painel Master / Usuários (Painel Master Phase 2A).
+   Layout/filter/button/table primitives (.modFilters, .modField,
+   .modBtn*, .modTable, .modTableWrap, .modEmptyState, .modLoadingState,
+   .modErrorState, .modPageHeader) all come from module-system.css,
+   unchanged -- only the bits genuinely new to an admin surface live
+   here: section nav, lifecycle badges, the detail/edit panel, and the
+   inline confirmation step (no modal primitive exists yet in this
+   codebase -- Gate 10 forbids introducing a new parallel one for this
+   alone). Desktop table / mobile card dual-renderer breakpoint mirrors
+   score.css's own .scDesktopOnly/.scMobileOnly exactly (767px). */
+
+.maPage { display: flex; flex-direction: column; gap: var(--mod-space-control-gap); }
+
+.maSectionNav { display: flex; gap: var(--space-2); flex-wrap: wrap; padding-bottom: var(--mod-space-compact); border-bottom: 1px solid var(--mod-border); }
+.maSectionItem { font-family: var(--font-ui); font-size: 12.5px; font-weight: 500; padding: var(--space-1) var(--mod-space-compact); border-radius: var(--radius-sm); color: var(--color-text-secondary); }
+.maSectionItemActive { color: var(--color-canvas); background: var(--color-text-primary); }
+.maSectionItemDisabled { opacity: .5; }
+.maSectionSoon { font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em; }
+/* Painel Master Phase 3B: section nav items with a live sibling section
+   are real <button>s (needed a click handler) -- reset native button
+   chrome so they stay visually identical to the inert <span> items. */
+.maSectionItemLink { font: inherit; border: none; background: transparent; cursor: pointer; }
+.maSectionItemLink:hover, .maSectionItemLink:focus-visible { background: var(--mod-surface-panel-2); }
+.maSectionItemLink:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+
+.maDesktopOnly { display: block; }
+.maMobileOnly { display: none; }
+@media (max-width: 767px) {
+  .maDesktopOnly { display: none; }
+  .maMobileOnly { display: block; }
+}
+
+/* Painel Master Phase PM-4B.2 (Human UAT finding: right-side content
+   clipping at intermediate desktop widths, e.g. ~1000-1366px). Root
+   cause: .modTable td's own global white-space:nowrap (module-
+   system.css, shared by every already-migrated module's table) forced
+   the Usuário name/e-mail cell and the Situação badges to stay single-
+   line -- with real long content (the Painel Master homolog's own real
+   60+ char name, or two badges side by side) this pushed the table's
+   natural width past the viewport, clipping the rightmost column at
+   the wrapper's own edge before any scroll. Fixed by letting these two
+   SPECIFIC cells wrap onto multiple lines instead -- never a hardcoded
+   column width, never a change to the shared .modTable/.modTableWrap
+   rule itself (which would touch every other module's table). This
+   lets the browser's own table layout algorithm reclaim the width
+   these cells no longer force, which is what actually removes the
+   overflow, not a breakpoint or scrollbar change. */
+/* max-width (not width) is load-bearing here, not decorative: a plain
+   table in table-layout:auto mode computes each column's preferred
+   width from content's un-wrapped/un-broken size and simply ignores
+   white-space/overflow-wrap when doing so (confirmed empirically --
+   white-space:normal + overflow-wrap:anywhere + min-width:0 alone left
+   the table exactly as wide as before). max-width is the one property
+   table auto-layout actually respects as a real constraint, which is
+   what lets these cells wrap instead of forcing the table wider. No
+   content is hidden or truncated -- full text still renders, just
+   across multiple lines (Gate 12: never sacrifice name/e-mail
+   legibility for width). 260px comfortably fits realistic names/
+   e-mails on 2-3 lines; not a per-column hardcode pattern (only this
+   one justified case), and never used with overflow:hidden/ellipsis
+   here (that treatment is reserved for Auditoria's own contextual
+   Vendedor/Usuário column below, which is a different tradeoff). */
+/* PM-USERS-VISUAL-H1 (Human UAT: row separators show "buracos" between
+   USUÁRIO/PERFIL and between STATUS/SITUAÇÃO). Root cause was the exact
+   PM-5F-H3 anti-pattern applied twice over: BOTH .maNameCell and
+   .maSituacaoCell used to carry display:flex DIRECTLY on the <td>
+   itself, which removes a cell from the table's native row-height
+   algorithm (its box then sizes to its own flex content instead of
+   stretching to the row). Confirmed live via getBoundingClientRect:
+   with the Gate-13 mixed fixture, the row's real height was always set
+   by whichever of the two flexed cells happened to have the taller
+   intrinsic content in a given row (name+e-mail wrapping to 2 lines,
+   vs. two situação badges wrapping to 2 lines) -- the OTHER flexed
+   cell then fell up to 22.75px short of that height every time,
+   leaving its own border-bottom (and, for the first column, its own
+   OPAQUE sticky background from module-system.css's shared
+   td:first-child rule) short of the row's true bottom edge -- exactly
+   the disconnected "hole" the Human's screenshot showed, on whichever
+   side had the shorter content. Because either cell could be the
+   "tall" one depending on real data, this was NEVER purely a
+   .maNameCell-only or .maSituacaoCell-only defect. Fixed identically
+   to PM-5F-H3 for both: the flex layout now lives on an inner <div>
+   wrapper INSIDE the <td> (.maNameCellInner / .maSituacaoCellInner);
+   the <td> itself keeps only its wrap/max-width policy and native
+   table-cell layout, sized like every sibling. max-width stays on the
+   <td> itself, not the inner wrapper -- PM-4B.2 already established
+   (empirically, not by assumption) that table auto-layout only
+   respects max-width as a real column-width constraint when it sits
+   directly on the cell, so moving it to the inner div risked
+   reintroducing horizontal overflow; re-verified empirically this
+   round that it still does with the flex layout removed from the
+   <td>. */
+.maNameCell { white-space: normal; overflow-wrap: anywhere; max-width: 260px; }
+.maNameCellInner { display: flex; flex-direction: column; gap: 2px; }
+.maSubtle { color: var(--color-text-secondary); font-size: 12px; overflow-wrap: anywhere; }
+/* flex-wrap (not relying on inline-block's own text-flow wrapping) so
+   the two badges reliably stack onto their own lines as a group when
+   the cell is width-constrained -- inline-block wrapping alone left
+   the SECOND badge still overflowing even after the first one wrapped,
+   since the browser kept trying to fit it on the first badge's own
+   line whenever any room remained. */
+.maSituacaoCell { max-width: 200px; }
+.maSituacaoCellInner { display: flex; flex-wrap: wrap; gap: 4px; }
+/* A single long invite-lifecycle label (e.g. "Conta criada — e-mail não
+   confirmado", ~37 chars) is itself an unbreakable inline-block pill --
+   the cell's own max-width doesn't stop THIS badge from overflowing its
+   own boundary, only the table's overall column-width contribution.
+   Scoped to .maSituacaoCell specifically (not .maBadge globally --
+   Auditoria's own short RESULTADO badge stays a single-line pill,
+   that's a different, already-fine case) so its text can wrap onto a
+   second line too, same never-truncate rule as the name/e-mail. */
+.maSituacaoCell .maBadge { white-space: normal; max-width: 100%; }
+
+.maMobileCard { display: flex; flex-direction: column; gap: 4px; padding: var(--mod-space-compact); border: 1px solid var(--mod-border); border-radius: var(--radius-sm); margin-bottom: var(--space-2); cursor: pointer; }
+.maMobileCard:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+.maMobileName { font-weight: 600; }
+.maMobileMeta { color: var(--color-text-secondary); font-size: 12.5px; }
+
+.maBadge { display: inline-block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; padding: 2px 8px; border-radius: 999px; }
+.maBadgeInvited { background: var(--color-warning-soft, #fff3cd); color: var(--color-warning-strong, #8a6d1a); }
+.maBadgePending { background: var(--color-accent-soft, #e6f0ff); color: var(--color-accent-primary, #1a56db); }
+.maBadgeActive { background: var(--color-success-soft, #e3f7e8); color: var(--color-success-strong, #1a7f37); }
+.maBadgeInactive { background: var(--color-critical-soft, #fde2e2); color: var(--color-critical, #c22); }
+
+.maDetail, .maConfirm { margin-top: var(--mod-space-control-gap); padding: var(--mod-space-control-gap); border: 1px solid var(--mod-border-strong); border-radius: var(--radius-sm); background: var(--mod-surface-panel-2); display: flex; flex-direction: column; gap: var(--space-2); }
+.maDetailHead { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.maDetailHead h2 { margin: 0; font-size: 16px; }
+.maDetailField { display: flex; justify-content: space-between; gap: var(--space-2); padding: 4px 0; border-bottom: 1px solid var(--mod-border); }
+.maDetailLabel { color: var(--color-text-secondary); font-size: 12.5px; flex-shrink: 0; }
+/* Painel Master Phase PM-4B.4: a flex item's default min-width is
+   "auto" (content-based), so an unbroken long value (e.g. an e-mail,
+   no spaces to wrap at) forced this row -- and the whole dialog -- wider
+   than the modal, clipping it at the right edge (same defect class as
+   PM-4B.2, different mechanism: flexbox min-width, not table auto-layout). */
+.maDetailValue { font-weight: 500; min-width: 0; overflow-wrap: anywhere; text-align: right; }
+.maDetailActions { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-top: var(--space-2); }
+.maWarnNote { color: var(--color-warning-strong, #8a6d1a); font-size: 12.5px; }
+.maFieldError { color: var(--mod-critical); font-size: 12.5px; }
+
+.maConfirm h3 { margin: 0; font-size: 15px; }
+
+@media (max-width: 480px) {
+  .maDetailActions { flex-direction: column; }
+  .maDetailActions .modBtn, .maDetailActions .modBtnGhost { width: 100%; }
+}
+
+/* Painel Master Phase 3B -- Acessos aos Módulos. Desktop matrix reuses
+   .modTable/.modTableWrap (own overflow-x:auto container, Gate 9 --
+   never BODY overflow); mobile uses grouped per-module cards, same
+   .maDesktopOnly/.maMobileOnly 767px breakpoint as Usuários above, one
+   data source (shell-admin.js's acessosState), zero duplicated logic. */
+.mamMasterNotice { padding: var(--mod-space-compact); border: 1px solid var(--mod-border-strong); border-radius: var(--radius-sm); background: var(--mod-surface-panel-2); font-size: 12.5px; }
+.mamDirtyBanner { padding: var(--mod-space-compact); border-radius: var(--radius-sm); background: var(--color-warning-soft, #fff3cd); color: var(--color-warning-strong, #8a6d1a); font-size: 12.5px; }
+
+.mamTable th, .mamTable td { text-align: center; vertical-align: middle; }
+.mamRowLabel { text-align: left; font-weight: 500; white-space: nowrap; }
+.mamColSub { font-weight: 400; color: var(--color-text-secondary); font-size: 10.5px; text-transform: uppercase; letter-spacing: .04em; }
+.mamCellTd input[type="checkbox"] { width: 18px; height: 18px; }
+.mamCellTd input[type="checkbox"]:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+
+.mamAvailBadge { margin-top: 2px; font-size: 10.5px; font-weight: 500; }
+.mamAvailAVAILABLE { color: var(--color-success-strong, #1a7f37); }
+.mamAvailLEGACY_ONLY { color: var(--color-warning-strong, #8a6d1a); }
+.mamAvailCOMING_SOON { color: var(--color-text-secondary); }
+
+.mamMobileCard { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--mod-space-compact); border: 1px solid var(--mod-border); border-radius: var(--radius-sm); margin-bottom: var(--space-2); }
+.mamMobileCardHead { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-2); }
+.mamModuleLabel { font-weight: 600; }
+.mamMobileScopeRow { display: flex; align-items: center; gap: var(--space-2); padding: 4px 0; border-bottom: 1px solid var(--mod-border); font-size: 12.5px; }
+.mamMobileScopeRow:last-child { border-bottom: none; }
+.mamMobileScopeRow input[type="checkbox"] { width: 18px; height: 18px; flex-shrink: 0; }
+
+.mamConfirmSummary { display: flex; flex-direction: column; gap: var(--space-2); max-height: 240px; overflow-y: auto; }
+.mamConfirmItem { padding: var(--space-1) var(--mod-space-compact); border-radius: var(--radius-sm); font-size: 12.5px; border-left: 3px solid var(--mod-border-strong); }
+.mamConfirmGood { border-left-color: var(--color-success-strong, #1a7f37); }
+.mamConfirmBad { border-left-color: var(--mod-critical, #c22); }
+
+/* Painel Master Phase PM-4B.1 -- explicit "Ver detalhes" affordance
+   (Human UAT finding: the whole row/card was clickable but had zero
+   visible affordance). Compact, discreet (.modBtnGhost's own neutral
+   underlined-text look) so it never competes with the RESULTADO badge. */
+.maudDetailCol { white-space: nowrap; text-align: right; }
+.maudDetailBtn { font-size: 12.5px; }
+.maudMobileActions { margin-top: 2px; }
+
+/* Painel Master Phase PM-4B.2 -- Vendedor/Usuário can legitimately
+   contain long real names; unlike Usuários' own name/e-mail (never
+   truncated -- see .maNameCell above), this column is contextual log
+   content, not the primary action target, and the full value is always
+   still reachable via "Ver detalhes" -- so an ellipsis-with-title is
+   the right tradeoff here (Gate 13's own guidance), not wrapping. A
+   single, justified max-width on this one column only, not a pattern
+   applied broadly across columns. */
+.maudVendedorCell { max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
+
+/* Painel Master Phase PM-4B.3 -- Auditoria detail modal (Human UAT
+   decision: opening a detail must never scroll to the end of a
+   100-row list). Rendered into #nxModalRoot, the pre-existing,
+   previously-unused overlay root already declared in shell.css/
+   index.html (position:fixed, inset:0, z-index:100) -- reused as-is
+   per Gate 19's own instruction to prefer an existing pattern; only
+   the actual dialog/backdrop visual treatment is new (that root only
+   had bare positioning, no visual styling yet, since nothing consumed
+   it before this). */
+.maudModalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3);
+  pointer-events: auto;
+}
+.maudModalDialog {
+  background: var(--mod-surface-panel-2);
+  border: 1px solid var(--mod-border-strong);
+  border-radius: var(--radius-md);
+  width: 100%;
+  max-width: 560px;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: var(--mod-space-control-gap);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.maudModalDialog:focus { outline: none; } /* focus is programmatic (Gate 22), not a click target */
+.maudModalBody { display: flex; flex-direction: column; }
+/* Gate 23: background scroll lock while the modal is open -- the
+   Auditoria list behind it must not shift. */
+body.maudModalOpen { overflow: hidden; }
+
+@media (max-width: 480px) {
+  .maudModalBackdrop { padding: 0; align-items: flex-end; }
+  .maudModalDialog { max-width: 100%; max-height: 100vh; height: 100%; border-radius: 0; }
+}
+
+/* Painel Master Phase PM-4C.2 -- Pendências Cadastrais. Reuses .maBadge,
+   .modTable/.modTableWrap, .maSubtle, .modField/.modFilters,
+   .maDetailField/.maDetailActions and the shared #nxModalRoot dialog
+   wholesale (Gate 26/46) -- only the genuinely new pieces (severity
+   badges, tab pills, summary cards, the numeric occurrences column,
+   exceptions rows, and the deep-linked field highlight) get their own
+   rules below. Desktop/mobile switching uses its OWN .pcDesktopOnly/
+   .pcMobileOnly pair (PM-4C.2.1), not the shared .maDesktopOnly/
+   .maMobileOnly -- see that rule's own comment for why. */
+.pcSevUrgente { background: var(--color-critical-soft, #fde2e2); color: var(--color-critical, #c22); }
+.pcSevAtencao { background: var(--color-warning-soft, #fff3cd); color: var(--color-warning-strong, #8a6d1a); }
+.pcSevInformativo { background: var(--color-accent-soft, #e6f0ff); color: var(--color-accent-primary, #1a56db); }
+
+.pcTabs { display: flex; gap: var(--space-2); flex-wrap: wrap; margin: var(--space-2) 0; }
+.pcAbaSwitch { margin-bottom: var(--mod-space-control-gap); }
+
+/* Gate 17/53: summary cards are explicitly filter-scoped (the note
+   above them says so in copy) -- this grid is intentionally plain, not
+   styled as an authoritative global KPI dashboard. */
+.pcSummaryCards { display: grid; grid-template-columns: repeat(4, minmax(120px, 1fr)); gap: var(--space-2); margin-bottom: var(--mod-space-control-gap); }
+.pcCard { border: 1px solid var(--mod-border); border-radius: var(--radius-sm); padding: var(--space-2); background: var(--mod-surface-panel-2); }
+.pcCardK { font-size: 11px; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: .04em; }
+.pcCardV { font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.pcSummaryNote { margin-bottom: var(--space-1); }
+
+/* Painel Master Phase PM-4C.2.1 (Human UAT: horizontal scrollbar
+   rejected). Root cause: module-system.css's shared .modTable td rule
+   (class+element, specificity 0-1-1) sets white-space:nowrap on EVERY
+   cell -- a same-specificity single-class override like .maNameCell
+   (0-1-0) can never win against it regardless of source order, so no
+   Painel Master table cell has ever actually word-wrapped (confirmed
+   empirically: Usuários' own .maNameCell still computes to nowrap
+   today). table-layout:auto then sizes every column to its full
+   UNWRAPPED preferred width, and the table overflows its wrapper as
+   soon as that sum exceeds the available width -- .modTableWrap's own
+   overflow-x:auto quietly absorbs it into an internal scrollbar
+   without ever pushing the page/BODY wider, which is exactly why a
+   body-level-only overflow check (the only kind PM-4C.2's own
+   responsive suite ran) could report clean while a real horizontal
+   scrollbar still appeared. Fix here is Pendências-scoped only (Gate
+   33): a genuinely higher-specificity compound selector
+   (.pcTable td.pcXxxCell, 0-2-1) for the identity/text-heavy columns
+   (Gate 8: Pessoa/Identificador, Origem, Motivo) plus a natural
+   date/time wrap point -- once white-space:normal actually applies,
+   table-layout:auto correctly shrinks these columns on its own
+   (verified empirically: no max-width needed at all, unlike the
+   PM-4B.2-era conclusion, which -- now demonstrably -- was measuring
+   this same specificity bug, not a real auto-layout limitation).
+   Severidade/Ocorrências/Status/Ação stay their own short, compact,
+   nowrap cells (Gate 9), never touched. */
+.pcTable td.pcPersonCell { white-space: normal; overflow-wrap: anywhere; }
+.pcTable td.pcOrigemCell { white-space: normal; overflow-wrap: break-word; }
+.pcTable td.pcMotivoCell { white-space: normal; overflow-wrap: break-word; }
+.pcTable td.pcDateCell { white-space: normal; }
+.pcTable td.pcSevCell, .pcTable td.pcStatusCell { white-space: nowrap; }
+
+/* Gate 14/15/24: even with the wrap fix above, 8 real columns (one
+   more than Usuários' 5 or Auditoria's 5) have a genuine minimum
+   content width (~828px, measured directly: Severidade/Ocorrências/
+   Status/Ação can only shrink so far before either clipping "Ver
+   detalhes" or wrapping "PENDENTE"/date character-by-character, both
+   explicitly forbidden) that the shared .maDesktopOnly/.maMobileOnly
+   767px breakpoint sits BELOW -- reusing it verbatim would leave a
+   real ~768-840px dead zone where the table is still active AND still
+   overflows (reproduced directly). A Pendências-OWN, earlier
+   breakpoint (900px, safely above the measured ~850px exact
+   threshold) avoids that zone entirely WITHOUT touching the shared
+   767px value Usuários/Auditoria/Acessos still correctly rely on
+   (Gate 33: scoped, not global). */
+.pcDesktopOnly { display: block; }
+.pcMobileOnly { display: none; }
+@media (max-width: 900px) {
+  .pcDesktopOnly { display: none; }
+  .pcMobileOnly { display: block; }
+}
+
+.pcNumCell { text-align: right; font-variant-numeric: tabular-nums; }
+.pcModalSubhead { margin: var(--space-2) 0 0; font-size: 13px; }
+.pcCheckLabel { display: flex; align-items: center; gap: var(--space-1); font-size: 13px; }
+.pcCheckLabel input { min-width: 0; width: auto; }
+
+/* Gate 34: the field row this Phase's Users deep-link scrolls to and
+   highlights -- a visual pointer only, never a new edit affordance. */
+.pcFocoDestaque { background: var(--color-accent-soft, #e6f0ff); border-radius: var(--radius-sm); }
+
+/* Exceções tab -- one row per exception, same field-row building block
+   already used everywhere else in this file (.maDetailField), never a
+   second table primitive. */
+.pcExcRow { border: 1px solid var(--mod-border); border-radius: var(--radius-sm); padding: var(--space-2); margin-bottom: var(--space-2); display: flex; flex-direction: column; gap: 4px; }
+/* .pcExcRow's own .maDetailField children rely on the column flex
+   parent's default align-items:stretch (full row width) to keep their
+   own internal justify-content:space-between meaningful -- but that
+   same default blockifies a bare .maBadge <span> child to the full row
+   width too (a real visual bug found while screenshotting: the ATIVA/
+   REVOGADA pill rendered as a full-width bar, not an inline pill).
+   Scoped align-self here, not a parent-wide align-items change, so the
+   field rows keep their own correct stretch behavior. */
+.pcExcRow > .maBadge { align-self: flex-start; }
+
+@media (max-width: 640px) {
+  .pcSummaryCards { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ==================== Gestão de Bases (Painel Master Phase PM-5C) ====================
+   Card-grid presentation, not a table -- Gate 28/29's "no horizontal
+   scroll" requirement is structurally satisfied here (a responsive grid
+   of cards reflows naturally; there is no wide row to overflow), unlike
+   Pendências' own table which needed a dedicated PM-4C.2.1 fix. */
+.gbGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--space-3); margin-top: var(--space-3); }
+.gbCard { border: 1px solid var(--mod-border); border-radius: var(--radius-md); padding: var(--mod-space-control-gap); background: var(--mod-surface-panel-2); display: flex; flex-direction: column; gap: 6px; }
+.gbCard h3 { margin: 0 0 4px 0; font-size: 14px; }
+.gbRow { display: flex; justify-content: space-between; gap: var(--space-2); font-size: 12.5px; padding: 2px 0; }
+.gbRow span { color: var(--color-text-secondary); }
+.gbStatusOk { color: var(--color-success-strong, #1a7f37); }
+.gbStatusBad { color: var(--color-critical, #c22); }
+.gbUpdateBtn { margin-top: var(--space-2); align-self: flex-start; }
+.gbPendingNote { font-size: 12px; color: var(--color-warning-strong, #8a6d1a); background: var(--color-warning-soft, #fff3cd); border-radius: var(--radius-sm); padding: 4px 8px; }
+.gbLegadoNote { margin-top: 4px; }
+.gbHomologBanner { color: var(--color-warning-strong, #8a6d1a); background: var(--color-warning-soft, #fff3cd); border-radius: var(--radius-sm); padding: var(--space-2); }
+.gbWarn { font-size: 12.5px; color: var(--color-warning-strong, #8a6d1a); background: var(--color-warning-soft, #fff3cd); border-radius: var(--radius-sm); padding: var(--space-2); margin-top: var(--space-2); }
+.gbSimNote { color: var(--color-warning-strong, #8a6d1a); }
+.gbErrText { color: var(--color-critical, #c22); }
+.gbMuted { color: var(--color-text-secondary); }
+.gbMissingList { max-height: 160px; overflow-y: auto; border: 1px solid var(--mod-border); border-radius: var(--radius-sm); padding: var(--space-2); font-size: 12.5px; margin-top: var(--space-2); }
+.gbProgressWrap { height: 8px; border-radius: 999px; background: var(--mod-border); overflow: hidden; margin-top: var(--space-2); }
+.gbProgressBar { height: 100%; width: 0; background: var(--color-accent-primary, #1a56db); transition: width var(--duration-fast, .15s) var(--ease-precise, ease); }
+
+@media (max-width: 480px) {
+  .gbGrid { grid-template-columns: 1fr; }
+}
+
+/* ==================== Gestão dos Simuladores (Painel Master Phase PM-5D) ====================
+   Reuses .gbGrid/.gbCard/.gbRow/.gbWarn/.gbProgress* etc. verbatim
+   (same real backend pattern: upload -> dry-run diff -> confirm) --
+   only the pieces genuinely unique to this surface (group headings,
+   badges, the diff-detail table) get their own rules. */
+.gsGroupTitle { margin: var(--space-4) 0 var(--space-1) 0; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--color-text-secondary); }
+.gsGroupTitle:first-child { margin-top: 0; }
+.gsSharedBadge, .gsBootstrapBadge, .gsPartialBadge {
+  display: inline-block; font-size: 9.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .03em;
+  padding: 2px 6px; border-radius: 999px; vertical-align: middle; margin-left: 4px;
+}
+.gsSharedBadge { background: var(--color-accent-soft, #e6f0ff); color: var(--color-accent-primary, #1a56db); }
+.gsBootstrapBadge { background: var(--mod-border); color: var(--color-text-secondary); }
+.gsPartialBadge { background: var(--color-warning-soft, #fff3cd); color: var(--color-warning-strong, #8a6d1a); }
+.gsNotaExtra { margin-top: 8px; }
+.gsPartialNote { margin-top: 8px; }
+.gsDetailTitle { margin: 14px 0 4px; font-size: 13px; }
+/* Wide diff-detail table: its own horizontal scroll container, never
+   the page body (Gate 46) -- column count varies per config family
+   (some have 3 fields, Coparticipado's model matrix has 7). */
+.gsTableWrap { overflow-x: auto; max-width: 100%; border: 1px solid var(--mod-border); border-radius: var(--radius-sm); }
+.gsTable { border-collapse: collapse; width: 100%; font-size: 12px; font-variant-numeric: tabular-nums; }
+.gsTable th, .gsTable td { padding: 4px 8px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--mod-border); }
+.gsTable th:first-child, .gsTable td:first-child { text-align: left; }
+.gsTable thead th { color: var(--color-text-secondary); font-weight: 500; text-transform: uppercase; font-size: 10.5px; letter-spacing: .03em; }
+
+/* ==================== Configurações (Painel Master Phase PM-5E) ====================
+   Reuses .gbGrid/.gbCard/.gbRow/.gbWarn verbatim -- only the read/edit-
+   mode toggle pieces are new. */
+.cfgGrid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+.cfgCard h3 { font-size: 13.5px; }
+.cfgEditRow { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-2); }
+.cfgEditRow input[type="text"] { flex: 1; min-width: 0; padding: 6px 8px; border: 1px solid var(--mod-border-strong); border-radius: var(--radius-sm); background: var(--color-canvas); color: var(--color-text-primary); font-variant-numeric: tabular-nums; }
+.cfgEditRow input[type="text"]:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+.cfgUnit { color: var(--color-text-secondary); font-size: 12.5px; flex-shrink: 0; }
+.cfgEditActions { margin-top: var(--space-2); justify-content: flex-start; }
+.cfgEditBtn { margin-top: var(--space-2); align-self: flex-start; }
+
+/* ==================== Períodos de Comissão (Painel Master Phase PM-5E) ==================== */
+.prCreateCard { max-width: 480px; margin-bottom: var(--space-3); display: flex; flex-direction: column; gap: 6px; }
+.prCreateCard label { font-size: 12px; color: var(--color-text-secondary); margin-top: 4px; }
+.prCreateCard input[type="text"], .prCreateCard input[type="date"] { padding: 6px 8px; border: 1px solid var(--mod-border-strong); border-radius: var(--radius-sm); background: var(--color-canvas); color: var(--color-text-primary); }
+.prCurrentLabel { display: flex; align-items: center; gap: 6px; font-size: 12.5px; }
+.prTable th, .prTable td { text-align: left; vertical-align: top; }
+.prActions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.prMobileCard .prActions { margin-top: var(--space-2); }
+
+/* ==================== Férias/Ausências (Painel Master Phase PM-5F) ==================== */
+.absCreateCard { max-width: 480px; margin-bottom: var(--space-3); display: flex; flex-direction: column; gap: 6px; }
+.absCreateCard label { font-size: 12px; color: var(--color-text-secondary); margin-top: 4px; }
+.absCreateCard input[type="text"], .absCreateCard input[type="date"], .absCreateCard select { padding: 6px 8px; border: 1px solid var(--mod-border-strong); border-radius: var(--radius-sm); background: var(--color-canvas); color: var(--color-text-primary); }
+.absFinanceWarn { border-left: 3px solid var(--color-accent-primary, #1a56db); padding-left: 8px; }
+/* PM-5F-H1 (Human UAT defect fix): the shared .modTable default
+   (module-system.css) sets white-space:nowrap on every th/td, and
+   .absTable never overrode that with a wrapping strategy of its own --
+   unlike .scPage/.cpPage/.gePage's own .modTable overrides, each of
+   which already had to solve this exact problem for their own tables.
+   With table-layout left at its implicit "auto", a long real analyst/
+   substitute/store name forced the table to its nowrap intrinsic width
+   (measured live: 2290px against the existing long-content fixture,
+   at every desktop width from 1440 down to 768) -- silently absorbed
+   by the shared .modTableWrap{overflow-x:auto} as a CONTAINED
+   horizontal scrollbar, which never reaches document.documentElement
+   and is exactly why the prior width-matrix assertions (checking only
+   documentElement.scrollWidth) reported a false PASS. Fixed the same
+   way Score/Coparticipado/Gestão fixed it for their own tables:
+   table-layout:fixed + deliberate column-width distribution via
+   <colgroup> (Gate 8 -- never an equal split) + per-column wrap
+   policy: names/store/motivo wrap (overflow-wrap:break-word), while
+   the date-range and badge columns stay nowrap on purpose (short,
+   fits, wrapping would look broken mid-date). Scoped to .absTable
+   only -- the shared .modTable/.modTableWrap defaults, and every
+   other screen using them, are untouched. */
+.absTable { table-layout: fixed; }
+.absTable th, .absTable td { text-align: left; vertical-align: top; white-space: normal; overflow-wrap: break-word; word-break: break-word; }
+/* Dates are NOT forced to nowrap (an earlier draft did, and at 900px
+   the date range visually overlapped the next column instead of
+   wrapping -- caught by direct screenshot inspection). A generous
+   column-width allocation (see absColgroupHtml) keeps the date range
+   on one line in practice at every real width; if a width ever gets
+   tight enough that it doesn't fit, it wraps at the natural word
+   boundary around "→" instead of overflowing into a neighboring
+   column -- never destructive.
+   Badges ARE kept nowrap, scoped to .absTable only (never touching the
+   shared .maBadge default used elsewhere, e.g. Pendências/Auditoria's
+   own .maSituacaoCell .maBadge{white-space:normal} override) -- a
+   badge word breaking mid-word ("ENCE/RRADA") is genuinely illegible,
+   not just compact, so their column gets enough width instead
+   (Gate 8: "badges devem permanecer legíveis"). */
+.absTable .maBadge, .absTable .absStateBadge { white-space: nowrap; }
+/* PM-5F-H3 (Human UAT defect: row-grid integrity): .absActions used to
+   sit directly on the Ações <td> itself, so this rule's own
+   display:flex REPLACED the cell's native display:table-cell --
+   confirmed live (not assumed) via getBoundingClientRect(): every
+   sibling td matched the row's own top/bottom exactly (table-cell
+   participates in the row's normal height/vertical-align algorithm),
+   while the flexed Ações td was 6-7px SHORTER than the row on every
+   row measured, leaving its own background/border-bottom short of the
+   row's true bottom edge -- exactly the "step" in the horizontal
+   separator line the Human's close-up screenshot showed. Fixed by
+   moving this class onto an inner <div> wrapper INSIDE the <td>
+   (matching the mobile-card version of this same class, which already
+   used a <div> wrapper, never a td) -- the <td> itself is native
+   table-cell again, sized like every sibling; only the wrapper div is
+   flex, purely for laying out the two button labels. */
+.absActions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+/* PM-5F-H1: same "legible, never break mid-word" discipline as badges
+   -- "Inativar"/"Arquivar" breaking into "Inati/var" at narrow desktop
+   widths (768px) was caught by direct screenshot inspection. The flex
+   container above already wraps whole BUTTONS onto their own line
+   when needed (flex-wrap:wrap) -- this only stops a single button's
+   own label from breaking internally, which is strictly better: it
+   never causes overflow (a short action label always fits one line
+   once allowed to sit on its own row) and is always legible. */
+.absTable .absActions .modBtnGhost { white-space: nowrap; }
+
+/* PM-5F-H2: responsive column widths (Gate 8/15/18 combined). No
+   single static distribution survived both ends of the 1440-768
+   matrix (see absColgroupHtml's own comment for the full history of
+   rejected attempts) -- the fixed content (badges/date/button labels/
+   the longest real single words in Loja and Motivo) already consumes
+   most of a 766px table on its own, so a distribution generous enough
+   for Analista ausente/Substituto at 1440px starves them at 768px,
+   and a distribution safe at 768px wastes visible space at 1440px.
+   Loja coberta/Período/Motivo/Situação/Status keep the SAME real,
+   measured, viewport-independent minimum at every width (their
+   content does not change with viewport, so their column shouldn't
+   either). Only Ações (which CAN legitimately trade side-by-side
+   buttons for stacked ones, per Gate 14) and the Analista ausente/
+   Substituto split (which can legitimately absorb more wrapping at
+   narrow widths, since real names always have multiple word-break
+   points) actually change between the two tiers. */
+.absColLoja { width: 115px; }   /* real longest single word "BANDEIRANTES" = 87px content + 24px padding */
+col.absColDate { width: 105px; } /* deliberate 2-line date, viewport-independent content */
+.absColMotivo { width: 110px; } /* real longest single word "AFASTAMENTO" = 84px content + 24px padding */
+col.absColSituacao { width: 108px; } /* badge content ~83px + cell padding, viewport-independent */
+col.absColStatus { width: 86px; }    /* badge content ~62px + cell padding, viewport-independent */
+.absColAcoes { width: 145px; }  /* wide desktop: both button labels side by side on one line (proven best density there) */
+.absColAnalista { width: 56%; } /* wide desktop: majority share of whatever the fixed columns leave remaining */
+.absColSubstituto { width: 44%; }
+@media (max-width: 1024px) {
+  /* Narrow desktop: shrink Ações to its single widest button label
+     (stacks to 2 lines when a row needs both -- explicitly acceptable,
+     Gate 14) to free real width back to the name columns, which is
+     the higher-priority legibility need at this tier. */
+  .absColAcoes { width: 85px; }
+  .absColAnalista { width: 58%; }
+  .absColSubstituto { width: 42%; }
+}
+.absMobileCard .absActions { margin-top: var(--space-2); }
+.absStateBadge { display: inline-block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; padding: 2px 8px; border-radius: 999px; }
+.absStatePASSADA { background: var(--mod-surface-muted, #eee); color: var(--color-text-secondary); }
+.absStateEM_CURSO { background: var(--color-accent-soft, #e6f0ff); color: var(--color-accent-primary, #1a56db); }
+.absStateFUTURA { background: #fff4e0; color: #8a5a00; }
+
+/* ==================== Mudança de Loja - Vendedores (Painel Master Phase PM-5F) ==================== */
+.scCreateCard { max-width: 520px; margin-bottom: var(--space-3); display: flex; flex-direction: column; gap: 6px; }
+.scCreateCard label { font-size: 12px; color: var(--color-text-secondary); margin-top: 4px; }
+.scCreateCard input[type="text"], .scCreateCard input[type="date"], .scCreateCard select { padding: 6px 8px; border: 1px solid var(--mod-border-strong); border-radius: var(--radius-sm); background: var(--color-canvas); color: var(--color-text-primary); }
+.scChainCard, .scRetroWarn { border-left: 3px solid var(--color-accent-primary, #1a56db); padding-left: 8px; }
+
+/* PM-5F-SC-H1 (Human UAT: horizontal scrollbar + column overlap --
+   MASTER_STORE_CHANGE_HUMAN_UAT_FAILED_HORIZONTAL_OVERFLOW). Root cause
+   chain, confirmed live (not assumed):
+   1) the shared .modTable td rule (module-system.css) sets
+      white-space:nowrap on every cell, and this table never overrode
+      it -- with table-layout left at its implicit "auto" (no colgroup,
+      no explicit widths), 7 real columns of un-wrappable content
+      (Vendedor+CPF, two store names, two date ranges, two department
+      names, 3 action-button labels) forced the table to its full
+      nowrap intrinsic width -- measured live at exactly 2627px against
+      the Gate 7 fixture, IDENTICAL at every desktop width from 1440
+      down to 768 (i.e. never responsive at all). .modTableWrap's own
+      overflow-x:auto silently absorbed that into a real, internal
+      horizontal scrollbar -- document.documentElement itself never
+      overflowed (confirmed 0 at every width), which is exactly the
+      "wrapper contains overflow that documentElement-only checks miss"
+      defect class this engagement already hardened Férias/Ausências'
+      own tests against (PM-5F-H1).
+   2) module-system.css also gives every .modTable's FIRST column
+      position:sticky;left:0 (a "frozen first column" affordance) --
+      harmless while the table never actually scrolls, but as soon as
+      (1) makes the wrapper genuinely scrollable, scrolling it pins the
+      Vendedor cell's rendered box at the wrapper's left edge while
+      every OTHER column's cell slides left underneath/behind it --
+      confirmed live: scrolling the wrapper by 250px moved the Loja
+      cell's own left edge to x=385.6 while the STILL-STICKY Vendedor
+      cell's own right edge sat at x=635.6, a real ~250px visual
+      overlap (screenshot: STORE_CHANGE_BEFORE_HUMAN_WIDTH.png /
+      STICKY_OVERLAP_PROOF_BEFORE.png) -- this is exactly the "Vendedor
+      invade Loja origem → destino" the Human reported, and it can only
+      ever happen when (1)'s overflow exists in the first place, so
+      fixing (1) structurally also eliminates (2) (no scroll ever
+      possible in TABLE mode => the sticky offset is always 0). A
+      second, defense-in-depth override below neutralizes the sticky
+      behavior for this table specifically regardless, using the exact
+      same static-position pattern score.css already established for
+      this identical shared-rule problem in the Score module
+      (score.css: ".scPage .modTable ... td:first-child
+      {position:static;background:none}").
+   3) the Ações <td> carried display:flex DIRECTLY on the <td> itself
+      (via "adminActions scActions") -- the exact PM-5F-H3 anti-pattern,
+      never actually fixed here since this table predates that phase.
+      Fixed identically: the flex class now lives on an inner <div>
+      wrapper inside the <td> (scRowHtml), the <td> keeps only the
+      inert "adminActions" class and its native table-cell layout.
+   NOTE (Gate 29 design-system debt): this table's own class name,
+   ".scTable", collides verbatim with an UNRELATED, pre-existing
+   ".scTable" in score.css (Score/Coparticipado's own "sc" prefix,
+   loaded earlier in index.html's stylesheet order) -- confirmed by
+   direct grep, not assumed. Renamed this table's own selectors to
+   ".scStoreTable"/".scStoreDesktopOnly"/".scStoreMobileOnly" (scoped,
+   surgical rename of only the 3 colliding class strings on the
+   <table>/wrapper elements in shell-admin.js -- scActions/scRow/
+   scMobileCard/SC_VM/SC_PROVIDER etc. are untouched, no collision
+   exists for those) to stop relying on score.css never being loaded
+   alongside this page (it already is, per index.html's own <link>
+   order) for correctness. A full "sc" prefix disambiguation across
+   both modules is a real but separate refactor -- NOT done this round
+   (out of scope, Gate 29 explicitly forbids a wide refactor here). */
+.scStoreTable { table-layout: fixed; }
+.scStoreTable th, .scStoreTable td { text-align: left; vertical-align: top; white-space: normal; overflow-wrap: break-word; word-break: break-word; }
+.scStoreTable .maBadge { white-space: nowrap; }
+.scStoreTable .scActions .modBtnGhost { white-space: nowrap; }
+/* Defense-in-depth: see root-cause (2) above. Once (1) is fixed this
+   table's wrapper never actually scrolls in TABLE mode, so this has no
+   visible effect either way -- kept anyway so this exact overlap class
+   can never recur even under a future regression of (1). */
+.scStoreTable th:first-child, .scStoreTable td:first-child { position: static; left: auto; background: none; }
+
+/* Column widths: real, measured (getBoundingClientRect against the
+   actual classes/fonts, never guessed), viewport-independent minimums
+   for THIS table's own content -- same discipline as absColLoja/
+   absColMotivo/absColStatus (PM-5F-H2). Vendedor (the one column left
+   with no explicit width) absorbs 100% of whatever the other six
+   don't claim, per the table-layout:fixed spec's single-auto-column
+   rule -- the same "majority share" role absColAnalista/Substituto
+   split between them in Férias/Ausências, here needed by only one
+   column since Loja origem→destino wraps to 2 lines of ONE store name
+   each (not two names side by side), so it gets the SAME real-word
+   budget absColLoja already used (~98px longest word + arrow + 24px
+   cell padding), not double. */
+.scColLoja { width: 135px; }     /* longest real single store word ("BANDEIRANTES") ~98px content + arrow + padding, wraps "ORIGEM →\nDESTINO" */
+.scColPeriodo { width: 110px; }  /* same 2-line date-range shape already proven for absColDate */
+.scColInicio { width: 100px; }   /* "DD/MM/AAAA" wraps above the literal, always-present "(em aberto)" suffix -- neither line ever needs more */
+.scColDept { width: 106px; }     /* longest department enum word "SEMINOVOS" ~78px content + padding */
+.scColBadge, .scColStatus { width: 86px; } /* ATIVO/INATIVO badge, same measured width as absColStatus */
+.scColAcoes { width: 160px; }    /* widest of 3 real button labels, "Editar departamentos" ~135px + padding -- constant at every desktop width, this table's longest single-word-break constraint never relaxes like absColAcoes' did */
+
+.scActions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.scMobileCard .scActions { margin-top: var(--space-2); }
+
+/* Desktop table / mobile card breakpoint -- deliberately its OWN pair
+   (.scStoreDesktopOnly/.scStoreMobileOnly), NOT the shared
+   .maDesktopOnly/.maMobileOnly (767px, Usuários/Acessos/Auditoria) and
+   NOT score.css's own, differently-named .scDesktopOnly/.scMobileOnly
+   (a same-prefix but unrelated pair belonging to the Score module,
+   also 767px -- reusing THAT name would have been the exact same
+   collision class as .scTable above). Measured minimum table width
+   (sum of the 6 fixed columns above, 697px, plus a legible Vendedor
+   minimum of ~160px so a real name can still wrap onto 2-3 words per
+   line without looking broken) is ~857px -- same "own, higher,
+   measured breakpoint" conclusion Pendências Cadastrais already
+   reached for its own, different, wider table (PM-4C.2.1: computed
+   ~850px minimum, chose 900px). Reusing the shared 767px verbatim here
+   would leave the same real dead zone Pendências' own comment
+   describes: the table still active AND still overflowing. */
+.scStoreDesktopOnly { display: block; }
+.scStoreMobileOnly { display: none; }
+@media (max-width: 899px) {
+  .scStoreDesktopOnly { display: none; }
+  .scStoreMobileOnly { display: block; }
+}
+
+/* ==================== Utilização dos Simuladores (Painel Master Phase PM-5H) ====================
+   Responsive breakpoints ported from the real, already-tested V1 CSS
+   (ia-reconciliation-v2-local/index.html) -- same 3-tier collapse
+   strategy (full grid -> hide Loja/Departamento columns behind a
+   mobile meta line -> full stack with data-label pseudo-headers),
+   adapted to this project's own design tokens instead of V1's
+   hardcoded dark colors. READ-ONLY screen: no CRUD affordances. */
+.suBanner { border: 1px solid var(--mod-border-strong); border-radius: var(--radius-sm); padding: 10px 12px; margin: var(--space-2) 0; }
+.suBannerWarn { border-color: rgba(246,196,83,.35); background: rgba(246,196,83,.06); }
+.suBannerOk { border-color: rgba(54,211,153,.28); background: rgba(54,211,153,.05); }
+.suKpiCards { display: grid; grid-template-columns: repeat(5, minmax(120px, 1fr)); gap: var(--space-2); margin-bottom: var(--space-3); }
+@media (max-width: 900px) { .suKpiCards { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 500px) { .suKpiCards { grid-template-columns: repeat(2, 1fr); } }
+.suPresetGroup { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: var(--space-2) 0; }
+.udsCompareGrid { display: grid; grid-template-columns: repeat(2, minmax(220px, 1fr)); gap: 14px; margin: var(--space-3) 0 var(--space-4); }
+.udsCompareCard { background: var(--mod-surface-muted, #151515); border: 1px solid var(--mod-border-strong); border-radius: var(--radius-md); padding: var(--space-3); }
+.udsCompareTitle { font-weight: 700; margin-bottom: 10px; text-transform: uppercase; font-size: 13px; letter-spacing: .04em; }
+.udsCompareRow { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--color-hairline); font-size: 13px; color: var(--color-text-secondary); }
+.udsCompareRow:last-child { border-bottom: 0; }
+@media (max-width: 700px) { .udsCompareGrid { grid-template-columns: 1fr; } }
+.udsList { display: grid; gap: 8px; margin-top: var(--space-3); }
+.udsRow { display: grid; grid-template-columns: 1.6fr .9fr .9fr .7fr .7fr .8fr .9fr 1fr auto; gap: 12px; align-items: center; background: var(--mod-surface-muted, #151515); border: 1px solid var(--mod-border-strong); border-radius: var(--radius-md); padding: 12px 16px; }
+.udsRowHead { background: transparent; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--color-text-secondary); font-weight: 700; padding: 10px 16px; }
+.udsRow .udsName { font-weight: 700; font-size: 14px; }
+.udsRow .udsMetaMobile { display: none; font-size: 12px; color: var(--color-text-secondary); margin-top: 2px; }
+.udsRow .udsColNum { text-align: right; font-weight: 700; }
+.udsRow .udsColAcao { text-align: right; }
+@media (max-width: 900px) {
+  .udsRow { grid-template-columns: 1.6fr .8fr .8fr .8fr .8fr 1fr auto; }
+  .udsRow .udsColLoja, .udsRow .udsColDep { display: none; }
+  .udsRow .udsMetaMobile { display: block; }
+}
+@media (max-width: 640px) {
+  .udsRow { grid-template-columns: 1fr; gap: 6px; }
+  .udsRowHead { display: none; }
+  .udsRow:not(.udsRowHead) .udsCol:not(.udsColLoja):not(.udsColDep) { display: flex; justify-content: space-between; text-align: left; }
+  .udsRow:not(.udsRowHead) .udsCol:not(.udsColLoja):not(.udsColDep)::before { content: attr(data-label); color: var(--color-text-secondary); font-weight: 700; text-transform: uppercase; font-size: 11px; }
+  .udsRow .udsColAcao { text-align: left; }
+  .udsRow .udsColAcao button { width: 100%; }
+}
+.udsNuncaBox { margin-top: var(--space-4); padding-top: var(--space-3); border-top: 1px dashed var(--color-hairline); }
+.udsNuncaHead { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: var(--space-2); }
+.udsNuncaRow { display: grid; grid-template-columns: 1.4fr 1fr 1.4fr; gap: 10px; background: var(--mod-surface-muted, #151515); border: 1px solid var(--mod-border-strong); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 6px; align-items: center; }
+@media (max-width: 760px) { .udsNuncaRow { grid-template-columns: 1fr; gap: 2px; } }
+/* ==================== Histórico de Competências (Painel Master Phase PM-5H) ====================
+   STRICTLY READ-ONLY capability (Gate 4) -- no create/edit/close/
+   reopen/archive action anywhere in this file's markup. Applies the
+   permanent row-grid-integrity lesson from PM-5F-H3/PM-5F-SC-H1/
+   PM-USERS-VISUAL-H1 from the start: table-layout:fixed + <colgroup>
+   with real measured widths, and the Ações cell's flex layout lives on
+   an inner <div> (.hcActions), never on the <td> itself. Desktop
+   table / mobile card breakpoint uses its OWN pair (.hcDesktopOnly/
+   .hcMobileOnly), not the shared .maDesktopOnly/.maMobileOnly (767px)
+   nor any other module's same-prefix pair -- same PM-5F-SC-H1
+   precedent (avoid a same-name collision with an unrelated module;
+   "hc" is not used as a class prefix anywhere else in this codebase,
+   confirmed by grep before choosing it). */
+.hcDesktopOnly { display: block; }
+.hcMobileOnly { display: none; }
+@media (max-width: 900px) {
+  .hcDesktopOnly { display: none; }
+  .hcMobileOnly { display: block; }
+}
+
+.hcTable, .hcSnapshotTable { table-layout: fixed; }
+.hcTable th, .hcTable td, .hcSnapshotTable th, .hcSnapshotTable td { text-align: left; vertical-align: top; white-space: normal; overflow-wrap: break-word; word-break: break-word; }
+.hcTable .maBadge, .hcSnapshotTable .maBadge { white-space: nowrap; }
+.hcTable .hcActions .modBtnGhost { white-space: nowrap; }
+.hcTable th:first-child, .hcTable td:first-child,
+.hcSnapshotTable th:first-child, .hcSnapshotTable td:first-child { position: static; left: auto; background: none; }
+
+/* Column widths: real measured minimums for this table's own content
+   (same discipline as absColLoja/scColLoja) -- longest single badge
+   word ("REABERTO"), a full date+time value ("DD/MM/AAAA HH:MM"), and
+   the widest of the 2 real action labels ("Exportando..."). Competência
+   (name+period range) and Resumo absorb the remaining width. */
+.hcColVersao { width: 64px; }
+.hcColStatus { width: 96px; }
+.hcColData { width: 150px; }
+.hcColResumo { width: 170px; }
+.hcColAcoes { width: 170px; }
+
+.hcColNome { width: 30%; }
+.hcColLoja { width: 13%; }
+.hcColDept { width: 13%; }
+.hcColNum { width: 8%; text-align: right; }
+.hcColMoney { width: 12%; text-align: right; }
+.hcSnapshotTable td:nth-child(4), .hcSnapshotTable td:nth-child(5),
+.hcSnapshotTable td:nth-child(6), .hcSnapshotTable td:nth-child(7), .hcSnapshotTable td:nth-child(8) { text-align: right; font-variant-numeric: tabular-nums; }
+
+.hcActions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.hcMobileCard .hcActions, .hcSnapshotCard { margin-top: var(--space-2); }
+/* PM-6B: RH/DP export / print inline error -- forces its own line inside
+   the flex-wrap .hcActions row (never stretches the row's own width) and
+   overrides .modErrorState's default centered/large-padding treatment,
+   which was sized for a full standalone panel, not a compact action
+   strip. */
+.hcInlineError { flex-basis: 100%; width: 100%; text-align: left; padding: 8px 10px; margin-top: 2px; }
+.hcInlineError .modStateTitle { margin-bottom: 2px; }
+
+.hcDetailHead { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; margin-bottom: var(--space-2); }
+.hcDetailHead h2, .hcDetailHead h3 { margin: 0; }
+.hcIntegrityWarn { border-left: 3px solid var(--mod-critical, #c22); margin: var(--space-2) 0; }
+
+/* ==================== Fechamento de Competência (Painel Master Phase PM-5J) ====================
+   The only WRITE-capable screen in this whole file that can create a
+   real, immutable financial snapshot. Reuses .hcDesktopOnly/
+   .hcMobileOnly (900px breakpoint, Histórico) for its own preview
+   table -- same real content shape (person/profile/loja/status/
+   commission columns), no need for a third breakpoint pair. Applies
+   the same row-grid-integrity discipline from the start: table-
+   layout:fixed + <colgroup>, no display:flex directly on any <td>. */
+.clPreviewTable { table-layout: fixed; }
+.clPreviewTable th, .clPreviewTable td { text-align: left; vertical-align: top; white-space: normal; overflow-wrap: break-word; word-break: break-word; }
+.clPreviewTable th:first-child, .clPreviewTable td:first-child { position: static; left: auto; background: none; }
+.clColNome { width: 26%; }
+.clColPerfil { width: 12%; }
+.clColLoja { width: 16%; }
+.clColStatus { width: 16%; }
+.clColNum { width: 8%; text-align: right; }
+.clColMoney { width: 14%; text-align: right; }
+.clPreviewTable td:nth-child(5), .clPreviewTable td:nth-child(6), .clPreviewTable td:nth-child(7) { text-align: right; font-variant-numeric: tabular-nums; }
+
+.fechamentoPreviewGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: var(--space-2); margin: var(--mod-space-control-gap) 0; }

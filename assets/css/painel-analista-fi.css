@@ -1,0 +1,91 @@
+/* PORTAL-NEXT V2 — Painel do Analista F&I (PA-1 migration).
+   Small, self-contained surface (LOW density, per module-registry.json).
+   Every value is a var() from design-system-2/tokens.css, same
+   discipline as simuladores.css/coparticipado.css. Status is
+   communicated by text + icon, never color alone (Gate 18). */
+
+.paPage { max-width: 900px; }
+
+.paBody { margin-top: var(--space-4); }
+
+.paHero { margin-bottom: var(--space-4); }
+.paHeroNote { font-size: 12.5px; color: var(--color-text-muted); margin: var(--space-2) 0 0; max-width: 60ch; }
+
+.paStatusPill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-hairline-strong);
+  background: var(--color-surface-2);
+  color: var(--color-text-primary);
+  margin-top: var(--space-2);
+}
+.paStatusONLINE { border-color: rgba(58, 201, 120, .45); background: rgba(58, 201, 120, .1); }
+.paStatusOCUPADO { border-color: rgba(230, 180, 40, .45); background: rgba(230, 180, 40, .1); }
+.paStatusALMOCO { border-color: rgba(238, 150, 75, .45); background: rgba(238, 150, 75, .1); }
+.paStatusFERIAS { border-color: rgba(90, 170, 238, .45); background: rgba(90, 170, 238, .1); }
+.paStatusOFFLINE { border-color: var(--color-hairline-strong); background: var(--color-surface-2); color: var(--color-text-muted); }
+
+/* ---------- status change buttons: comfortable tap targets, wraps
+   naturally at any width -- no forced desktop table, no horizontal
+   scroll (PORTAL_V2_ZERO_HORIZONTAL_SCROLL_GLOBAL_RULE). ---------- */
+.paStatusGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--space-2);
+  margin: var(--space-4) 0;
+}
+.paStatusBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 48px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-hairline-strong);
+  background: var(--color-surface-2);
+  color: var(--color-text-secondary);
+  font-family: var(--font-ui);
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.paStatusBtn:hover:not(:disabled) { border-color: rgba(238, 75, 87, .4); color: var(--color-text-primary); }
+.paStatusBtn.active { background: rgba(238, 75, 87, .14); border-color: var(--color-accent-primary); color: #ffecec; }
+.paStatusBtn:disabled { opacity: .55; cursor: default; }
+.paStatusBtn:focus-visible { outline: 2px solid var(--color-accent-primary); outline-offset: 2px; }
+.paStatusIcon { font-size: 16px; }
+
+/* ---------- summary cards: stacks to 1 column on narrow viewports via
+   the same auto-fit pattern, no fixed 3-up grid forcing overflow. ---------- */
+.paCards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+.paCard {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+}
+.paCardValue { font-family: var(--font-mono); font-size: 17px; font-variant-numeric: tabular-nums; margin: 6px 0 0; }
+
+.paMsg { margin-top: var(--space-3); font-size: 13px; min-height: 1em; }
+.paMsg.ok { color: #a5d6a7; }
+.paMsg.err { color: #ef9a9a; }
+
+.paEmptyState, .paErrorState {
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--color-text-muted);
+  border: 1px dashed var(--color-hairline-strong);
+  border-radius: var(--radius-sm);
+}

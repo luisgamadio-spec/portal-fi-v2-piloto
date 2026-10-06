@@ -1,0 +1,415 @@
+/* PORTAL-NEXT V2 — Dashbi (Análise Geral do Grupo) module CSS.
+   Visual authority: design-system-2.1/references/data-table.md
+   (APPROVED, same pattern Score/Coparticipado/Gestão use) — no
+   dedicated Approved Reference exists for Dashbi; NORMATIVE
+   COMPLIANCE reported, not VISUAL PARITY (Gate 69/121). Executive
+   surface (Gate 72-74): KPI hierarchy reflects materiality — Grupo/
+   Novos/Seminovos primary KPIs are largest, Model Analysis (HIGH
+   density, Gate 82) gets its own dense region with Ambient Motion
+   OFF. Numeric table headers and values share one right-aligned axis
+   (Gate 77, the PORTAL-NEXT-06.1 lesson) — never per-cell offsets. */
+
+.dbPage { max-width: 1360px; }
+
+/* Wave 3A: page header / fixture banner / filter row+field migrated to
+   assets/css/module-system.css (.modPageHeader/.modTitle/.modSubtitle,
+   .modFixtureBanner, .modFilters/.modField) — dashbi.js's render() no
+   longer emits .dbHeader/.dbFixtureBar/.dbFilters/.dbField. Rules below
+   kept (not deleted) as a documented, confirmed-dead reference, same
+   discipline as other Waves' retired code — 0 remaining reference,
+   verified via grep before this edit. .dbPresetGroup/.dbViewGroup/
+   .dbBtn/.dbBtnActive stay ACTIVE below (segmented-control class
+   rename deferred to a future Wave; JS event-handler toggles still
+   target these exact names). */
+.dbHeader { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; margin-bottom: var(--space-5); }
+.dbHeader h1 { font-family: var(--font-ui); font-weight: 300; font-size: clamp(22px, 2.6vw, 30px); letter-spacing: -.01em; margin: 0; }
+.dbHeader p { color: var(--color-text-secondary); margin: var(--space-1) 0 0; font-size: 13px; }
+
+.dbFixtureBar { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; padding: var(--space-2) var(--space-3); margin-bottom: var(--space-4); border: 1px dashed var(--color-hairline-strong); border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 10.5px; color: var(--color-text-muted); }
+.dbFixtureBar .dbFixtureLabel { text-transform: uppercase; letter-spacing: .06em; color: var(--color-warning); }
+.dbFixtureBar select { background: var(--color-surface-2); border: 1px solid var(--color-hairline-strong); color: var(--color-text-primary); font-family: var(--font-mono); font-size: 11px; padding: 3px var(--space-2); border-radius: var(--radius-sm); }
+.dbFixtureBar select:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+
+.dbFilters { display: flex; align-items: flex-end; gap: var(--space-4); flex-wrap: wrap; margin-bottom: var(--space-4); padding-bottom: var(--space-4); border-bottom: 1px solid var(--color-hairline); }
+.dbField { display: flex; flex-direction: column; gap: var(--space-1); min-width: 160px; }
+.dbField label { color: var(--color-text-muted); font-size: 10.5px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; }
+.dbField select, .dbField input[type="date"] { background: var(--color-surface-2); border: 1px solid var(--color-hairline-strong); color: var(--color-text-primary); font-family: var(--font-ui); font-size: 13px; padding: var(--space-2); border-radius: var(--radius-sm); }
+.dbField select:focus-visible, .dbField input:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+
+.dbPresetGroup, .dbViewGroup { display: flex; gap: var(--space-1); flex-wrap: wrap; }
+.dbBtn { background: none; border: 1px solid var(--color-hairline-strong); color: var(--color-text-secondary); font-family: var(--font-ui); font-size: 12.5px; font-weight: 500; padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); cursor: pointer; }
+.dbBtn:hover:not(.dbBtnActive) { color: var(--color-text-primary); }
+.dbBtn:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+.dbBtnActive { color: var(--color-canvas); background: var(--color-text-primary); border-color: var(--color-text-primary); }
+
+.dbFechamentoBar { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-4); }
+
+/* Selective analytical navigation (PORTAL-NEXT-07.2) — mirrors production's
+   own single-active-region tab switcher (showTab(): exactly one of
+   share/modelos/ranking/novosLoja visible at a time) with a compact Red
+   Precision treatment reusing the existing .dbBtn segmented-control
+   grammar (already used for Visão/Período), not a new tabs component —
+   no dedicated Design System tabs pattern exists to authorize one. Plain
+   buttons, not an ARIA tablist (no arrow-key semantics implemented, so
+   none are claimed). */
+/* FC-1.1, CHANGE-03 (Human UAT): #dbSubnav is a static shell slot between
+   the module header and the filters (assets/js/dashbi.js's pageShellHtml),
+   not inside #dbPanel's own rebuilt content -- reachable without scrolling
+   past KPIs/tables. .dbModeGroup itself is unchanged (still flex-wrap for
+   narrow widths, Gate 25), only its border flips from top to bottom since
+   it now separates FROM the content below it, not from content above. */
+.dbSubnav:empty { display: none; }
+.dbSubnav { margin-bottom: var(--space-4); }
+.dbModeGroup { display: flex; gap: var(--space-1); flex-wrap: wrap; padding-bottom: var(--space-2); margin: 0; border-top: none; border-bottom: 1px solid var(--color-hairline); }
+.dbModeBtn { position: relative; }
+.dbModeBtn.dbBtnActive::after { content: ""; position: absolute; left: var(--space-2); right: var(--space-2); bottom: -7px; height: 2px; background: var(--color-accent-primary); }
+.dbModeHint { padding: var(--space-4) 0; }
+.dbFechamentoBar .dbMuted { margin: 0; }
+.dbFechamento { display: inline-block; font-family: var(--font-mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em; color: var(--color-success); border: 1px solid var(--color-success); border-radius: var(--radius-sm); padding: 2px 7px; flex-shrink: 0; }
+
+.dbBlockedNotice { border: 1px solid var(--color-critical); border-radius: var(--radius-md); padding: var(--space-4); color: var(--color-critical); font-size: 13px; margin-bottom: var(--space-4); }
+.dbBlockedNotice b { color: var(--color-text-primary); }
+
+.dbPage h2 { font-family: var(--font-ui); font-weight: 400; font-size: 17px; margin: var(--space-6) 0 var(--space-3); }
+.dbPage h2:first-of-type { margin-top: 0; }
+.dbMuted { color: var(--color-text-muted); font-size: 12px; margin: 0 0 var(--space-3); }
+/* FC-2 (GAP-004): discoverable-but-not-dominant export action, reusing the
+   existing .dbBtn segmented-control look rather than a new visual language. */
+.dbExportBar { display: flex; align-items: center; gap: var(--space-3); margin: 0 0 var(--space-3); flex-wrap: wrap; }
+.dbExportStatus { margin: 0; }
+.dbExportResumoBtn:disabled { opacity: .55; cursor: default; }
+.dbDiagJson { font-family: var(--font-mono); overflow-wrap: anywhere; }
+
+/* Wave 3A: the top-tier KPI grid (Vendas/Financiamentos/Share/Produção
+   Total/Receita Total) migrated to module-system.css's
+   .modKpiGrid/.modKpiCard(+Success/Critical/Info modifiers) — same
+   visual result (verified via screenshot), dbKpiGridPrimary/
+   dbKpiCardPrimary/dbKpiCardShare/dbShareOk/dbShareBaixa/
+   dbKpiCardReceitaTotal below are confirmed dead (0 reference in
+   dashbi.js, kept as documented reference, not deleted). */
+.dbKpiGridPrimary { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--space-3); margin-bottom: var(--space-3); }
+.dbKpiCardPrimary { border: 1px solid var(--color-hairline); border-radius: var(--radius-md); padding: var(--space-4); }
+.dbKpiCardPrimary .dbK { color: var(--color-text-muted); font-size: 10.5px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; }
+.dbKpiCardPrimary .dbV { font-family: var(--font-mono); font-size: 24px; font-weight: 500; margin-top: var(--space-1); font-variant-numeric: tabular-nums; }
+.dbKpiCardPrimary .dbHint { color: var(--color-text-muted); font-size: 11px; margin-top: 2px; }
+
+/* PORTAL-NEXT-07.5 — Share and Receita Total get distinct attention
+   treatment (Gate 13/14), each identifiable WITHOUT relying on color
+   alone: Share reads via a LEFT border stripe + a same-hue value/status
+   caption (reuses the already-approved Penetração threshold, Gate 15 —
+   docs/DASHBI-KPI-CONTRACT.md, v<0.40); Receita Total reads via a TOP
+   border stripe + bold weight + --color-info (a financial/value hue that
+   is neither a status semantic (success/warning/critical) nor
+   --color-accent-primary, which the token file itself reserves for
+   interactive/selection state — see
+   docs/DS-CHANGE-PROPOSAL-RECEITA-TOTAL-EMPHASIS-01.md for why no exact
+   token authority existed and this is a provisional, documented reuse).
+   Position (left vs top) + hue family (status vs info) + weight keep the
+   two distinguishable from each other and from the plain KPI cards
+   around them at a glance, not just by color. */
+.dbKpiCardShare { border-left-width: 3px; }
+.dbKpiCardShare.dbShareOk { border-left-color: var(--color-success); }
+.dbKpiCardShare.dbShareOk .dbV { color: var(--color-success); }
+.dbKpiCardShare.dbShareBaixa { border-left-color: var(--color-critical); }
+.dbKpiCardShare.dbShareBaixa .dbV { color: var(--color-critical); }
+
+.dbKpiCardReceitaTotal { border-top-width: 3px; border-top-color: var(--color-info); }
+.dbKpiCardReceitaTotal .dbV { color: var(--color-info); font-weight: 700; }
+
+.dbKpiDetailToggleWrap { margin: 0 0 var(--space-4); }
+.dbKpiDetailPanel { border: 1px solid var(--color-hairline); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); background: var(--color-surface-2); margin: 0 0 var(--space-4); }
+
+/* FC-1.1 (Human UAT revision, GAP-001 presentation) -- previous value +
+   direction arrow, replacing FC-1's percent-delta badge (not approved).
+   Previous value itself stays muted/secondary (Gate 6, this Wave's brief:
+   "não transformar o valor anterior inteiro em elemento visual
+   dominante" -- the current value above/beside it remains the
+   protagonist); only the ARROW carries the up/down/flat color, reusing
+   the same success/critical hue family as the Share card above (Gate 18:
+   a pure math direction, not a performance judgment). Percent text and
+   the "Anterior:" label are gone by design (Gate 3) -- visually. Gate 29:
+   assistive tech still gets the equivalent context via .srOnly, never
+   shown visually. */
+.dbPrevValue { display: inline-flex; align-items: baseline; gap: 4px; margin-left: 5px; font-family: var(--font-mono); font-size: 11px; font-variant-numeric: tabular-nums; color: var(--color-text-muted); }
+.dbPrevValueShort { font-size: 10px; }
+.dbPrevValueNA { font-weight: 600; }
+.dbPrevArrow { font-weight: 700; }
+.dbPrevArrowUp { color: var(--color-success); }
+.dbPrevArrowDown { color: var(--color-critical); }
+.dbPrevArrowFlat { color: var(--color-text-muted); }
+.dbKpiCompare { margin-top: var(--space-1); display: flex; align-items: baseline; gap: var(--space-2); flex-wrap: wrap; }
+/* Visually hidden but available to assistive tech (Gate 29) -- standard
+   sr-only clip pattern, no dependency on any utility framework. */
+.srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+/* FC-1.2 (Human UAT DEFECT A) -- table/model numeric comparison cells.
+   Grid, not the KPI cards' inline-flex (.dbPrevValue, kept above,
+   unchanged, exempt per Gate 23): CURRENT (row 1) spans both columns;
+   PREVIOUS NUMBER (row 2, column 1) lands on the exact same right edge as
+   CURRENT because both are justify-self:end within the same first column
+   -- the ARROW (row 2, column 2) sits outside that shared edge and can
+   never shift the numbers (Gate 20). white-space:nowrap on both number
+   rows stops currency values from wrapping into awkward fragments
+   (Gate 27) -- the table's own overflow-x:auto (.dbTableWrap) is the
+   fallback for genuinely insufficient width, not mid-number breaking. */
+/* grid-column:1 on BOTH current and previous (not 1/-1 spanning both
+   columns) is what makes them share the same right edge: column 1 is
+   sized to max-content across everything placed in it, so it auto-widens
+   to fit whichever of the two numbers is wider, and both then right-align
+   (justify-self:end) to that SAME column's right edge. Column 2 exists
+   only for the arrow -- it stays empty on the current row by construction
+   (nothing is ever placed in it there), never affecting column 1's edge. */
+.dbNumCompare { display: inline-grid; grid-template-columns: max-content max-content; column-gap: 4px; justify-content: end; }
+.dbNumCurrent { grid-column: 1; justify-self: end; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.dbPrevNum { grid-column: 1; justify-self: end; font-family: var(--font-mono); font-size: 11px; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--color-text-muted); }
+.dbNumCompare .dbPrevValueNA { grid-column: 1; justify-self: end; font-family: var(--font-mono); font-size: 11px; color: var(--color-text-muted); font-weight: 600; }
+.dbNumCompare .dbPrevArrow { grid-column: 2; justify-self: start; }
+/* Gate 20/25 (responsive): the previous row occupies its own compact
+   secondary line, not inline with the current value, so it never forces
+   a cell to overflow at 390px -- .dbNumCompare is already 2 grid rows by
+   construction (dbNumCurrent + dbPrevNum/dbPrevArrow), this just confirms
+   the containing cell doesn't force it back onto one line. */
+.dbTable .dbNumCol .dbNumCompare, .dbMobileValue .dbNumCompare { display: inline-grid; }
+.dbFamilyMetricBox .dbV .dbPrevValue { display: flex; margin-top: 2px; margin-left: 0; font-size: 10px; }
+
+.dbPlanGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: var(--space-2); margin-bottom: var(--space-2); }
+.dbPlanCard { border: 1px solid var(--color-hairline); border-radius: var(--radius-sm); padding: var(--space-3); border-left: 3px solid var(--color-hairline-strong); }
+.dbPlanCard .dbK { font-size: 11px; font-weight: 600; letter-spacing: .03em; }
+.dbPlanCard .dbV { font-family: var(--font-mono); font-size: 18px; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.dbPlanCard.planSubsidiado { border-left-color: var(--color-success); }
+.dbPlanCard.planReversao { border-left-color: var(--color-warning); }
+.dbPlanCard.planCoparticipado { border-left-color: var(--color-accent-primary); }
+.dbPlanCard.planBalao { border-left-color: var(--color-info); }
+.dbPlanCard.planLinear { border-left-color: var(--color-text-muted); }
+
+.dbTableWrap { overflow-x: auto; border: 1px solid var(--color-hairline); border-radius: var(--radius-md); margin-bottom: var(--space-4); }
+.dbTable { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.dbTable thead th { text-align: left; font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--color-text-muted); font-weight: 500; padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--color-hairline-strong); white-space: nowrap; }
+.dbTable td { padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--color-hairline); white-space: nowrap; }
+.dbTable tbody tr:last-child td { border-bottom: none; }
+.dbTable tbody tr:hover td { background: rgba(255,255,255,.028); }
+.dbTable .dbNumCol { font-family: var(--font-mono); text-align: right; font-variant-numeric: tabular-nums; }
+.dbTable thead th:first-child, .dbTable td:first-child { position: sticky; left: 0; background: var(--color-surface-1); }
+.dbTable thead th:first-child { background: var(--color-surface-2); z-index: 1; }
+
+/* Primary + inline detail (PORTAL-NEXT-07.4, global no-horizontal-scroll
+   directive) — replaces PORTAL-NEXT-07.3's grouped wide table, which
+   scrolled horizontally at every viewport including 1920px. Every
+   Dashbi table wide enough to need a scrollbar now shows a compact
+   primary row + a "+ Detalhes" toggle that expands a structured
+   label/value panel directly below that row — no card grid, no modal,
+   no horizontal movement, 0 change to any value or formula. */
+.dbTableExpandable thead th:first-child, .dbTableExpandable tbody td:first-child { position: static; }
+/* Root cause: with the table's default "auto" layout, a browser sizes the
+   whole <table> from the WIDEST cell's min-content across every row —
+   including the colspan'd detail <td>. .dbDetailPanel's grid/flex content
+   reported a min-content width that grew the table past its .dbTableWrap
+   container; the wrap's own overflow-x:auto then silently absorbed that
+   into a hidden component-level scrollbar — a document-level scrollWidth
+   check doesn't catch this, exactly what the no-scroll directive forbids.
+   table-layout:fixed is the fix that actually held up under testing —
+   column widths are set once from the primary row and never re-grown by a
+   later (detail) row, regardless of that row's own content. */
+.dbTableExpandable { table-layout: fixed; width: 100%; }
+/* Column headers (e.g. "FINANCIAMENTOS") are long uppercase mono-font
+   labels — under fixed layout's even default column division they don't
+   always fit one line either; the same overflow-into-scrollWidth issue as
+   the toggle button applies. Wrapping the label is the same fix, applied
+   to headers instead of body cells (data-table.md's own header style is
+   already uppercase/letter-spaced, unaffected by allowing a second line). */
+.dbTableExpandable thead th,
+.dbTableExpandable > tbody > tr:not(.dbDetailRow) > td { white-space: normal; overflow-wrap: break-word; word-break: break-word; }
+.dbTableWrapText { table-layout: fixed; width: 100%; }
+.dbTableWrapText td { white-space: normal; overflow-wrap: break-word; }
+/* No explicit width + white-space:normal (not nowrap) on both the cell and
+   the button: under table-layout:fixed, a narrow fixed-layout column still
+   lets its content overflow the cell's box visually if that content can't
+   wrap — that ink overflow bled into .dbTableWrap's scrollWidth the same
+   way the original bug did, just smaller (confirmed empirically: fixing
+   the detail-panel blowout alone left a ~28px residual from exactly this).
+   Letting the button's own text wrap removes that last source. */
+/* Giving the toggle column a guaranteed FIXED pixel width (not a share of
+   the auto-divided remainder) is what finally made this exact: any %-based
+   or even-share width is one sub-pixel rounding step away from being
+   slightly too small for "+ Detalhes"/"− Detalhes" at some viewport, which
+   then bleeds a few px of ink overflow into .dbTableWrap's scrollWidth —
+   confirmed repeatedly across several narrower attempts. A fixed px width
+   sidesteps that arithmetic entirely, at the cost of every table reserving
+   the same column width for its toggle regardless of its own column count. */
+.dbTableExpandable thead th:last-child { width: 86px; }
+/* Identity column (Modelo/Loja/Vendedor/Família/#+Nome) gets a floor share
+   too, otherwise it wraps character-by-character on narrow viewports once
+   the remaining numeric+toggle columns claim their own width — real names
+   like "ALPHAVILLE" or "MARIANA ALVES COSTA" need more than an even 1/N
+   split. This is a floor (min-width via width on a fixed-layout column),
+   not the earlier attempt's rigid 30% that itself caused a different
+   overflow when combined with the (since-fixed) toggle/header bugs. */
+.dbTableExpandable thead th:first-child { width: 34%; }
+
+/* FC-1.3 (DASHBI_ANALYTICAL_TABLE_NUMERIC_READABILITY_DEFECT) --------------
+   Two distinct problems, both from the same root: .dbTableExpandable's own
+   blanket white-space:normal/overflow-wrap:break-word/word-break:break-word
+   above (needed for long text like Modelo/Loja names) also reached NUMERIC
+   cells, since none of them ever re-asserted their own values, AND every
+   numeric column shared an even 1/N split with count/percent columns
+   regardless of how much wider a formatted BRL value actually is.
+
+   1) Numeric atomicity: word-break/overflow-wrap ARE inherited properties,
+      so a money span nested inside a broken-word td (or one that only sets
+      white-space:nowrap, as .dbNumCompare's spans already did from FC-1.2)
+      still inherited word-break:break-word from that ancestor -- browsers
+      honor break-word even under a descendant's own white-space:nowrap in
+      practice, which is exactly how "R$ 755.200" became "R$ 755.20"+"0" on
+      a second line in the human's Ranking screenshot. Fixing word-break/
+      overflow-wrap back to keep-all/normal at the .dbNumCol td level lets
+      every descendant (plain text, .dbNumCompare's spans, anything else)
+      inherit the CORRECT value instead. 3 classes here (.dbTable
+      .dbTableExpandable td.dbNumCol) intentionally out-specifies the
+      2-class rule above; order in the file is a second, redundant
+      safeguard for engines that tie-break differently. */
+.dbTable.dbTableExpandable td.dbNumCol {
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: keep-all;
+}
+
+/* 2) Column-type width classes (Gate 10): applied to <th> -- table-layout:
+   fixed reads column widths from the header row, so these are what
+   actually give Produção/Receita Total/Ticket Médio enough room to stop
+   colliding with their neighbors, instead of an even split with Vendas/
+   Financiamentos/Share. Each table that uses these also gets an explicit
+   min-width below (summed from exactly these numbers) so table-layout:
+   fixed's own width:100% never scales them back down below what a BRL
+   value actually needs -- when the viewport is too narrow for that
+   min-width, .dbTableWrap's existing overflow-x:auto scrolls the TABLE
+   only (Gate 14/15), never the page. */
+/* Qualified with .dbTableExpandable thead th (not standalone classes):
+   .dbTableExpandable thead th:first-child{width:34%} above has specificity
+   (0,2,2) (.dbTableExpandable + :first-child, 2 elements) -- a standalone
+   ".dbColRank{width:40px}" is only (0,1,0) and silently lost to it (found
+   empirically: "#" was still rendering at 34%/446px, starving "Nome" down
+   to 194px, which then wrapped to multiple lines and inflated the whole
+   row's height). Repeating the same ancestor context here matches that
+   specificity exactly; being declared AFTER the :first-child rule wins the
+   tie via normal cascade order, same safeguard reasoning as the numeric-
+   atomicity rule above. */
+.dbTableExpandable thead th.dbColRank { width: 40px; }
+.dbTableExpandable thead th.dbColName { width: 170px; }
+.dbTableExpandable thead th.dbColCount { width: 72px; }
+.dbTableExpandable thead th.dbColPercent { width: 82px; }
+.dbTableExpandable thead th.dbColMoney { width: 126px; }
+/* Loja (storeTableHtml): name+2count+1pct+2money+toggle. */
+.dbTableLoja { min-width: 734px; }
+/* Ranking: rank+name+2count+1pct+2money+toggle -- one column wider than
+   Loja (the rank column), which is also why the shared thead th:first-
+   child{width:34%} above was wrong here (it targeted "#", not "Nome"). */
+.dbTableRanking { min-width: 774px; }
+/* Modelos primary row: name+2count+2pct+3money+toggle. */
+.dbTableModelos { min-width: 942px; }
+
+.dbDetailToggleCell { white-space: normal; }
+.dbDetailToggle { box-sizing: border-box; max-width: 100%; background: none; border: 1px solid var(--color-hairline-strong); color: var(--color-text-secondary); font-family: var(--font-mono); font-size: 10.5px; padding: 3px 4px; border-radius: var(--radius-sm); cursor: pointer; white-space: normal; }
+.dbDetailToggle:hover { color: var(--color-text-primary); border-color: var(--color-text-secondary); }
+.dbDetailToggle:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+.dbDetailToggle[aria-expanded="true"] { color: var(--color-canvas); background: var(--color-text-primary); border-color: var(--color-text-primary); font-weight: 700; }
+.dbTable tr.dbDetailRow td { background: var(--color-surface-2); padding: var(--space-3); border-bottom: 1px solid var(--color-hairline); white-space: normal; }
+.dbDetailPanel { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 160px)); gap: var(--space-4); }
+.dbDetailGroupLabel { color: var(--color-text-muted); font-size: 9.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; margin-bottom: var(--space-2); padding-bottom: 3px; border-bottom: 1px solid var(--color-hairline); }
+.dbDetailGroupItems { display: flex; flex-direction: column; gap: 5px; }
+.dbDetailItem { display: flex; justify-content: space-between; gap: var(--space-3); font-size: 12.5px; }
+.dbDetailK { color: var(--color-text-muted); }
+.dbDetailV { font-family: var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; }
+
+@media (max-width: 767px) {
+  .dbDesktopCol { display: none; }
+}
+
+/* PORTAL-NEXT-07.6.4 — human UAT rejected transforming the desktop
+   <table> into a mobile layout three separate times (07.6, 07.6.2,
+   07.6.3-retested) — even after the last version was proven correct by
+   every computed-style/DOM check available, the human's actual browser
+   result is authoritative regardless. Strategy changed: two independent
+   renderers (dashbi.js's dbMobileCard()/dbMobileListHtml(), fed by the
+   same computed row data as the desktop table, no recalculation) for
+   store/seller/Ranking/Novos por Loja. Exactly one of
+   .dbDesktopOnly/.dbMobileOnly is visible at a time; Model Analysis's
+   own tables (frozen, Gate 32) don't use this component and are
+   untouched. <=767px uses the non-table mobile renderer; 768px+ keeps
+   the plain table (verified readable there). */
+.dbDesktopOnly { display: block; }
+.dbMobileOnly { display: none; }
+
+@media (max-width: 767px) {
+  .dbDesktopOnly { display: none; }
+  .dbMobileOnly { display: block; }
+}
+
+/* ---------- mobile record cards (plain divs — no table/tr/td/th/col
+   anywhere in this block, so no legacy column geometry can ever reach
+   them again) ---------- */
+.dbMobileCard {
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  margin-bottom: var(--space-3);
+}
+.dbMobileCard:last-child { margin-bottom: 0; }
+.dbMobileCardTotal { border-color: var(--color-hairline-strong); font-weight: 600; }
+.dbMobileIdentity { font-size: 15px; font-weight: 600; color: var(--color-text-primary); overflow-wrap: break-word; }
+.dbMobileSub { font-size: 11px; color: var(--color-text-muted); margin-top: 1px; }
+.dbMobileFieldGrid { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); margin-top: var(--space-3); }
+.dbMobileField { flex-basis: 100%; }
+.dbMobileFieldPair { flex-basis: calc(50% - var(--space-2)); }
+.dbMobileFieldEmph { padding: var(--space-2); border: 1px solid var(--color-hairline-strong); border-radius: var(--radius-sm); }
+.dbMobileLabel { font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; letter-spacing: .05em; color: var(--color-text-muted); margin-bottom: 2px; }
+.dbMobileValue { font-family: var(--font-mono); font-size: 14px; font-variant-numeric: tabular-nums; overflow-wrap: break-word; }
+.dbMobileCard > .dbDetailToggle { display: block; width: 100%; margin-top: var(--space-3); }
+.dbMobileCard > .dbDetailPanel { margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--color-hairline); }
+
+.dbFamilyMetricGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--space-2); margin: var(--space-3) 0 var(--space-4); }
+.dbFamilyMetricBox { border: 1px solid var(--color-hairline); border-radius: var(--radius-sm); padding: var(--space-2) var(--space-3); }
+.dbFamilyMetricBox .dbK { color: var(--color-text-muted); font-size: 9.5px; font-weight: 500; text-transform: uppercase; letter-spacing: .05em; }
+.dbFamilyMetricBox .dbV { font-family: var(--font-mono); font-size: 15px; margin-top: 2px; font-variant-numeric: tabular-nums; }
+
+/* Model Analysis — HIGH density, its own visual region (Gate 81-82) */
+.dbModelSection { border: 1px solid var(--color-hairline-strong); border-radius: var(--radius-md); padding: var(--space-4); margin-bottom: var(--space-5); }
+.dbEntradaGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--space-2); margin: var(--space-3) 0; }
+.dbEntradaCard { border: 1px solid var(--color-hairline); border-radius: var(--radius-sm); padding: var(--space-3); border-left: 2px solid var(--color-accent-primary); }
+.dbEntradaCard .dbK { color: var(--color-text-muted); font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: .05em; }
+.dbEntradaCard .dbV { font-family: var(--font-mono); font-size: 17px; margin-top: 2px; font-variant-numeric: tabular-nums; }
+
+.dbPenetracaoBaixa { color: var(--color-critical); }
+.dbPenetracaoOk { color: var(--color-success); }
+
+/* Vehicle selector (Análise por Modelos, Novos only) — compact family
+   picker built from the real production assets (origin/main
+   VEHICLE_IMAGES, resized). Image + name + accent, no catalog/card
+   styling: no shadow, no glow, no gradient. Selected state is signaled
+   by border weight + a check glyph + bold text, never color alone. */
+.dbVehicleSelector { display: flex; gap: var(--space-2); flex-wrap: wrap; margin: var(--space-3) 0 var(--space-4); }
+.dbVehicleCard { display: flex; flex-direction: column; align-items: center; gap: var(--space-1); width: 132px; background: none; border: 1px solid var(--color-hairline); border-radius: var(--radius-sm); padding: var(--space-2); cursor: pointer; font-family: var(--font-ui); }
+.dbVehicleCard:hover:not(.dbVehicleCardActive) { border-color: var(--color-hairline-strong); }
+.dbVehicleCard:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+.dbVehicleCardActive { border-color: var(--color-accent-primary); border-width: 2px; padding: calc(var(--space-2) - 1px); }
+.dbVehicleImgWrap { width: 100%; height: 60px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.dbVehicleImgWrap img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.dbVehicleName { font-size: 11.5px; font-weight: 500; letter-spacing: .02em; text-align: center; color: var(--color-text-secondary); }
+.dbVehicleCardActive .dbVehicleName { color: var(--color-text-primary); font-weight: 700; }
+.dbVehicleCheck { color: var(--color-accent-primary); }
+
+.dbSubHeading { font-family: var(--font-ui); font-weight: 500; font-size: 13px; margin: var(--space-4) 0 var(--space-2); color: var(--color-text-secondary); }
+.dbRankingSection h3:first-of-type, .dbNovosLojaSection h3:first-of-type { margin-top: var(--space-2); }
+.dbTableSub { font-size: 11px; color: var(--color-text-muted); margin-top: 1px; }
+.dbTable tbody tr.dbTotalRow td { font-weight: 700; border-top: 1px solid var(--color-hairline-strong); }
+
+@media (max-width: 480px) {
+  .dbVehicleCard { width: calc(50% - var(--space-2) / 2); }
+}
+
+@media (max-width: 768px) {
+  .dbField { min-width: 130px; }
+  .dbKpiGridPrimary { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 480px) {
+  .dbKpiGridPrimary, .dbPlanGrid, .dbEntradaGrid, .dbFamilyMetricGrid { grid-template-columns: 1fr; }
+}

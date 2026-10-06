@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Verificar e-mail — Portal F&amp;I</title>
+<link rel="stylesheet" href="assets/css/vendor/fonts.css">
+<link rel="stylesheet" href="assets/css/vendor/design-tokens.css">
+<link rel="stylesheet" href="assets/css/conta.css">
+</head>
+<body>
+  <main class="contaCard">
+    <img class="contaLogo" src="assets/images/brabus-logo.png" alt="Grupo Brabus Mitsubishi">
+
+    <div id="loadingState">
+      <h1 class="contaTitulo">Confirmando seu e-mail...</h1>
+      <p class="contaTexto">Aguarde um instante.</p>
+    </div>
+
+    <div id="successState" class="hidden">
+      <h1 class="contaTitulo">E-mail confirmado</h1>
+      <p class="contaTexto">Seu e-mail foi atualizado com sucesso.<br>Por segurança, entre novamente usando seu novo endereço.</p>
+      <a class="contaBotao" href="index.html">Voltar para o login</a>
+    </div>
+
+    <div id="errorState" class="hidden">
+      <h1 class="contaTitulo">Não foi possível concluir</h1>
+      <p class="contaTexto">O link pode ter expirado ou já ter sido utilizado.<br>Volte ao Portal e solicite uma nova verificação.</p>
+      <a class="contaLink" href="index.html">Voltar ao Portal →</a>
+    </div>
+
+    <div class="contaRodape">Desenvolvido por <b>BLISTIQ</b> em 2026.</div>
+  </main>
+
+<script>
+(function(){
+  'use strict';
+  // Porte do verificar-email.html do Portal oficial: página mínima e isolada,
+  // sem supabase-js. O token vem só do FRAGMENT da URL (nunca vai ao servidor
+  // em request HTTP) e sai do endereço/histórico antes de qualquer chamada.
+  const FUNCTION_URL = 'https://yacqlelpzchcotgngwbh.supabase.co/functions/v1/confirm-email-migration';
+
+  function show(id){
+    ['loadingState','successState','errorState'].forEach(function(s){
+      document.getElementById(s).classList.toggle('hidden', s!==id);
+    });
+  }
+
+  const hash = location.hash || '';
+  const match = hash.match(/(?:^#|&)token=([^&]+)/);
+  const token = match ? decodeURIComponent(match[1]) : '';
+
+  history.replaceState(null, '', location.pathname);
+
+  if(!token){
+    show('errorState');
+  }else{
+    fetch(FUNCTION_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: token })
+    }).then(function(r){ return r.json().catch(function(){ return {success:false}; }); })
+      .then(function(data){
+        show(data && data.success ? 'successState' : 'errorState');
+      })
+      .catch(function(){
+        show('errorState');
+      });
+  }
+})();
+</script>
+</body>
+</html>

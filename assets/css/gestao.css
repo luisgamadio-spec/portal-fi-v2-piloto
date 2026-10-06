@@ -1,0 +1,266 @@
+/* PORTAL-NEXT V2 — Gestão (Análise F&I do Grupo) module CSS.
+   Visual authority: design-system-2.1/references/data-table.md
+   (APPROVED, same pattern Score/Coparticipado use) — no dedicated
+   Approved Reference exists for Gestão; NORMATIVE COMPLIANCE reported,
+   not VISUAL PARITY (Gate 32/43). Executive surface (Gate 42, 67):
+   KPI hierarchy reflects materiality (Gate 34) — production cards are
+   the largest/first, support KPIs are visually quieter, no giant
+   uniform KPI wall. No charts (none exist in production — Gate 35
+   N/A). Tables stay tables (Gate 36). High-density table regions:
+   Ambient Motion OFF (Gate 38, 93). */
+
+.gePage { max-width: 1320px; }
+
+/* Wave 3B — page header, fixture banner, and filter-field wrappers
+   migrated to the shared module-system.css primitives (.modPageHeader/
+   .modFixtureBanner/.modFilters/.modField). The rules below are
+   superseded, 0 remaining reference (grep-verified before editing),
+   kept for history same as Wave 3A's dashbi.css. */
+.geHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-5);
+}
+.geHeader h1 {
+  font-family: var(--font-ui);
+  font-weight: 300;
+  font-size: clamp(22px, 2.6vw, 30px);
+  letter-spacing: -.01em;
+  margin: 0;
+}
+.geHeader p { color: var(--color-text-secondary); margin: var(--space-1) 0 0; font-size: 13px; }
+
+.geFixtureBar {
+  display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap;
+  padding: var(--space-2) var(--space-3); margin-bottom: var(--space-4);
+  border: 1px dashed var(--color-hairline-strong); border-radius: var(--radius-sm);
+  font-family: var(--font-mono); font-size: 10.5px; color: var(--color-text-muted);
+}
+.geFixtureBar .geFixtureLabel { text-transform: uppercase; letter-spacing: .06em; color: var(--color-warning); }
+.geFixtureBar select {
+  background: var(--color-surface-2); border: 1px solid var(--color-hairline-strong);
+  color: var(--color-text-primary); font-family: var(--font-mono); font-size: 11px;
+  padding: 3px var(--space-2); border-radius: var(--radius-sm);
+}
+.geFixtureBar select:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+
+/* ---------- filters (superseded, see comment above; .gePresetGroup/
+   .geVehicleGroup below remain ACTIVE -- own segmented-control classes,
+   not filter-field wrappers) ---------- */
+.geFilters {
+  display: flex; align-items: flex-end; gap: var(--space-4); flex-wrap: wrap;
+  margin-bottom: var(--space-5); padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-hairline);
+}
+.geField { display: flex; flex-direction: column; gap: var(--space-1); min-width: 160px; }
+.geField label { color: var(--color-text-muted); font-size: 10.5px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; }
+.geField select, .geField input[type="date"] {
+  background: var(--color-surface-2); border: 1px solid var(--color-hairline-strong);
+  color: var(--color-text-primary); font-family: var(--font-ui); font-size: 13px;
+  padding: var(--space-2); border-radius: var(--radius-sm);
+}
+.geField select:focus-visible, .geField input:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+
+.gePresetGroup { display: flex; gap: var(--space-1); flex-wrap: wrap; }
+.gePresetBtn {
+  background: none; border: 1px solid var(--color-hairline-strong); color: var(--color-text-secondary);
+  font-family: var(--font-ui); font-size: 12px; padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm); cursor: pointer;
+}
+.gePresetBtn:hover:not(.gePresetActive) { color: var(--color-text-primary); }
+.gePresetBtn:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+.gePresetActive { color: var(--color-canvas); background: var(--color-text-primary); border-color: var(--color-text-primary); }
+
+.geVehicleGroup { display: flex; gap: var(--space-1); }
+.geVehicleBtn {
+  background: none; border: 1px solid var(--color-hairline-strong); color: var(--color-text-secondary);
+  font-family: var(--font-ui); font-size: 13px; font-weight: 500; padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm); cursor: pointer;
+}
+.geVehicleBtn:hover:not(.geVehicleActive) { color: var(--color-text-primary); }
+.geVehicleBtn:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+.geVehicleActive { color: var(--color-canvas); background: var(--color-text-primary); border-color: var(--color-text-primary); }
+
+/* ---------- section headings ---------- */
+/* Wave 3B audit: these values are already pixel-identical to the
+   shared .modSectionTitle (font-weight 400/17px, margin 32px 0 12px) --
+   left as-is rather than adding the class, since .modSectionTitle's
+   :first-child reset would silently NOT apply here (this module's
+   first <h2> is not the literal first child of its container, the KPI
+   grid is) and would reintroduce an unwanted top margin. Classified as
+   MODULE-SPECIFIC COMPOSITION (already consistent, zero risk). */
+.gePage h2 {
+  font-family: var(--font-ui); font-weight: 400; font-size: 17px;
+  margin: var(--space-6) 0 var(--space-3);
+}
+.gePage h2:first-of-type { margin-top: 0; }
+
+/* Wave 3B — superseded by shared .modMuted, 0 remaining reference. */
+.geMuted { color: var(--color-text-muted); font-size: 12px; margin: 0 0 var(--space-3); }
+
+/* Wave 3B — KPI grids/cards migrated to the shared .modKpiGrid/
+   .modKpiCard(+Exec/+Secondary tiers), preserving the same materiality
+   hierarchy (Gate 34): production status cards largest/first (base
+   tier), financial-value cards second (Exec tier, now with
+   .modKpiCardWarning/.modKpiCardInfo semantic accents for Perdidas/
+   Abertas per Wave 3B Gate 8 -- was uniform accent-primary on all 3
+   before), everything else quietest (Secondary tier). Rules below
+   superseded, 0 remaining reference, kept for history. .geSplit is
+   NOT superseded -- it has no shared equivalent (module-specific
+   Novos/Seminovos split composition inside a .modKpiCard), only its
+   selector scope moved down to ".modKpiCard .geSplit" (active, see
+   below in this file). */
+.geKpiGridPrimary {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-3); margin-bottom: var(--space-4);
+}
+.geKpiCardPrimary {
+  border: 1px solid var(--color-hairline); border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+.geKpiCardPrimary .geK { color: var(--color-text-muted); font-size: 10.5px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; }
+.geKpiCardPrimary .geV { font-family: var(--font-mono); font-size: 26px; font-weight: 500; margin-top: var(--space-1); font-variant-numeric: tabular-nums; }
+
+.geKpiGridExec {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-3); margin-bottom: var(--space-4);
+}
+.geKpiCardExec {
+  border: 1px solid var(--color-hairline); border-radius: var(--radius-md);
+  padding: var(--space-4); border-left: 2px solid var(--color-accent-primary);
+}
+.geKpiCardExec .geK { color: var(--color-text-muted); font-size: 10.5px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; }
+.geKpiCardExec .geV { font-family: var(--font-mono); font-size: 22px; font-weight: 500; margin-top: var(--space-1); font-variant-numeric: tabular-nums; }
+.geKpiCardExec .geHint { color: var(--color-text-muted); font-size: 11px; margin-top: 2px; }
+
+.geKpiGridSecondary {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: var(--space-2); margin-bottom: var(--space-4);
+}
+.geKpiCardSecondary {
+  border: 1px solid var(--color-hairline); border-radius: var(--radius-sm); padding: var(--space-3);
+}
+.geKpiCardSecondary .geK { color: var(--color-text-muted); font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: .05em; }
+.geKpiCardSecondary .geV { font-size: 15px; font-weight: 500; margin-top: 3px; }
+.geKpiCardSecondary .geHint { color: var(--color-text-muted); font-size: 10.5px; margin-top: 2px; }
+
+/* ACTIVE -- .geSplit's new scope under the shared .modKpiCard */
+.modKpiCard .geSplit { display: flex; gap: var(--space-4); margin-top: var(--space-2); font-size: 11.5px; color: var(--color-text-secondary); }
+.modKpiCard .geSplit b { color: var(--color-text-primary); font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+/* Plan classification cards -- distinct plan identity via left-border
+   accent + text label together (never color-only), same discipline as
+   Coparticipado's plan semantics. Wave 3B Gate 9/10 (CRITICAL):
+   INTENTIONALLY NOT migrated to the shared KPI system -- this 5-way
+   business classification (SUBSIDIADO/REVERSÃO/COPARTICIPADO/BALÃO/
+   LINEAR) already has correct, distinct visual semantics the shared
+   system's 4 generic modifiers don't map onto 1:1; not touched to
+   avoid any risk to a business-critical section. */
+.gePlanGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--space-2); margin-bottom: var(--space-2); }
+.gePlanCard { border: 1px solid var(--color-hairline); border-radius: var(--radius-sm); padding: var(--space-3); border-left: 3px solid var(--color-hairline-strong); }
+.gePlanCard .geK { font-size: 11px; font-weight: 600; letter-spacing: .03em; }
+.gePlanCard .geV { font-family: var(--font-mono); font-size: 20px; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.gePlanCard .geHint { color: var(--color-text-muted); font-size: 11px; margin-top: 2px; font-family: var(--font-mono); }
+.gePlanCard.planSubsidiado { border-left-color: var(--color-success); }
+.gePlanCard.planReversao { border-left-color: var(--color-warning); }
+.gePlanCard.planCoparticipado { border-left-color: var(--color-accent-primary); }
+.gePlanCard.planBalao { border-left-color: var(--color-info); }
+.gePlanCard.planLinear { border-left-color: var(--color-text-muted); }
+
+/* ---------- tables ---------- */
+/* Wave 3B — desktop/tablet table base (.geTableWrap/.geTable) is
+   superseded by the shared .modTableWrap/.modTable, 0 remaining
+   reference. table-layout:fixed + wrapping is NOT superseded: it is
+   re-declared below as a module-specific override on top of the
+   shared foundation (module-system.css's own stated convention --
+   "a module can override a shared rule with its own higher-specificity
+   class if it ever genuinely needs to"). module-system.css's default
+   .modTable uses white-space:nowrap, which is the WRONG strategy for
+   this module -- PORTAL-NEXT-07.6 found up to 819px of overflow at
+   320px on "Financiamentos por Loja" (up to 10 columns) under nowrap;
+   table-layout:fixed + wrapping is what actually guarantees 0
+   horizontal scroll here. Sticky first column / hover / border-bottom
+   already come from the shared .modTable, not re-declared. */
+.gePage .modTable { table-layout: fixed; }
+.gePage .modTable thead th, .gePage .modTable td { white-space: normal; overflow-wrap: break-word; }
+/* FI-UX-1 (Human-reported defect, root cause part 1): module-system.css's
+   own .modTable thead th{text-align:left} (a compound element+class
+   selector) out-specifies the plain .modNumCol{text-align:right} class
+   alone, so every numeric header in this module rendered LEFT-aligned
+   over a RIGHT-aligned value beneath it -- confirmed via computed style
+   (th.modNumCol computed text-align:left, td.modNumCol computed
+   text-align:right) -- exactly the "weak visual anchoring" Human
+   reported. headerRow()'s own .modNumCol class on <th> was already the
+   correct intent; only the specificity war was broken. Corrective,
+   module-wide (every Gestão table with a numeric column benefits, not
+   just the two plan-matrix tables) -- not a redesign. */
+.gePage .modTable thead th.modNumCol { text-align: right; }
+
+/* FI-UX-1 -- "Planos por Loja e Departamento" (Novos/Seminovos) only,
+   via the colgroup gestao.js now emits (gePlanMatrixColGroup()). Table
+   is NOT stretched to the wrapper's full width -- narrower than the
+   shared .modTable{width:100%} default on purpose (Gate 20/21): the
+   Seminovos table (fewer columns) then renders visibly narrower than
+   Novos instead of stretching the same few values across a full-width
+   table, while both tables' shared column widths (the colgroup) still
+   line up identically -- same LOJA column edge, same numeric column
+   rhythm, one coherent analytical section. */
+.gePlanMatrixTable { width: auto; }
+.gePlanMatrixTable td, .gePlanMatrixTable th { overflow-wrap: anywhere; }
+.gePlanMatrixTable .gePlanColLoja { width: 170px; }
+.gePlanMatrixTable .gePlanColPlan { width: 78px; }
+.gePlanMatrixTable .gePlanColTotal { width: 90px; }
+
+/* The colgroup/auto-width above is a desktop-table-mode concern only --
+   below 768px this module already replaces <thead>/table geometry
+   entirely with a stacked card layout (existing @media rule below), so
+   the fixed per-column widths must not leak into that mode (confirmed
+   live: an INLINE <col style="width:Npx"> kept the table wider than the
+   viewport even after td/th switched to flex display -- a class-based
+   width, overridden here by a later same-specificity rule, does not). */
+@media (max-width: 768px) {
+  .gePlanMatrixTable { width: 100%; }
+  .gePlanMatrixTable .gePlanColLoja,
+  .gePlanMatrixTable .gePlanColPlan,
+  .gePlanMatrixTable .gePlanColTotal { width: auto; }
+}
+
+.geTableWrap { overflow-x: auto; border: 1px solid var(--color-hairline); border-radius: var(--radius-md); margin-bottom: var(--space-4); }
+.geTable { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 12.5px; }
+.geTable thead th {
+  text-align: left; font-family: var(--font-mono); font-size: 10px; text-transform: uppercase;
+  letter-spacing: .05em; color: var(--color-text-muted); font-weight: 500;
+  padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--color-hairline-strong);
+  white-space: normal; overflow-wrap: break-word;
+}
+.geTable td { padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--color-hairline); white-space: normal; overflow-wrap: break-word; }
+.geTable tbody tr:last-child td { border-bottom: none; }
+.geTable tbody tr:hover td { background: rgba(255,255,255,.028); }
+.geTable .geNumCol { font-family: var(--font-mono); text-align: right; font-variant-numeric: tabular-nums; }
+.geTable thead th:first-child, .geTable td:first-child { position: sticky; left: 0; background: var(--color-surface-1); }
+.geTable thead th:first-child { background: var(--color-surface-2); z-index: 1; }
+
+/* ACTIVE — module-specific mobile responsive override on top of the
+   shared desktop/tablet .modTable foundation (module-system.css
+   covers desktop/tablet only by design, Gate 8/Wave 3A doc; this
+   module's own data-th vertical-stack strategy, same technique
+   Coparticipado uses at its own breakpoint, stays module-owned).
+   Selectors retargeted from .geTableWrap/.geTable to .modTableWrap/
+   .modTable — same rules, same breakpoint, only the class renamed. */
+@media (max-width: 768px) {
+  .modTableWrap { overflow-x: visible; }
+  .modTable thead { display: none; }
+  .modTable tbody tr { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); padding: var(--space-3); border-bottom: 1px solid var(--color-hairline); }
+  .modTable tbody tr:last-child { border-bottom: none; }
+  .modTable td { display: block; padding: 0; border: none; position: static; background: none; flex: 1 1 120px; min-width: 120px; }
+  .modTable td[data-th]::before { content: attr(data-th); display: block; color: var(--color-text-muted); font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; }
+  .modTable td:first-child { flex-basis: 100%; font-weight: 600; }
+  .modTable .modNumCol { text-align: left; }
+}
+
+@media (max-width: 480px) {
+  .gePlanGrid { grid-template-columns: 1fr; }
+}

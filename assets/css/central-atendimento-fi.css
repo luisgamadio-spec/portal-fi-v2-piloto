@@ -1,0 +1,130 @@
+/* PORTAL-NEXT V2 — Central de Atendimento F&I (CA-1 migration).
+   MEDIUM-HIGH density admin console (dashboard + CRUD form +
+   filterable/exportable history table), per module-registry.json.
+   Every value is a var() from design-system-2/tokens.css, same
+   discipline as painel-analista-fi.css/shell-admin.css. Status is
+   communicated by text + icon, never color alone (Gate 18) --
+   .paStatusBtn/.paStatusIcon/.paStatusLabel are deliberately reused
+   from painel-analista-fi.css (always loaded on every page via
+   index.html) for the status-change control, so the two management
+   surfaces over the same analistas_fi table share one visual language
+   for the same real action instead of duplicating it. */
+
+.caPage { max-width: 1100px; }
+.caBody { margin-top: var(--mod-space-control-gap); }
+
+.caKpiValue { font-family: var(--font-mono); font-size: 22px; font-variant-numeric: tabular-nums; margin: 4px 0 0; }
+.caKpiValueSm { font-family: var(--font-mono); font-size: 14px; font-variant-numeric: tabular-nums; margin: 6px 0 0; }
+
+.caInlineMsg { margin: 0 0 var(--mod-space-control-gap); font-size: 13px; }
+.caInlineMsg.ok { color: #a5d6a7; }
+.caInlineMsg.err { color: #ef9a9a; }
+
+.caWarn {
+  font-size: 12px;
+  color: var(--mod-muted);
+  border: 1px dashed var(--mod-border-strong);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  margin: var(--mod-space-control-gap) 0;
+}
+
+/* ---------- destructive-action confirm panel (same in-page pattern as
+   shell-admin.js's own maConfirm -- never a native confirm()/alert(),
+   Cancelar always returns untouched). ---------- */
+.caConfirm {
+  border: 1px solid var(--mod-critical);
+  border-radius: var(--radius-md);
+  padding: var(--mod-space-control-gap);
+  margin-bottom: var(--mod-space-control-gap);
+  background: rgba(226, 84, 58, .06);
+}
+.caConfirm h3 { margin: 0 0 var(--space-2); font-size: 15px; }
+.caConfirm p { margin: 0 0 var(--mod-space-control-gap); color: var(--color-text-secondary); font-size: 13px; }
+.caConfirmActions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+
+/* ---------- roster CRUD form ---------- */
+.caForm { margin-bottom: var(--mod-space-section-gap); }
+.caFormGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--mod-space-control-gap);
+}
+.caFieldCheckbox { flex-direction: row !important; align-items: center; gap: var(--space-2) !important; }
+.caFieldCheckbox input { width: 16px; height: 16px; }
+
+.caRowActions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+
+/* ---------- desktop table / mobile card split (Score's own proven
+   PORTAL-NEXT-07.6.4 pattern: a CSS-only table transform was rejected
+   twice in real human UAT; a genuinely separate non-table renderer,
+   fed by the same data, structurally replaces the table below the
+   breakpoint instead of visually disguising it).
+   PORTAL_V2_ZERO_HORIZONTAL_SCROLL_GLOBAL_RULE verified at
+   1366/1024/900/480. ---------- */
+/* .caCardList intentionally never sets `display` itself (only inert
+   layout props below) -- display is controlled EXCLUSIVELY by
+   .caMobileOnly below so there is exactly one property/element pair
+   deciding visibility. A separate unconditional `.caCardList{display:
+   flex}` rule was tried first and found to silently win the cascade
+   over `.caMobileOnly`'s display:none at equal specificity (same
+   [hidden]-losing-to-explicit-display class of bug already documented
+   in shell.css) -- both renderers ended up visible at every width.
+   Fixed by moving display:flex INTO the media query itself, on the
+   same .caMobileOnly selector, so there is only ever one rule setting
+   `display` per breakpoint. */
+.caMobileOnly { display: none; }
+@media (max-width: 760px) {
+  .caDesktopOnly { display: none; }
+  .caMobileOnly { display: flex; }
+}
+
+.caCardList { flex-direction: column; gap: var(--mod-space-card-gap); }
+.caCard {
+  border: 1px solid var(--mod-border);
+  border-radius: var(--radius-md);
+  padding: var(--mod-space-control-gap);
+  background: var(--color-surface-1);
+}
+.caCardTop { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-bottom: var(--space-2); }
+.caCardName { font-weight: 600; font-size: 14px; }
+.caCardFields { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-1) var(--mod-space-control-gap); margin: 0 0 var(--mod-space-control-gap); font-size: 12.5px; }
+.caCardFields dt { color: var(--mod-muted); }
+.caCardFields dd { margin: 0; color: var(--color-text-secondary); }
+.caCard .caRowActions { justify-content: flex-start; }
+
+/* ---------- status-change modal ---------- */
+.caModalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 120;
+  padding: var(--space-3);
+}
+.caModal {
+  background: var(--color-elevated-surface);
+  border: 1px solid var(--color-hairline-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-elevated);
+  padding: var(--mod-space-section-gap);
+  max-width: 420px;
+  width: 100%;
+}
+.caModal h3 { margin: 0 0 var(--mod-space-control-gap); font-size: 15px; }
+.caStatusGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--space-2);
+}
+
+/* ---------- status colors (same 5-value V1 contract as
+   painel-analista-fi.css, independently namespaced ca* to avoid any
+   cross-stylesheet coupling on the color rules themselves). ---------- */
+.modStatusCell.caStatusONLINE { color: #7fd99a; }
+.modStatusCell.caStatusOCUPADO { color: #e6c04d; }
+.modStatusCell.caStatusALMOCO { color: #ee965b; }
+.modStatusCell.caStatusFERIAS { color: #7ab8f0; }
+.modStatusCell.caStatusOFFLINE { color: var(--mod-muted); }

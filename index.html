@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portal F&amp;I</title>
+<link rel="stylesheet" href="assets/css/vendor/fonts.css">
+<link rel="stylesheet" href="assets/css/vendor/design-tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/login.css">
+<link rel="stylesheet" href="assets/css/landing.css">
+<link rel="stylesheet" href="assets/css/module-system.css">
+<link rel="stylesheet" href="assets/css/score.css">
+<link rel="stylesheet" href="assets/css/coparticipado.css">
+<link rel="stylesheet" href="assets/css/gestao.css">
+<link rel="stylesheet" href="assets/css/dashbi.css">
+<link rel="stylesheet" href="assets/css/simuladores.css">
+<link rel="stylesheet" href="assets/css/painel-analista-fi.css">
+<link rel="stylesheet" href="assets/css/central-atendimento-fi.css">
+<link rel="stylesheet" href="assets/css/salarios-comissoes.css">
+<link rel="stylesheet" href="assets/css/intelligence.css">
+<link rel="stylesheet" href="assets/css/bi-chat.css">
+<link rel="stylesheet" href="assets/css/shell-admin.css">
+<link rel="stylesheet" href="assets/css/launch-experience.css">
+</head>
+<body>
+
+<a class="nxSkipLink" href="#nxContentOutlet">Pular para o conteúdo</a>
+
+<div id="nxBootLoading" class="nxPlaceholder"><p>Carregando…</p></div>
+
+<div id="nxLoginRoot" hidden></div>
+
+<div id="nxRoot" hidden>
+  <div class="pShell">
+    <div class="pNavBackdrop" id="pNavBackdrop" hidden></div>
+    <nav class="pGlobalNav" id="pGlobalNav" aria-label="Navegação principal"></nav>
+    <div class="pMain">
+      <div class="pTopBar">
+        <button type="button" class="pNavTrigger" id="pNavTrigger" aria-expanded="false" aria-controls="pGlobalNav" aria-label="Abrir navegação">
+          <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M3 6h14"/><path d="M3 10h14"/><path d="M3 14h14"/></svg>
+        </button>
+        <img class="pHeaderLogo" src="assets/images/brabus-logo.png" alt="Grupo Brabus Mitsubishi">
+        <span class="pBreadcrumb" id="pBreadcrumb"></span>
+        <div class="pUserArea" id="pUserArea"></div>
+      </div>
+      <div class="ctxBeam" id="ctxBeam"></div>
+      <main id="nxContentOutlet" class="pContent" tabindex="-1" aria-live="polite">
+        <div class="nxPlaceholder"><p>Carregando…</p></div>
+      </main>
+    </div>
+  </div>
+
+  <div id="nxOverlayRoot" aria-hidden="true"></div>
+  <div id="nxModalRoot" aria-hidden="true"></div>
+
+  <!-- dev badge + design trace: hidden by default; shell.js shows them only when
+       NX_DEV.ativo (localhost/127.0.0.1 with ?debug=1) -->
+  <div class="nxDevBadge" id="nxDevBadge" hidden>
+    <span class="nxDevDot" aria-hidden="true"></span>
+    <span>V2 LOCAL · NEXT_LOCAL — não é produção</span>
+    <!-- IA-3H.1A Section 10/11 -- local/homolog-only Voice UAT provenance
+         marker (never rendered in production: this whole badge/element
+         lives inside the same LOCAL/HOMOLOG-only #nxDevBadge every other
+         dev-only marker here already uses). data-short-head is a stable,
+         automatable assertion point (Section 11) -- no user/project
+         ref/secret/JWT, just a short commit hash a Human can read aloud
+         if asked, and Codex can assert against before any real call. -->
+    <button type="button" id="nxDesignTraceToggle" aria-expanded="false" aria-controls="nxDesignTrace">trace</button>
+  </div>
+
+  <aside class="nxDesignTrace" id="nxDesignTrace" hidden aria-label="Design Trace (dev tooling)">
+    <h2>Design Trace (dev only)</h2>
+    <dl><dt>route</dt><dd>—</dd></dl>
+  </aside>
+</div>
+
+<script src="assets/js/vendor/parametric-catalog.js"></script>
+<script src="assets/js/vendor/engine.js"></script>
+<script src="assets/js/environment-guard.js"></script>
+<script src="assets/js/network-guard.js"></script>
+<!-- IA-V2-2 -- committed default is mode:'fixture', safe on every host
+     (see intelligence-runtime-config.js's own header). The local
+     override below only ever loads on localhost/127.0.0.1, mirroring
+     the exact same convention the Secure repo already uses for its own
+     portal-runtime-config.local.js -- never present unless a developer
+     creates it on their own machine from the .example.js file. -->
+<script src="assets/js/intelligence-runtime-config.js"></script>
+<script>
+// GL-ENV-AUTH-WRITE-BOUNDARY -- exact-match only (no wildcard, no
+// *.github.io), three mutually-exclusive real-credentialed overrides.
+// Each loads the tracked config so environment-guard.js's
+// DOMContentLoaded check (which runs after every synchronous script
+// here has already executed) sees the right hostname in the right
+// allowlist -- authorizedHostnames (production) or
+// authorizedHomologationHostnames (homolog), never both from the same
+// file. Any other hostname loads no override and stays fail-closed on
+// the committed inert default (empty arrays), unchanged.
+if(location.hostname==='127.0.0.1'||location.hostname==='localhost'){
+  document.write('<script src="assets/js/intelligence-runtime-config.local.js"><\/script>');
+} else if(location.hostname==='luisgamadio-spec.github.io'){
+  // Proven GitHub Pages HOMOLOGATION hostname -- MUST NEVER be treated
+  // as production (Human Environment Authority, GL-ENV-AUTH-WRITE-
+  // BOUNDARY). Loads only the homolog config (portal-ai-homolog).
+  document.write('<script src="assets/js/intelligence-runtime-config.homolog.js"><\/script>');
+} else if(location.hostname==='brabus.blistiq.com.br'){
+  // Human-designated FUTURE V2 production hostname. Currently serves
+  // the existing V1/Secure portal's own separate deployment -- this
+  // branch only has any effect once V2 is actually deployed there by a
+  // separate, later, explicitly-authorized cutover wave; until then no
+  // browser ever reaches this file from that hostname via V2's own
+  // code (V2 has no deployment there yet). Loads the production config
+  // (portal-ai, not portal-ai-homolog) so that, once V2 IS deployed
+  // there, auth and write-safety already resolve correctly without a
+  // further code change.
+  document.write('<script src="assets/js/intelligence-runtime-config.production.js"><\/script>');
+} else if(location.hostname==='v2.brabus.blistiq.com.br'){
+  // PILOTO de produção do V2 (repositório portal-fi-v2-piloto): config própria,
+  // AUTHORIZED_PRODUCTION só neste host -- o Painel Master grava aqui.
+  document.write('<script src="assets/js/intelligence-runtime-config.piloto.js"><\/script>');
+}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.0" integrity="sha384-De+l/Df7qym5QBDVocD3+gW1S7IjR3epf+6KbRDjB3FCCzM/LqVTwqckT6FhFar8" crossorigin="anonymous"></script>
+<script src="assets/js/session-guard.js"></script>
+<script src="assets/js/auth-boundary.js"></script>
+<script src="assets/js/auth-core.js"></script>
+<script src="assets/js/login.js"></script>
+<script src="assets/js/first-access.js"></script>
+<script src="assets/js/password-recovery.js"></script>
+<script src="assets/js/business-adapter-boundary.js"></script>
+<!-- SIM-REG-01: "Falar com um Analista" shared attendance authority --
+     loaded before Landing/Novos/Seminovos (its 3 real consumers) so
+     window.NX_FI_ATENDIMENTO is always available when their own click
+     handlers wire up. Reuses the same window.NX_AUTH/
+     window.NX_INTELLIGENCE_CONFIG boundary business-adapter-boundary.js
+     already established -- 0 new Supabase client, 0 new backend. -->
+<script src="assets/js/adapters/fi-atendimento-real-provider.js"></script>
+<script src="assets/js/fi-atendimento.js"></script>
+<script src="assets/js/router.js"></script>
+<script src="assets/js/module-registry.js"></script>
+<script src="assets/js/design-trace.js"></script>
+<script src="assets/js/landing.js"></script>
+<!-- FC-2/FC-2.3 (GAP-003/GAP-004): xlsx-js-style is the EXACT library+
+     version V1's OWN Coparticipado export (exportarCoparticipados(),
+     modules/coparticipado.html -- a real, wired V1 production button,
+     confirmed by direct source read) already uses -- a styled SheetJS
+     fork (supports cell.s formatting: header fill/bold, number formats,
+     column widths), a strict superset of plain xlsx (which V1's Dash BI
+     export used). One library serves both exports (Gate 14/15: prefer
+     existing capability, avoid a second library). GAP-003's export was
+     briefly placed in Score (FC-2/FC-2.2) before Human UAT (FC-2.3)
+     corrected its product placement to Coparticipado, its true V1 home. -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js" integrity="sha384-OUW9euuUyxyHcAhTqbhI+Iyb8LMssXt/cpz0yXhs9UWG2/R/uaWdakx/4cfww7Vb" crossorigin="anonymous"></script>
+<script src="assets/js/lib/xlsx-export-helper.js"></script>
+<script src="assets/js/adapters/score.adapter.js"></script>
+<script src="assets/js/adapters/score-real-provider.js"></script>
+<script src="assets/js/adapters/score-real-view-model.js"></script>
+<!-- SCORE HOMOLOGADO (HUMAN_APPROVED) -- integração final do critério
+     "Utilização + Conversão" (RPC governada score_utilization_
+     conversion_scope_data, EXECUTE só para authenticated, escopo
+     resolvido 100% server-side via operational_current_scope()) e da
+     composição experimental 900+100. score-intelligence-view-model.js
+     permanece só como lógica pura de identidade/cobertura reaproveitada
+     internamente -- a seção visual "Inteligência de Utilização" foi
+     removida por decisão de UAT. Os 3 arquivos *-experimental.js abaixo
+     dão suporte ao modo de demonstração (fixture) apenas -- nunca usados
+     por sessão real autenticada. -->
+<script src="assets/js/adapters/score-intelligence-view-model.js"></script>
+<script src="assets/js/adapters/score-calculation-proof-experimental.js"></script>
+<script src="assets/js/adapters/score-telemetry-integration-experimental.js"></script>
+<script src="assets/js/adapters/score-utilization-scoring-experimental.js"></script>
+<script src="assets/js/adapters/score-utilization-view-model.js"></script>
+<script src="assets/js/adapters/score-utilization-conversion-view-model.js"></script>
+<script src="assets/js/adapters/score-utilization-governed-provider.js"></script>
+<script src="assets/js/score.js"></script>
+<script src="assets/js/adapters/coparticipado.adapter.js"></script>
+<script src="assets/js/adapters/coparticipado-real-provider.js"></script>
+<script src="assets/js/adapters/coparticipado-governed-rates-provider.js"></script>
+<script src="assets/js/adapters/coparticipado-real-view-model.js"></script>
+<script src="assets/js/coparticipado.js"></script>
+<script src="assets/js/lookups/store-display.js"></script>
+<script src="assets/js/adapters/gestao-fixture-provider.js"></script>
+<script src="assets/js/adapters/gestao-real-provider.js"></script>
+<script src="assets/js/adapters/gestao.adapter.js"></script>
+<script src="assets/js/gestao.js"></script>
+<script src="assets/js/adapters/dashbi.adapter.js"></script>
+<script src="assets/js/adapters/dashbi-real-provider.js"></script>
+<script src="assets/js/adapters/dashbi-real-view-model.js"></script>
+<script src="assets/js/dashbi.js"></script>
+<script src="assets/js/adapters/simulador-shared.adapter.js"></script>
+<script src="assets/js/adapters/simulador-rates-provider.js"></script>
+<script src="assets/js/adapters/simulador-novos.adapter.js"></script>
+<script src="assets/js/adapters/simulador-seminovos.adapter.js"></script>
+<script src="assets/js/adapters/financiamento-campanha.adapter.js"></script>
+<script src="assets/js/adapters/cash-conversion.adapter.js"></script>
+<script src="assets/js/simuladores-shared.js"></script>
+<script src="assets/js/simulador-novos.js"></script>
+<script src="assets/js/simulador-seminovos.js"></script>
+<script src="assets/js/adapters/painel-analista-fi-real-provider.js"></script>
+<script src="assets/js/painel-analista-fi.js"></script>
+<script src="assets/js/adapters/central-atendimento-fi-real-provider.js"></script>
+<script src="assets/js/central-atendimento-fi.js"></script>
+<!-- RH-4D: Histórico consumes the canonical window.NX_MASTER_COMPETENCE_
+     HISTORY_PROVIDER / _VM (loaded further below, Painel Master's own
+     script block) via lazy window.* lookups inside salarios-comissoes.js
+     -- no separate historical provider script tag needed here anymore. -->
+<script src="assets/js/adapters/salarios-comissoes-real-provider.js"></script>
+<script src="assets/js/salarios-comissoes.js"></script>
+<!-- Brabus Intelligence RESET -- shell-level launcher + drawer, visual
+     shell only (no adapter, no state machine, no context provider, no
+     voice). mounted once by shell.js's boot() calling
+     NX_INTELLIGENCE_PANEL.mount(), same as before. -->
+<script src="assets/js/intelligence/bi-voice-orb.js"></script>
+<script src="assets/js/intelligence/intelligence-panel.js"></script>
+<script src="assets/js/adapters/master-users-provider.js"></script>
+<script src="assets/js/adapters/master-users-view-model.js"></script>
+<script src="assets/js/adapters/master-acessos-provider.js"></script>
+<script src="assets/js/adapters/master-acessos-view-model.js"></script>
+<script src="assets/js/adapters/master-audit-provider.js"></script>
+<script src="assets/js/adapters/master-audit-view-model.js"></script>
+<script src="assets/js/adapters/master-pendencias-provider.js"></script>
+<script src="assets/js/master-pendencias-view-model.js"></script>
+<script src="assets/js/adapters/master-gestao-bases-provider.js"></script>
+<script src="assets/js/master-gestao-bases-view-model.js"></script>
+<script src="assets/js/adapters/master-gestao-simuladores-provider.js"></script>
+<script src="assets/js/master-gestao-simuladores-view-model.js"></script>
+<script src="assets/js/adapters/master-config-provider.js"></script>
+<script src="assets/js/master-config-view-model.js"></script>
+<script src="assets/js/adapters/master-periodos-provider.js"></script>
+<script src="assets/js/master-periodos-view-model.js"></script>
+<script src="assets/js/adapters/master-absences-provider.js"></script>
+<script src="assets/js/master-absences-view-model.js"></script>
+<script src="assets/js/adapters/master-store-change-provider.js"></script>
+<script src="assets/js/master-store-change-view-model.js"></script>
+<script src="assets/js/adapters/master-simulator-usage-provider.js"></script>
+<script src="assets/js/master-simulator-usage-view-model.js"></script>
+<script src="assets/js/adapters/master-competence-history-provider.js"></script>
+<script src="assets/js/master-competence-history-view-model.js"></script>
+<script src="assets/js/adapters/master-competence-rhdp-export-engine.js"></script>
+<script src="assets/js/adapters/master-competence-closing-engine.js"></script>
+<script src="assets/js/adapters/master-competence-closing-provider.js"></script>
+<script src="assets/js/master-competence-closing-view-model.js"></script>
+<script src="assets/js/shell-admin.js"></script>
+<script src="assets/js/launch-experience.js"></script>
+<script src="assets/js/shell.js"></script>
+</body>
+</html>

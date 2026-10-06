@@ -1,0 +1,288 @@
+/* PORTAL-NEXT V2 — Shell Foundation CSS.
+   Every color/spacing/radius/font/motion value below is a var() read
+   from assets/css/vendor/design-tokens.css (linked directly in
+   index.html; vendored byte-identical from design-system-2/tokens.css
+   as of GL-1B, see docs/VENDORED-DESIGN-ASSETS-PROVENANCE.md — not
+   copied into THIS file). No new hex, no new radius, no new shadow,
+   no new motion was introduced here — see Gate 45. */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+/* Painel Master Phase PM-5B (Human UAT finding, PM-5A root-caused it):
+   the HTML `hidden` attribute's own UA default -- [hidden]{display:none}
+   -- is AUTHOR-origin-losing by design: any author rule that sets an
+   explicit `display` on the same element (e.g. .modBtn{display:
+   inline-flex}) wins at equal specificity regardless of source order,
+   because author-normal beats user-agent-normal before specificity is
+   even compared. Confirmed empirically: shell-admin.js's own
+   `newUserBtn.hidden = true` left the button's computed display at
+   `flex`, fully visible, still keyboard-focusable (tabIndex 0) --
+   `hidden` was being silently ignored, not merely mis-styled.
+   Audited every other real `.hidden =`/`setAttribute('hidden', ...)`
+   site in this codebase (#nxDesignTrace, #pNavBackdrop, #nxRoot,
+   #nxBootLoading, #loginStatus, #nxLoginRoot) before adding this
+   globally: none of them sets a conflicting explicit `display` on the
+   same element (the two that already have their own `[hidden]`-aware
+   rule, #nxDesignTrace/#nxLoginRoot, only ever ADD display:none or key
+   off the attribute's ABSENCE via :not([hidden]) -- never try to keep
+   a hidden element visible), so restoring the real HTML semantic here
+   is safe portal-wide, not just for the one button that surfaced it. */
+[hidden] { display: none !important; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--color-canvas);
+  color: var(--color-text-primary);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+  font-size: 14px;
+  line-height: 1.5;
+  height: 100%;
+}
+
+#nxRoot { min-height: 100vh; }
+
+/* ---------- skip link (Gate 24) ---------- */
+.nxSkipLink {
+  position: absolute;
+  left: var(--space-3);
+  top: -48px;
+  background: var(--color-surface-2);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-hairline-strong);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  z-index: 200;
+  transition: top var(--duration-fast) var(--ease-precise);
+}
+.nxSkipLink:focus {
+  top: var(--space-3);
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+/* ---------- shell layout ----------
+   The persistent chrome (.pShell/.pGlobalNav/.pTopBar/.pContent) is
+   defined in assets/css/landing.css — transplanted verbatim from the
+   Approved Reference (Gate 8). Nothing shell-specific remains to
+   define here as of the Landing Wave; #nxContentOutlet uses the
+   .pContent class directly in index.html. */
+
+.nxPlaceholder {
+  max-width: 640px;
+}
+.nxPlaceholder h1 {
+  font-family: var(--font-ui);
+  font-weight: 300;
+  font-size: clamp(22px, 2.6vw, 32px);
+  letter-spacing: -.01em;
+  margin: 0 0 var(--space-3) 0;
+}
+.nxPlaceholder p {
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--space-2) 0;
+}
+.nxPlaceholder .nxMeta {
+  margin-top: var(--space-5);
+  border-top: 1px solid var(--color-hairline);
+  padding-top: var(--space-4);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-text-muted);
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--space-1) var(--space-4);
+}
+.nxPlaceholder .nxMeta dt { color: var(--color-text-muted); }
+.nxPlaceholder .nxMeta dd { margin: 0; color: var(--color-text-secondary); }
+
+.nxStatusTag {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-hairline-strong);
+  border-radius: var(--radius-sm);
+  padding: 2px var(--space-2);
+  margin-bottom: var(--space-3);
+}
+.nxStatusTagError {
+  color: var(--color-critical);
+  border-color: var(--color-critical);
+}
+
+/* ---------- Shell Wave 2A Gate 14: deferred/not-migrated state ---------- */
+.nxDeferredState .nxMetaDetails {
+  margin-top: var(--space-5);
+  border-top: 1px solid var(--color-hairline);
+  padding-top: var(--space-4);
+}
+.nxDeferredState .nxMetaDetails summary {
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: .04em;
+  color: var(--color-text-muted);
+}
+.nxDeferredState .nxMetaDetails summary:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}
+.nxDeferredState .nxMeta {
+  margin-top: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-text-muted);
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--space-1) var(--space-4);
+}
+.nxDeferredState .nxMeta dt { color: var(--color-text-muted); }
+.nxDeferredState .nxMeta dd { margin: 0; color: var(--color-text-secondary); }
+.nxDeferredHome {
+  display: inline-block;
+  margin-top: var(--space-3);
+  color: var(--color-accent-primary);
+  font-size: 13px;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+.nxDeferredHome:hover { border-bottom-color: var(--color-accent-primary); }
+.nxDeferredHome:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+
+/* ---------- Shell Wave 2A Gate 12: module loading state (static, no
+   animation — Gate 17 defers motion/polish to a later pass) ---------- */
+.nxModuleLoading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: 13px;
+  padding: var(--space-4) 0;
+}
+.nxModuleLoadingDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-accent-primary);
+  flex-shrink: 0;
+}
+
+/* ---------- Shell Wave 2A Gate 13: module error state ---------- */
+.nxModuleError { max-width: 640px; }
+
+/* ---------- overlay / modal roots (Gate 10) ---------- */
+#nxOverlayRoot,
+#nxModalRoot {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+}
+#nxOverlayRoot:empty,
+#nxModalRoot:empty { display: none; }
+
+/* ---------- discreet dev indicator (Shell Wave 2A.1 Gate 5: further
+   quieted — no box/border/surface fill, small and low-opacity by
+   default so it never competes with navigation or reads as primary
+   product UI; brightens on hover/focus so it stays fully discoverable,
+   never removed). ---------- */
+.nxDevBadge {
+  position: fixed;
+  left: var(--space-2);
+  bottom: var(--space-2);
+  z-index: 150;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 5px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: .03em;
+  color: var(--color-text-muted);
+  opacity: .5;
+  pointer-events: auto;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .nxDevBadge { transition: opacity var(--duration-fast) var(--ease-precise); }
+}
+.nxDevBadge:hover,
+.nxDevBadge:focus-within { opacity: 1; }
+.nxDevBadge .nxDevDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-accent-primary);
+  flex-shrink: 0;
+}
+.nxDevBadge button {
+  background: none;
+  border: none;
+  color: inherit;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+.nxDevBadge button:hover { color: var(--color-accent-primary); }
+.nxDevBadge button:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* ---------- Design Trace panel (Gate 32 — dev tooling only) ---------- */
+.nxDesignTrace {
+  position: fixed;
+  right: var(--space-3);
+  bottom: var(--space-3);
+  z-index: 150;
+  width: 320px;
+  max-width: calc(100vw - 2 * var(--space-3));
+  background: var(--color-elevated-surface);
+  border: 1px solid var(--color-hairline-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-elevated);
+  padding: var(--space-4);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  pointer-events: auto;
+}
+.nxDesignTrace[hidden] { display: none; }
+.nxDevBadge[hidden] { display: none; } /* dev badge: localhost with ?debug=1 only (NX_DEV) */
+.nxDesignTrace h2 {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--color-text-muted);
+  margin: 0 0 var(--space-3) 0;
+}
+.nxDesignTrace dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--space-1) var(--space-3);
+  margin: 0;
+}
+.nxDesignTrace dt { color: var(--color-text-muted); }
+.nxDesignTrace dd { margin: 0; color: var(--color-text-primary); word-break: break-word; }
+
+/* ---------- reduced motion plumbing (Gate 24) ---------- */
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
+
+/* ---------- responsive foundation (Gate 25) ----------
+   Shell/nav responsive behavior lives in landing.css (transplanted
+   from the reference, which already handles .pShell/.pGlobalNav/
+   .pContent at these breakpoints). Only dev-tooling responsiveness
+   stays here. */
+@media (max-width: 768px) {
+  .nxDesignTrace { left: var(--space-3); right: var(--space-3); width: auto; }
+}

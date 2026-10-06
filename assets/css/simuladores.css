@@ -1,0 +1,502 @@
+/* PORTAL-NEXT V2 — Simuladores (Novos + Seminovos) shared CSS.
+   Visual authority: design-system-2.1/references/financial-simulator.md
+   (APPROVED Reference) + facelift-prototype-01/index.html#simulador
+   (HUMAN APPROVED executable implementation, source of the .field/
+   .segmented/.inputAffix/.resultHero/.resultSecondaryGrid/.planTabs/
+   .planCompareGrid grammar reused verbatim below) + NORMATIVE.md §9
+   (Financial UI MUST rules: Balão shows parcela+balão+mês final+total;
+   Rebate labeled "custo comercial da taxa", never "desconto"; Valor
+   líquido para a loja always shown) + §6 Anti-AI Rules (no card grid
+   syndrome, no pills everywhere, no gradient decoration, no glow).
+   Every value is a var() from design-system-2/tokens.css. */
+
+.smPage { max-width: 1180px; }
+
+/* Wave 3E migrated Novos' own page header to the shared module-system.css
+   primitives (.modPageHeader/.modTitle/.modSubtitle); Wave 3F did the
+   same for Seminovos. Both simulators' render() now request those
+   shared classes instead, so .smHeader itself is superseded — 0
+   remaining reference in either file (grep-verified before this
+   comment was written), kept for history same as every other Wave's
+   dead-rule discipline. Same applies below for .smResultCard. */
+.smHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-3);
+}
+.smHeader h1 {
+  font-family: var(--font-ui);
+  font-weight: 300;
+  font-size: clamp(22px, 2.6vw, 30px);
+  letter-spacing: -.01em;
+  margin: 0;
+}
+.smHeader p {
+  color: var(--color-text-secondary);
+  margin: var(--space-1) 0 0;
+  font-size: 13px;
+}
+/* Gate 6 — product identity: Novos vs Seminovos must always be legible,
+   not only inferable from the URL/breadcrumb. */
+.smProductBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--color-accent-primary);
+  border: 1px solid rgba(238, 75, 87, .35);
+  background: rgba(238, 75, 87, .08);
+  border-radius: var(--radius-sm);
+  padding: 4px 10px;
+  margin-bottom: var(--space-2);
+}
+
+/* ---------- mode selector (Gate 8: select surface, not a horizontal
+   tab strip -- 8-10 modes per simulator would either overflow or
+   force unreadable compression in a segmented row) ---------- */
+.smModeBar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-bottom: var(--space-5);
+  max-width: 480px;
+}
+.smModeBar label {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+.smModeDesc {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin: var(--space-1) 0 0;
+}
+
+/* ---------- SIM-NAV-4: Hybrid Luxury Collapsible (Concept F.2) —
+   Human-approved final authority (SIM_NAV_F2_HUMAN_APPROVED,
+   F_HYBRID_LUXURY_COLLAPSIBLE_FINAL_AUTHORITY; SIM-NAV-LAB-3/4/5
+   commits 1909bd1/8ded4b0/5158925), replacing SIM-NAV-3's Concept E
+   navigation. Shared by BOTH Novos and Seminovos. Categories start
+   collapsed; only one may be open; selecting an option auto-collapses
+   it. .smModeGroup/.smModeGroupLabel/.smModeButtons/.smModeBtn/
+   data-mode/.smModeBtnLabel/.smChevron are ALL UNCHANGED from E (the
+   row/marker/hover/active/focus-visible treatment the pre-existing
+   simulator test suites already assert on is untouched) — this wave
+   only adds a new clickable .smModeGroupHeader (replacing the old
+   always-visible label row) and a grid-template-rows-animated
+   .smModeRowsWrap around the existing .smModeButtons, so 0 renamed/
+   removed selector. Category index (01/02/03) stays the same pure-CSS
+   counter() on .smModeGroupLabel::before -- .smModeGroupLabel's own
+   .textContent stays exactly 'Financiamento'/'Ferramentas'/etc. ---------- */
+.smModeNav {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-4);
+  align-items: start;
+  counter-reset: smModeGroup;
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-hairline);
+}
+.smModeGroup {
+  counter-increment: smModeGroup;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface-1);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: border-color var(--duration-standard) var(--ease-precise);
+}
+.smModeGroup.open { border-color: rgba(238,75,87,.28); }
+.smModeGroupHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: var(--space-3) var(--space-4);
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font-ui);
+  color: var(--color-text-secondary);
+  transition: background var(--duration-standard) var(--ease-precise), color var(--duration-standard) var(--ease-precise);
+}
+.smModeGroupHeader:hover { background: rgba(255,255,255,.025); color: var(--color-text-primary); }
+.smModeGroup.open .smModeGroupHeader { color: var(--color-text-primary); border-bottom: 1px solid var(--color-hairline); }
+.smModeGroupHeader:focus-visible { outline: var(--focus-ring); outline-offset: -2px; z-index: 1; }
+.smModeGroupHeaderMain { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.smModeGroupLabel {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  font-size: 11px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: inherit;
+  font-weight: 500;
+}
+.smModeGroupLabel::before {
+  content: counter(smModeGroup, decimal-leading-zero);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: .04em;
+  color: var(--color-text-muted);
+  opacity: .7;
+}
+/* SIM-NAV-4 / F.2: collapsed current-mode hint -- only ever rendered
+   for the category owning the CURRENT simulator mode (see
+   modeNavHtml() in the JS). Same token E/F's own selected-row marker
+   already uses (functional: state/selection/interactive emphasis),
+   not an invented red; font-weight:700 matches the codebase's one
+   other established "must stand out" precedent
+   (.modKpiCardInfo .modKpiValue, module-system.css). */
+.smModeHint { font-size: 11.5px; color: var(--color-accent-primary); font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.smModeDisclosure { flex: 0 0 auto; color: var(--color-text-muted); transform: rotate(0deg); transition: transform var(--duration-standard) var(--ease-precise), color var(--duration-standard) var(--ease-precise); }
+.smModeGroup.open .smModeDisclosure { transform: rotate(90deg); color: var(--p-red-1); }
+.smModeGroupHeader:hover .smModeDisclosure { color: var(--color-text-primary); }
+.smModeGroup.open .smModeGroupHeader:hover .smModeDisclosure { color: var(--p-red-1); }
+.smModeRowsWrap { display: grid; grid-template-rows: 0fr; transition: grid-template-rows var(--duration-standard) var(--ease-precise); }
+.smModeGroup.open .smModeRowsWrap { grid-template-rows: 1fr; }
+.smModeRowsInner { overflow: hidden; min-height: 0; }
+.smModeButtons { display: flex; flex-direction: column; border-top: 1px solid var(--color-hairline); }
+.smModeBtn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-height: 50px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--color-hairline);
+  padding: 0 var(--space-4) 0 20px;
+  color: var(--color-text-secondary);
+  font-family: var(--font-ui);
+  font-size: 12.5px;
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--duration-standard) var(--ease-precise), color var(--duration-standard) var(--ease-precise);
+}
+.smModeButtons .smModeBtn:last-child { border-bottom: none; }
+.smModeBtn::before {
+  content: '';
+  position: absolute;
+  left: 8px; top: 50%;
+  width: 2px; height: 0;
+  border-radius: 1px;
+  background: var(--p-red-1);
+  opacity: 0;
+  transform: translateY(-50%);
+  transition: height var(--duration-standard) var(--ease-precise), opacity var(--duration-standard) var(--ease-precise), box-shadow var(--duration-standard) var(--ease-precise);
+}
+.smModeBtnLabel { line-height: 1.3; }
+.smChevron { flex: 0 0 auto; color: var(--color-text-muted); transition: transform var(--duration-standard) var(--ease-precise), color var(--duration-standard) var(--ease-precise); }
+.smModeBtn:hover { background: rgba(255,255,255,.025); color: var(--color-text-primary); }
+.smModeBtn:hover::before { height: 14px; opacity: .4; }
+.smModeBtn:hover .smChevron { transform: translateX(2px); color: var(--color-text-primary); }
+.smModeBtn.active { background: rgba(255,255,255,.045); color: var(--color-text-primary); font-weight: 500; }
+.smModeBtn.active::before { height: 22px; opacity: 1; box-shadow: 0 0 6px 0 rgba(238,75,87,.45); }
+.smModeBtn.active .smChevron { color: var(--p-red-1); transform: translateX(1px); }
+.smModeBtn:focus-visible { outline: var(--focus-ring); outline-offset: -2px; z-index: 1; }
+@media (prefers-reduced-motion: reduce) { .smModeBtn, .smModeBtn::before, .smChevron, .smModeGroup, .smModeGroupHeader, .smModeDisclosure, .smModeRowsWrap { transition: none; } }
+/* Production's sidebar/page chrome leaves less usable width than the
+   LAB's standalone page at the same viewport, so auto-fit alone still
+   fits 2 columns at 480px here (vs. 1 in the LAB) -- forced to match
+   the approved single-column mobile stack. */
+@media (max-width: 480px) { .smModeNav { grid-template-columns: 1fr; } }
+
+/* ---------- SIM-REG-01 / SIM-REG-01B: "Falar com um Analista" CTA
+   (Novos + Seminovos share this rule -- both files emit the identical
+   .smAnalystCta markup). Lives inside .modPageHeader, which is
+   already display:flex; justify-content:space-between (module-
+   system.css, untouched) -- so this simply becomes the header's
+   second child, pushed to the right, wrapping under the title on
+   narrow widths for free. Positioned in the static header, never
+   inside #smModeNavRegion, so it never competes with or gets
+   disturbed by mode/category switching.
+   SIM-REG-01B (Human UAT: position/layout/copy/authority all
+   approved -- "aumentar o destaque visual" only): now reuses the
+   EXACT SAME filled-accent authority already used by "Calcular"
+   itself (.btn-primary, simuladores.css) -- background/border-color/
+   foreground values copied verbatim from that already-approved,
+   already-Human-tested button family, not a new invented treatment.
+   ~5.4:1 contrast (#1a0506 on #ee4b57, computed) clears WCAG AA. ---------- */
+.smAnalystCta { display: inline-flex; align-items: center; gap: 9px; min-height: 44px; flex-shrink: 0; background: var(--color-accent-primary); border: 1px solid var(--color-accent-primary); border-radius: var(--radius-sm); padding: 0 18px; font-family: var(--font-ui); font-size: 12.5px; font-weight: 500; color: #1a0506; cursor: pointer; white-space: nowrap; }
+.smAnalystCtaIcon { color: inherit; flex-shrink: 0; }
+@media (prefers-reduced-motion: no-preference) { .smAnalystCta { transition: background var(--duration-fast) var(--ease-precise), filter var(--duration-fast) var(--ease-precise); } }
+.smAnalystCta:hover { background: #f16571; border-color: #f16571; }
+.smAnalystCta:active { filter: brightness(.92); }
+.smAnalystCta:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+@media (max-width: 480px) { .smAnalystCta { width: 100%; justify-content: center; } }
+
+/* ---------- PORTAL-NEXT-08.2 Change 2: balanced term-select grid
+   (replaces .segmented's flex-wrap for prazo, which could leave an
+   isolated last-row button). --term-cols is computed in JS per the
+   actual term count and current container width. ---------- */
+.smTermSelectGrid {
+  display: grid;
+  grid-template-columns: repeat(var(--term-cols, 4), 1fr);
+  gap: 1px;
+  background: var(--color-hairline-strong);
+  border: 1px solid var(--color-hairline-strong);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.smTermSelectGrid button {
+  background: var(--color-surface-2);
+  border: 0;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  padding: 9px 4px;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.smTermSelectGrid button.active { background: rgba(238, 75, 87, .14); color: #ffecec; font-weight: 500; }
+.smTermSelectGrid button:focus-visible { outline: 2px solid var(--color-accent-primary); outline-offset: -2px; z-index: 1; position: relative; }
+
+/* ---------- PORTAL-NEXT-08.2 Change 4: balloon payment-structure
+   story (Simulador Novos, Tradicional mode only). ---------- */
+.smPlanRegular { margin: 0; font-size: 15px; color: var(--color-text-secondary); }
+.smPlanRegularCount { font-family: var(--font-mono); font-weight: 500; color: var(--color-text-primary); }
+.smPlanRegularValue { display: inline; font-size: clamp(26px, 4.2vw, 38px) !important; }
+.smPlanSpecials { display: flex; flex-direction: column; gap: var(--space-2); margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--color-hairline); }
+.smPlanSpecialRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2) var(--space-3);
+  padding: 10px 14px;
+  background: var(--color-surface-2);
+  border: 1px solid rgba(238, 75, 87, .3);
+  border-radius: var(--radius-sm);
+}
+.smPlanSpecialValue { font-family: var(--font-mono); font-size: 18px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.smPlanSpecialBreakdown { font-size: 11px; color: var(--color-text-muted); flex-basis: 100%; }
+
+.smGrid { display: grid; grid-template-columns: 360px 1fr; gap: 28px; align-items: start; }
+@media (max-width: 900px) { .smGrid { grid-template-columns: 1fr; } }
+/* PORTAL-NEXT-08.3 Gate 24 -- Simulador Novos, Taxas Subsidiadas mode
+   only (applied via JS as an additive modifier class; the base .smGrid
+   rule above is untouched, so Seminovos -- which never sets this
+   class -- is unaffected). Stacks input above a full-width comparison
+   grid instead of squeezing 3-4 cards into a 1fr column beside a
+   fixed 360px rail. */
+.smGrid.smGridStacked { grid-template-columns: 1fr; }
+.smGrid.smGridStacked .smFormCard { max-width: 480px; }
+
+/* ---------- PORTAL-NEXT-08.3 Change 2/3: reusable schedule block
+   (Semestral/Anual, Parcela Única, Semestral Triton). Markers are
+   informational timeline markers, not buttons (Gate 33). ---------- */
+.smSchedule { margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--color-hairline); }
+.smScheduleRow { display: flex; flex-wrap: wrap; gap: var(--space-5); margin: var(--space-2) 0 var(--space-3); }
+.smScheduleItem { display: flex; flex-direction: column; gap: 4px; }
+.smScheduleItem strong { font-family: var(--font-mono); font-size: 15px; font-variant-numeric: tabular-nums; }
+.smScheduleLabel { font-size: 11px; color: var(--color-text-secondary); }
+.smScheduleMarkersLabel { font-size: 11px; color: var(--color-text-muted); margin: 0 0 var(--space-2); }
+.smScheduleMarkers { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.smScheduleMarker {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 34px; height: 34px; padding: 0 8px;
+  border: 1px solid var(--color-hairline-strong); border-radius: var(--radius-sm);
+  background: var(--color-surface-2); color: var(--color-text-secondary);
+  font-family: var(--font-mono); font-size: 12.5px; font-variant-numeric: tabular-nums;
+}
+
+/* ---------- PORTAL-NEXT-08.3 Change 4: Coparticipado emphasis pair
+   (Gates 14/15) -- financial-metric cards, not marketing banners. ---------- */
+.smEmphasisPair { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); margin: var(--space-4) 0; }
+@media (max-width: 480px) { .smEmphasisPair { grid-template-columns: 1fr; } }
+.smEmphasisCard {
+  background: var(--color-surface-2); border: 1px solid var(--color-hairline-strong);
+  border-radius: var(--radius-md); padding: var(--space-4);
+}
+.smEmphasisCardPrimary { border-color: var(--color-accent-primary); background: rgba(238, 75, 87, .07); }
+.smEmphasisValue { font-family: var(--font-mono); font-size: 22px; font-weight: 500; font-variant-numeric: tabular-nums; margin: 4px 0 0; word-break: break-word; }
+.smEmphasisValuePrimary { font-size: 26px; color: #ffecec; }
+
+/* ---------- PORTAL-NEXT-08.3 Change 5: Taxas Subsidiadas comparison
+   card grid (Gates 16-22), replacing the vertically-stacked rows. ---------- */
+.smSubsidiadaGroups { display: flex; flex-direction: column; gap: var(--space-5); }
+.smSubsidiadaGroupHead { font-family: var(--font-mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--color-text-muted); margin: 0 0 var(--space-2); }
+.smSubsidiadaGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: var(--space-3); }
+.smSubsidiadaCard {
+  display: flex; flex-direction: column; gap: 8px;
+  background: var(--color-surface-2); border: 1px solid var(--color-hairline-strong);
+  border-radius: var(--radius-md); padding: var(--space-3) var(--space-4);
+}
+.smSubsidiadaCard.best { border-color: var(--color-accent-primary); background: rgba(238, 75, 87, .06); }
+.smSubsidiadaCardHead { display: flex; justify-content: space-between; align-items: baseline; }
+.smSubsidiadaCardPrazo { font-family: var(--font-mono); font-size: 20px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.smSubsidiadaCardTaxa { font-family: var(--font-mono); font-size: 11.5px; color: var(--color-text-muted); }
+.smSubsidiadaCardPill { margin: -2px 0 2px; }
+.smSubsidiadaCardRow { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-2); font-size: 13px; padding-top: 4px; border-top: 1px solid var(--color-hairline); }
+.smSubsidiadaCardRow strong { font-family: var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; }
+.smSubsidiadaCardRow.smSubsidiadaCardRowEmphasis strong { font-size: 14.5px; color: var(--color-text-primary); }
+.smSubsidiadaCardValueStack { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; }
+.smSubsidiadaCardRebatePct { font-family: var(--font-mono); font-size: 10.5px; font-weight: 400; color: var(--color-text-muted); font-variant-numeric: tabular-nums; }
+
+/* Wave 3E migrated Novos' result region to .modPanelResult and its
+   form region to .modPanelForm + .smFormCard (kept alongside, not
+   replaced — the .smGridStacked .smFormCard descendant rule below
+   still targets it by name, exercised by Novos' own Subsidiadas mode,
+   which Seminovos has no equivalent of). Wave 3F migrated Seminovos'
+   result AND form regions the same way, but Seminovos has no stacked
+   mode, so it drops .smFormCard/.smResultCard entirely rather than
+   keeping a redundant class. .smResultCard is now fully superseded — 0
+   remaining reference in either file. .smFormCard stays ACTIVE, but
+   ONLY because Novos still carries it as that one redundant class;
+   .modPanelForm/.modPanelResult (module-system.css, Wave 3A) were
+   originally EXTRACTED from this exact rule, so the values remain
+   pixel-identical regardless of which class(es) apply. */
+.smFormCard, .smResultCard {
+  background: var(--color-surface-1);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+}
+
+.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.field label { font-size: 11.5px; color: var(--color-text-secondary); font-weight: 500; }
+.field .hint { font-size: 11px; color: var(--color-text-muted); }
+.field .hint.warn { color: var(--color-warning); }
+
+.input, .select {
+  font-family: var(--font-ui);
+  font-size: 13.5px;
+  padding: 9px 11px;
+  border-radius: var(--radius-sm);
+  width: 100%;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-hairline-strong);
+  color: var(--color-text-primary);
+}
+.input.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.input:focus-visible, .select:focus-visible { outline: 2px solid var(--color-accent-primary); outline-offset: 1px; }
+.input.invalid { border-color: var(--color-critical); }
+
+.inputAffix { position: relative; }
+.inputAffix .prefix {
+  position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+  font-family: var(--font-mono); font-size: 12.5px; color: var(--color-text-muted);
+  pointer-events: none;
+}
+.inputAffix .input { padding-left: 30px; }
+
+.segmented { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--color-hairline-strong); border-radius: var(--radius-sm); overflow: hidden; }
+.segmented button {
+  background: var(--color-surface-2); border: 0; border-right: 1px solid var(--color-hairline-strong);
+  color: var(--color-text-secondary); font-size: 12px; padding: 7px 13px; cursor: pointer;
+  font-family: var(--font-ui);
+}
+.segmented button:last-child { border-right: 0; }
+.segmented button.active { background: rgba(238, 75, 87, .14); color: #ffecec; }
+.segmented button:focus-visible { outline: 2px solid var(--color-accent-primary); outline-offset: -2px; }
+
+.btn {
+  font-family: var(--font-ui); font-size: 13px; font-weight: 500; padding: 9px 16px;
+  border-radius: var(--radius-sm); cursor: pointer; display: inline-flex; align-items: center;
+  gap: 8px; border: 1px solid transparent; line-height: 1.2;
+}
+.btn-primary { background: var(--color-accent-primary); border-color: var(--color-accent-primary); color: #1a0506; }
+.btn-primary:hover:not(:disabled) { background: #f16571; }
+.btn-secondary { background: var(--color-surface-2); border-color: var(--color-hairline-strong); color: var(--color-text-primary); }
+.btn-tertiary { background: none; border-color: transparent; color: var(--color-text-secondary); text-decoration: underline; padding: 4px 2px; }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+.btn:disabled { opacity: .42; cursor: not-allowed; }
+.btn:focus-visible { outline: 2px solid var(--color-accent-primary); outline-offset: 2px; }
+
+.smBalloonList { display: flex; flex-direction: column; gap: var(--space-2); margin-bottom: var(--space-3); }
+/* Gate PORTAL-NEXT-08.2 Change 3: value field is the priority (must
+   comfortably show a realistic BRL balloon amount without clipping),
+   month is a short 1-2 digit field, remove is icon-sized -- an equal
+   1fr/1fr split starved the currency field of width. */
+.smBalloonRow { display: grid; grid-template-columns: 92px minmax(150px, 1fr) auto; gap: var(--space-3); align-items: end; }
+.smBalloonRow .field { margin-bottom: 0; min-width: 0; }
+.smBalloonRow .btn { white-space: nowrap; }
+
+.kpiLabel {
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--color-text-muted); margin: 0 0 6px;
+}
+.emptyState, .errorState {
+  text-align: center; padding: 40px 20px; color: var(--color-text-secondary); font-size: 12.5px;
+  border: 1px dashed var(--color-hairline-strong); border-radius: var(--radius-md);
+}
+.emptyState .t, .errorState .t { color: var(--color-text-primary); font-size: 13.5px; font-weight: 500; margin-bottom: 6px; }
+.errorState { border-color: rgba(226, 84, 58, .4); color: #f3c7ba; }
+
+.smWarning {
+  display: flex; gap: 10px; background: var(--color-warning-soft); border: 1px solid rgba(219, 166, 72, .35);
+  border-radius: var(--radius-sm); padding: 12px 14px; font-size: 12.5px; color: #e8c992; margin: 0 0 var(--space-4);
+}
+
+.resultHero .kpiLabel { margin-bottom: 8px; }
+.resultHero .resultValue {
+  font-size: clamp(30px, 5vw, 44px); font-weight: 300; letter-spacing: -.01em; font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums; word-break: break-word;
+}
+.resultSecondaryGrid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 16px;
+  padding: 16px 0; border-top: 1px solid var(--color-hairline); margin-top: 16px;
+}
+.resultSecondaryGrid .val { font-size: 16px; font-family: var(--font-mono); font-variant-numeric: tabular-nums; word-break: break-word; }
+
+/* ---------- term grid (Linear/RATE_TABLE/Campanha: N terms at once) ---------- */
+/* V2_SIMULATOR_INSTALLMENT_GRID_VISUAL_FIX: auto-fill left incomplete
+   wrapped rows with unfilled trailing tracks (a visible void reading as
+   a broken divider at the row-wrap boundary) whenever the item count
+   wasn't an exact multiple of the auto-computed column count. --term-
+   grid-cols is set by UI.wireTermResultGrid() (simuladores-shared.js)
+   from the real item count + container width, same mechanism already
+   proven for .smTermSelectGrid's own --term-cols. */
+.smTermGrid { display: grid; grid-template-columns: repeat(var(--term-grid-cols, 6), 1fr); gap: 1px; background: var(--color-hairline); border: 1px solid var(--color-hairline); border-radius: var(--radius-sm); overflow: hidden; margin-top: var(--space-4); }
+.smTermCard { background: var(--color-surface-2); padding: 12px 8px; text-align: center; }
+.smTermCard.best { background: rgba(238, 75, 87, .1); }
+.smTermCard .term { font-family: var(--font-mono); font-size: 11px; color: var(--color-text-muted); margin-bottom: 6px; }
+.smTermCard .payment { font-family: var(--font-mono); font-size: 15px; font-variant-numeric: tabular-nums; }
+.smTermCard .rate { font-size: 10.5px; color: var(--color-text-muted); margin-top: 4px; }
+.smTermCard .unavailable { color: var(--color-text-muted); font-size: 11px; }
+
+/* ---------- Subsidiadas comparison groups ---------- */
+.smCompareGroups { display: flex; flex-direction: column; gap: var(--space-4); margin-top: var(--space-4); }
+.smCompareGroup { border: 1px solid var(--color-hairline); border-radius: var(--radius-md); overflow: hidden; }
+.smCompareGroupHead { display: flex; justify-content: space-between; padding: 10px 14px; background: var(--color-surface-2); font-size: 12.5px; font-weight: 500; }
+.smCompareRow { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)) auto; gap: var(--space-3); align-items: center; padding: 10px 14px; border-top: 1px solid var(--color-hairline); font-size: 12.5px; }
+.smCompareRow.best { background: var(--color-success-soft); }
+.smCompareRow .lbl { display: block; font-size: 10px; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: .05em; }
+.smCompareRow .v { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.smPill { font-size: 10.5px; padding: 3px 9px; border-radius: 999px; font-family: var(--font-mono); white-space: nowrap; }
+.smPill.excellent { background: var(--color-success-soft); color: var(--color-success); }
+.smPill.good { background: var(--color-success-soft); color: var(--color-success); }
+.smPill.bad { background: var(--color-critical-soft); color: var(--color-critical); }
+.smPill.neutral { background: var(--color-surface-2); color: var(--color-text-secondary); }
+
+/* ---------- Antecipação / Cash Conversion detail tables ---------- */
+.smTableWrap { overflow-x: auto; margin-top: var(--space-4); }
+.smTable { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.smTable th, .smTable td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--color-hairline); }
+.smTable th { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--color-text-muted); font-weight: 500; }
+.smTable td.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+.smClassBadge { display: inline-block; padding: 4px 10px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 500; font-family: var(--font-mono); }
+.smClassBadge.FINANCIAR { background: var(--color-success-soft); color: var(--color-success); }
+.smClassBadge.UTILIZAR { background: var(--color-warning-soft); color: var(--color-warning); }
+.smClassBadge.EQUIVALENTE { background: var(--color-surface-2); color: var(--color-text-secondary); }
+
+.smFootnote { font-size: 11px; color: var(--color-text-muted); margin-top: var(--space-3); line-height: 1.5; }
+
+@media (max-width: 480px) {
+  .smBalloonRow { grid-template-columns: 1fr; }
+  .resultHero .resultValue { font-size: 30px; }
+}

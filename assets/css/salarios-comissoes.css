@@ -1,0 +1,571 @@
+/* PORTAL-NEXT V2 — Salários & Comissões (RH-4B module shell).
+   MEDIUM density (module-registry.json). Every value is a var() from
+   design-system-2/tokens.css, same discipline as every sibling module.
+   Financial values are never communicated by color alone (Gate 30) --
+   every KPI/row pairs a value with a text label. */
+
+.salPage { max-width: 1200px; }
+.salBody { margin-top: var(--mod-space-control-gap); }
+
+/* RH-5F -- Human-observed bug: large currency values (e.g. "R$
+   6.980.111,74" and up) escaped/pressed outside the KPI cards, worst on
+   "Produção (Grupo)" inside Comissão — Gestor F&I. Root cause: .modKpiCard
+   is a CSS grid item (module-system.css .modKpiGrid, auto-fit/minmax),
+   and grid items default to min-width:auto -- an unbroken monospace
+   numeric string in .modKpiValue can force its own track wider than the
+   grid allows, pushing the value past the card's own border. Scoped to
+   this module only (.salPage covers both the top KPIs and the Gestor F&I
+   section, which renders inside it) -- the shared module-system.css rule
+   is intentionally left untouched so no other module using .modKpiCard
+   is affected by this fix. min-width:0 lets the card shrink to its grid
+   track instead of overriding it.
+
+   SAL-INTEGRATION-2, Human decision (supersedes RH-5F.1/H1): RH-5F.1's
+   per-value length-based font-size tiers (modKpiValueSmall/Tiny) made
+   sibling KPI values visually inconsistent -- a longer formatted string
+   is not semantic hierarchy, and Human explicitly rejected "Produção"
+   (or "Produção (Grupo)"/"Base") rendering smaller than its siblings
+   merely because its formatted value has more characters. Removed;
+   kpiCard() (salarios-comissoes.js) no longer applies any length-based
+   class, so every card in a family now renders at the SAME canonical
+   .modKpiValue size. The single-line, no-wrap goal from RH-5F.1 is kept
+   (white-space:nowrap below), but is now satisfied by giving every KPI
+   card enough room in the first place -- the grid track itself is
+   widened (module-system.css's own auto-fit/minmax pattern, just with a
+   larger minimum, scoped to this module only) rather than shrinking
+   individual values to fit a track too narrow for them. Verified to fit
+   the real production ceiling (R$ 999.999.999,99) at every mandated
+   width without wrapping or clipping. */
+.salPage .modKpiCard { min-width: 0; }
+.salPage .modKpiValue { white-space: nowrap; }
+.salPage .modKpiGrid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+@media (max-width: 900px) {
+  .salPage .modKpiGrid { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
+}
+@media (max-width: 480px) {
+  .salPage .modKpiGrid { grid-template-columns: 1fr; }
+}
+
+/* .salCardList intentionally never sets `display` itself (only inert
+   layout props below) -- display is controlled EXCLUSIVELY by
+   .salMobileOnly, same fix already proven necessary for Central de
+   Atendimento F&I (an earlier, unconditional `.caCardList{display:flex}`
+   rule was found to silently win the cascade over `.caMobileOnly`'s
+   display:none at equal specificity -- both renderers ended up visible
+   at every width). Applying the same fix here from the start. */
+.salMobileOnly { display: none; }
+@media (max-width: 760px) {
+  .salDesktopOnly { display: none; }
+  .salMobileOnly { display: flex; }
+}
+.salCardList { flex-direction: column; gap: var(--mod-space-card-gap); }
+
+.salCard {
+  border: 1px solid var(--mod-border);
+  border-radius: var(--radius-md);
+  padding: var(--mod-space-control-gap);
+  background: var(--color-surface-1);
+}
+.salCardTop { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-bottom: var(--space-2); flex-wrap: wrap; }
+.salCardName { font-weight: 600; font-size: 14px; }
+.salCardFields { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-1) var(--mod-space-control-gap); margin: 0 0 var(--mod-space-control-gap); font-size: 12.5px; }
+.salCardFields dt { color: var(--mod-muted); }
+.salCardFields dd { margin: 0; color: var(--color-text-secondary); text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ---------- Detalhes modal (operational detail foundation only) ---------- */
+.salModalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 120;
+  padding: var(--space-3);
+}
+.salModal {
+  background: var(--color-elevated-surface);
+  border: 1px solid var(--color-hairline-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-elevated);
+  padding: var(--mod-space-section-gap);
+  max-width: 720px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+.salModal h3 { margin: 0 0 var(--mod-space-control-gap); font-size: 15px; }
+
+/* ---------- Detalhes — operation rows (RH-5F) -- replaces the old
+   6-column .modTable (which forced Data/Chassi to wrap mid-value inside
+   this modal's narrower 720px cap, the exact defect the Human reported)
+   with a structured primary-row + financial-strip card per operation.
+   Date and masked chassis each get their own non-wrapping token; the
+   financial strip is a wrapping flex row so it reflows at narrow widths
+   instead of ever forcing horizontal scroll. ---------- */
+.salOpList { display: flex; flex-direction: column; gap: var(--mod-space-card-gap); }
+.salOpRow {
+  border: 1px solid var(--mod-border);
+  border-radius: var(--radius-sm);
+  padding: var(--mod-space-compact) var(--mod-space-card-gap);
+}
+.salOpRow.salOpRowFinanced { border-left: 3px solid var(--mod-success); }
+.salOpRowPrimary { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; font-size: 13px; }
+.salOpDate, .salOpChassis { font-family: var(--font-mono); white-space: nowrap; color: var(--color-text-secondary); }
+.salOpModel { font-weight: 600; flex: 1 1 auto; min-width: 0; overflow-wrap: break-word; }
+.salOpRowFinancial {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mod-space-control-gap) var(--mod-space-section-gap);
+  margin-top: var(--mod-space-compact);
+}
+.salOpMetric { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.salOpMetricLabel { color: var(--mod-muted); font-size: var(--mod-metadata-size); text-transform: uppercase; letter-spacing: .04em; }
+.salOpMetricValue { font-variant-numeric: tabular-nums; font-size: 13px; }
+.salOpRowMeta { margin-top: var(--mod-space-compact); font-size: 11.5px; color: var(--mod-muted); }
+
+/* ---------- Histórico (RH-4C, MASTER-only read-only viewer) ---------- */
+.salHistoryMeta { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+
+/* RH-5C.1 root-cause fix (Gate 37/39, "Histórico wrapper overflow"):
+   this table has 10 columns, and .modTable's shared base rule sets
+   white-space:nowrap on every cell with 12px horizontal padding per
+   side (--mod-space-card-gap) -- with 10 unwrapped columns, the sum of
+   natural content widths measurably exceeds the wrapper's available
+   width at 1366px by ~25px (measured: wrap clientWidth 1052 vs table
+   width ~1077.5), forcing .modTableWrap's own overflow-x:auto to
+   engage. Unlike Equipe/Analistas (7-9 columns, fits comfortably),
+   this table's extra Loja+Depto+Comissão columns push it over. Fixed
+   by trimming horizontal cell padding specifically for this table
+   (12px->8px per side, 10 columns x 2 sides = 20 cell-edges x 4px =
+   80px reclaimed, comfortably covering the ~25px gap with margin) --
+   a real geometry change, not an overflow-x:hidden/clip hack; content
+   remains fully visible and unclipped, just slightly denser. Re-
+   measured after: table width now fits inside the wrapper at every
+   mandated width, zero residual scroll. */
+.salHistSnapshotTableWrap .modTable th,
+.salHistSnapshotTableWrap .modTable td {
+  padding-left: var(--space-2);
+  padding-right: var(--space-2);
+}
+
+/* RH-5F.1A -- SAME root-cause fix as .salHistSnapshotTableWrap above,
+   now needed here too: RH-5F/RH-5F.1 grew this table from 9 to 11
+   columns (adding % Comissão, then Comissão Total) -- the comment this
+   file carried since RH-5C.1 ("Unlike Equipe/Analistas... fits
+   comfortably") stopped being true and nobody re-measured until Human
+   UAT caught the resulting horizontal scrollbar live. Confirmed root
+   cause (measured against the real deployed table): every .modTable
+   base rule cell is white-space:nowrap with 12px horizontal padding
+   per side (--mod-space-card-gap); 11 such columns overflow the
+   ~1052px wrapper by up to ~133px at 1366px (worst real group
+   measured). RH-5F.1's own automated "zero horizontal overflow" tests
+   only ever measured the PAGE root -- never caught this because
+   .modTableWrap's own overflow-x:auto absorbs the scroll locally
+   without ever pushing the page itself wider (the exact false-negative
+   class this Wave's brief asked to find and fix, see the new
+   regression test in tests/salarios-comissoes-test.py). Padding trim
+   alone (12px->8px, 11 columns x 2 sides x 4px = 88px) plus applying
+   the SAME already-proven currency size-tiering used on the KPI cards
+   (RH-5F.1) to this table's own two widest currency columns closes the
+   remaining gap -- content stays fully visible, single-line, never
+   clipped/hidden/scrolled; just denser, matching this exact codebase's
+   own established fix for this defect class. */
+/* RH-5F.1A -- CROSS-MODULE CSS LEAK, found while investigating why
+   the "zero overflow" tests still looked green at exactly 900px:
+   index.html loads every module's own stylesheet on every page load,
+   and BOTH coparticipado.css (@media max-width:900px) and gestao.css
+   (@media max-width:768px) apply an UNSCOPED "table -> stacked flex/
+   block cards" transform directly to the SHARED .modTable/
+   .modTableWrap classes -- each module's own comment there documents
+   it as a deliberate, reusable "ACTIVE" pattern, but neither scopes it
+   to its own module, so it silently applies to ANY .modTable on the
+   page, Salários included. This is why the Equipe table visually
+   rendered as stacked cards at exactly 900px even though this
+   module's OWN .salDesktopOnly/.salMobileOnly split (the real,
+   intended breakpoint, 760px) said the desktop table should still be
+   showing -- the DOM was correct, but an unrelated module's CSS
+   overrode how it rendered, and a block-stacked layout trivially has
+   zero horizontal overflow, so the old page-root-only test looked
+   "clean" for the wrong reason. A real desktop .modTable at exactly
+   900px, once density-fixed (below), fits fine on its own -- this
+   override exists purely to keep this module in control of its own
+   breakpoint regardless of what other modules' stylesheets do. Higher
+   specificity (.salEquipeTableWrap/.salAnalystTableWrap + .modTable +
+   element, 3 classes) than either leak's selector, so this wins
+   regardless of CSS file load order. */
+/* Compound selectors (.modTableWrap.salEquipeTableWrap, 2 classes on
+   the SAME element) -- guaranteed higher specificity than coparticipado
+   .css's plain ".modTableWrap" (1 class), never dependent on CSS file
+   load order for the tie-break. Both coparticipado.css and gestao.css
+   also flip overflow-x to visible inside their own media queries
+   (correct for THEIR stacked-card layout, where the wrapper no longer
+   needs to scroll) -- wrong here now that display is restored to a
+   real table, so restored explicitly. */
+.modTableWrap.salEquipeTableWrap,
+.modTableWrap.salAnalystTableWrap {
+  overflow-x: auto;
+}
+.salEquipeTableWrap .modTable,
+.salAnalystTableWrap .modTable {
+  display: table;
+}
+.salEquipeTableWrap .modTable thead,
+.salAnalystTableWrap .modTable thead {
+  display: table-header-group;
+}
+.salEquipeTableWrap .modTable tbody,
+.salAnalystTableWrap .modTable tbody {
+  display: table-row-group;
+}
+.salEquipeTableWrap .modTable tr,
+.salAnalystTableWrap .modTable tr {
+  display: table-row;
+}
+.salEquipeTableWrap .modTable td,
+.salEquipeTableWrap .modTable th,
+.salAnalystTableWrap .modTable td,
+.salAnalystTableWrap .modTable th {
+  display: table-cell;
+  /* coparticipado.css's own leak also sets min-width:130px per cell
+     (correct for ITS flex-card layout, meaningless -- actively harmful
+     -- for a real <td>: 11 columns x 130px alone explains a measured
+     1432px table at a 850px-wide wrapper). A real table cell should
+     size to its content/column, not carry an unrelated module's flex-
+     item floor. */
+  min-width: 0;
+}
+
+.salEquipeTableWrap .modTable th,
+.salEquipeTableWrap .modTable td {
+  padding-left: var(--space-1);
+  padding-right: var(--space-1);
+}
+.salEquipeTableWrap .modTable th { font-size: 10.5px; }
+.salEquipeTableWrap .modCurrencyCol { font-size: 12.5px; }
+.salEquipeTableWrap .modActionCol .modBtnSm {
+  padding-left: var(--space-1);
+  padding-right: var(--space-1);
+  font-size: 11.5px;
+}
+/* RH-5F.1A -- Gate 31's own principle (already applied to the Detalhes
+   modal) generalized here: the NAME column is the one place safe to
+   wrap when content is genuinely long (a real "Pedro Henrique Machado
+   Kodama"-class name) -- date/currency/chassis/percentage columns
+   never do (they keep the shared .modTable base rule's white-space:
+   nowrap). A max-width keeps a wrapped name from single-handedly
+   widening the column further than necessary. */
+.salEquipeTableWrap .modTable td:first-child,
+.salAnalystTableWrap .modTable td:first-child {
+  white-space: normal;
+  word-break: break-word;
+  max-width: 160px;
+}
+
+/* RH-5F.1A -- at 1024/900px the available wrapper width (~974/~854px)
+   is measurably narrower than 1366's (~1052px) while the 11-column
+   table's own natural content width barely changes -- the 1366-only
+   density pass (padding+font, above) verifiably still isn't enough at
+   these 2 widths (measured: BANDEIRANTES-class content needs ~1008px
+   at 1024, only ~974px available). Rather than keep shrinking text
+   toward the readability floor (Gate 23), a second, narrower-only
+   density step trims currency-column padding further and drops the
+   name column's max-width slightly -- verified empirically (component-
+   level scrollWidth<=clientWidth) at both 1024 and 900, real content
+   included, never by hiding/clipping/scrolling. */
+@media (max-width: 1100px) {
+  .salEquipeTableWrap .modTable td,
+  .salEquipeTableWrap .modTable th,
+  .salAnalystTableWrap .modTable td,
+  .salAnalystTableWrap .modTable th {
+    padding-left: 5px;
+    padding-right: 5px;
+  }
+  .salEquipeTableWrap .modCurrencyCol,
+  .salAnalystTableWrap .modCurrencyCol {
+    font-size: 11.5px;
+  }
+  .salEquipeTableWrap .modTable td:first-child,
+  .salAnalystTableWrap .modTable td:first-child {
+    max-width: 120px;
+  }
+}
+
+/* RH-5F.1A -- one more narrow-only step: at 900px (measured, real
+   content, both known store groups) the 1100px tier alone still left
+   ~87px of real overflow. Rather than push the SAME properties further
+   toward illegibility, this tier shifts the Ações column's own button
+   to a smaller footprint too (previously untouched) alongside a final
+   small padding/name-width trim -- verified empirically down to a
+   >=10px readability floor (Gate 23, this Wave's own regression test
+   36d). */
+@media (max-width: 950px) {
+  .salEquipeTableWrap .modTable td,
+  .salEquipeTableWrap .modTable th,
+  .salAnalystTableWrap .modTable td,
+  .salAnalystTableWrap .modTable th {
+    padding-left: 2px;
+    padding-right: 2px;
+  }
+  .salEquipeTableWrap .modCurrencyCol,
+  .salAnalystTableWrap .modCurrencyCol {
+    font-size: 10px;
+  }
+  .salEquipeTableWrap .modTable td:first-child,
+  .salAnalystTableWrap .modTable td:first-child {
+    max-width: 60px;
+  }
+  .salEquipeTableWrap .modActionCol .modBtnSm,
+  .salAnalystTableWrap .modActionCol .modBtnSm {
+    padding-left: 4px;
+    padding-right: 4px;
+    font-size: 10.5px;
+  }
+}
+
+/* RH-5C: the real, already-frozen "GESTOR F&I" snapshot row (V1's
+   group-wide oversight commission, one per closing, loja literally
+   "GRUPO") gets its own left-accent treatment so it reads as a
+   distinct, real feature instead of a stray/anomalous row -- a
+   different accent than .salManagerRow's plain background swap
+   (Equipe, RH-5B.1) since this is a different real concept (group-wide
+   single-identity oversight commission, not a per-store manager
+   trailing total). Pure presentation of already-persisted data, no
+   computation. */
+.salGestorFiRow { border-left: 3px solid var(--color-accent-primary); }
+.salGestorFiRow td:first-child { padding-left: calc(var(--mod-space-card-gap) - 3px); }
+.salCard.salGestorFiRow { border-left: 3px solid var(--color-accent-primary); }
+
+/* ---------- Equipe grouping (RH-5B.1 Secure presentation parity):
+   Loja · Depto sub-header row, and the manager/team-total trailing row
+   embedded at the end of each group -- matches V1's own
+   operationalManagerRowHtml/operationalTeamTotalRowHtml as one more
+   <tr>, never a separate section (portal-app.js:1375-1423). ---------- */
+/* RH-5F, Human feedback ("nomes de loja/unidade precisam de mais
+   hierarquia visual"): stronger weight/contrast/accent than the plain
+   muted mono label this had before -- but deliberately still well below
+   .modTitle (the page's own "Salários & Comissões" h1, 20px+/700) so the
+   hierarchy reads store-group < page title, never louder. */
+.salGroupHeaderRow th {
+  background: var(--mod-surface-panel-2);
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  text-align: left;
+  padding: var(--mod-space-compact) var(--mod-space-card-gap);
+  border-bottom: 1px solid var(--mod-border-strong);
+  border-left: 3px solid var(--color-accent-primary);
+}
+/* RH-5B.3 root-cause fix: the shared base rule (module-system.css
+   .modTable thead th:first-child,.modTable td:first-child) makes the
+   FIRST column sticky with its OWN forced background
+   (--color-surface-1) independent of any row-level class -- so a
+   .salManagerRow/.salTeamTotalRow's first cell rendered a visibly
+   different shade than its own other 8 cells (--mod-surface-panel-2),
+   the exact "linha cortada" seam reported. This table never needs
+   horizontal-scroll column-anchoring (proven zero-overflow at every
+   mandated width), so the sticky behavior serves no purpose here --
+   disabled outright, matching the SAME established precedent already
+   used elsewhere in this codebase for tables that don't want it
+   (score.css .scPage .modTable, shell-admin.css .hcSnapshotTable/
+   .clPreviewTable/.scStoreTable, all `position:static;background:none`). */
+.salDesktopOnly .modTable thead th:first-child,
+.salDesktopOnly .modTable td:first-child {
+  position: static;
+  background: none;
+}
+.salManagerRow td, .salTeamTotalRow td {
+  font-weight: 600;
+  background: var(--mod-surface-panel-2);
+}
+.salDesktopOnly .modTable tr.salManagerRow td:first-child,
+.salDesktopOnly .modTable tr.salTeamTotalRow td:first-child {
+  background: var(--mod-surface-panel-2);
+}
+.salManagerRow td:first-child, .salTeamTotalRow td:first-child { color: var(--color-text-primary); }
+.salGroupHeading {
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin: var(--mod-space-control-gap) 0 var(--mod-space-compact);
+  padding-left: var(--space-2);
+  border-left: 3px solid var(--color-accent-primary);
+}
+.salGroupHeading:first-child { margin-top: 0; }
+.salCard.salManagerRow, .salCard.salTeamTotalRow { background: var(--mod-surface-panel-2); }
+
+/* ---------- Store groups (RH-5F): each store's table(s) + its Analyst
+   sub-section travel together as one visual unit, with real breathing
+   room before the next store -- so the page stays scannable now that
+   Analistas is interleaved per store instead of one flat block at the
+   end. ---------- */
+.salStoreGroup + .salStoreGroup { margin-top: var(--mod-space-section-gap); }
+.salOrphanStoreHeading {
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin: 0 0 var(--mod-space-compact);
+  padding-left: var(--space-2);
+  border-left: 3px solid var(--color-accent-primary);
+}
+
+/* ---------- Analista, inside a store group (RH-5F) -- visually a
+   distinct row-type from seller/manager (own sub-heading + slightly
+   indented, never the same accent as .salGroupHeaderRow's store-level
+   header or .salManagerRow/.salTeamTotalRow's shaded total row), so the
+   three row types stay legible as three different things at a glance
+   without inventing a fourth unrelated visual system. ---------- */
+.salAnalystSection { margin-top: var(--mod-space-compact); }
+.salAnalystHeading {
+  color: var(--mod-muted);
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin: 0 0 var(--space-1);
+  padding-left: calc(var(--space-2) + 3px);
+}
+.salAnalystTableWrap { margin-left: var(--space-3); }
+.salAnalystTable th, .salAnalystTable td { font-size: 12.5px; }
+/* border-style (not margin-left) for the mobile indent -- a card is a
+   flex child sized to its container; adding a left MARGIN pushes its
+   right edge past the viewport at narrow widths instead of shrinking it
+   (measured, real 480px overflow), while a border adds no box-model
+   width of its own beyond its declared thickness. */
+.salAnalystCard { border-style: dashed; border-left-width: 3px; }
+
+/* ---------- Faixas de comissão (RH-5B.3) -- native <details>
+   disclosure, collapsed by default: a real V1 concept, restored as a
+   reference the Human opens when needed rather than a competing hero
+   section. ---------- */
+.salRangesDisclosure {
+  border: 1px solid var(--mod-border);
+  border-radius: var(--radius-md);
+  padding: var(--mod-space-compact) var(--mod-space-control-gap);
+  margin: var(--mod-space-control-gap) 0;
+  background: var(--color-surface-1);
+}
+.salRangesDisclosure summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--color-text-primary);
+  list-style: none;
+}
+.salRangesDisclosure summary::-webkit-details-marker { display: none; }
+.salRangesDisclosure summary::before { content: "▸ "; color: var(--mod-muted); }
+.salRangesDisclosure[open] summary::before { content: "▾ "; }
+.salRangesBody { margin-top: var(--mod-space-control-gap); }
+.salRangesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--mod-space-control-gap);
+  margin-top: var(--mod-space-control-gap);
+}
+.salRangesGrid ul { margin: 0; padding-left: 18px; font-size: 12.5px; color: var(--color-text-secondary); }
+.salRangesGrid li { margin-bottom: var(--space-1); }
+.salRangesGrid b { color: var(--color-text-primary); font-variant-numeric: tabular-nums; }
+.salRangesNote { font-size: 11.5px; margin-top: var(--mod-space-control-gap); }
+
+/* ---------- Comissão — Gestor F&I (RH-5C.1, live/open-period) --
+   deliberately a DIFFERENT visual treatment than .salManagerRow/
+   .salTeamTotalRow (Equipe's per-store manager trailing row) so the
+   two distinct V1 concepts are never visually conflated: a bordered,
+   slightly elevated card section (not a table row), matching the same
+   "secondary governed information" weight as the static Faixas
+   reference card but with its own accent-top border for a clearly
+   different, more prominent placement (this is live, per-period,
+   Human-requested data, not a static rules reference). ---------- */
+.salGestorFiSection {
+  border: 1px solid var(--mod-border);
+  border-top: 3px solid var(--color-accent-primary);
+  border-radius: var(--radius-md);
+  padding: var(--mod-space-control-gap);
+  margin: var(--mod-space-section-gap) 0 var(--mod-space-control-gap);
+  background: var(--color-surface-1);
+}
+.salGestorFiSection .modSectionTitle { margin-top: 0; }
+.salGestorFiSection .modKpiGrid { margin-top: var(--mod-space-control-gap); }
+
+/* ---------- Own-commission summary cards (RH-5F.3) -- Faixa de
+   Comissão / Comissão Total / DSR do mês / Comissão + DSR. A second
+   .modKpiGrid row directly under the main operational KPI grid (never
+   buried only inside a table row), separated by the same control-gap
+   spacing .salGestorFiSection already uses for its own secondary KPI
+   row -- consistent rhythm, no new spacing token. "Comissão + DSR"
+   (ANALISTA's final outcome card) reuses modKpiCardSuccess, the same
+   accent already used for Rentabilidade -- no new color system.
+   RH-5F.3B, Human UAT correction: align-items:start so the compact
+   Faixa card (below) sizes to its OWN short content instead of CSS
+   grid's default stretch-to-tallest-sibling behavior, which would have
+   silently re-inflated it back to full KPI-card height. ---------- */
+.salOwnCommissionGrid { margin-top: var(--mod-space-control-gap); align-items: start; }
+
+/* ---------- Compact Faixa de Comissão component (RH-5F.3B, Human UAT
+   correction: "Ficou muito grande, estranha" -- the Faixa is a
+   CLASSIFICATION, not a primary financial KPI, so it must not compete
+   visually with Comissão Total/DSR/Comissão + DSR). Reuses
+   .modKpiCardSecondary verbatim (this codebase's own existing smaller-
+   KPI-card variant, module-system.css) -- not a new card shape, just
+   the already-established compact one. The tier itself renders as a
+   .modBadge pill (already-established badge shape/sizing), colored via
+   the existing modBadgeSuccess/Warning/Info tokens (FAIXA_TIER_CLASS in
+   salarios-comissoes.js) -- text label always present (Gate 25: meaning
+   never depends on color alone), percentage stays plain text next to
+   it, never removed. ---------- */
+.salFaixaCompactCard { display: flex; flex-direction: column; justify-content: center; }
+.salFaixaCompactValue { display: flex; align-items: center; gap: var(--space-1); margin-top: var(--mod-space-micro); }
+.salFaixaTierBadge { font-size: 11px; padding: 3px 8px; }
+.salFaixaPct { font-family: var(--font-mono); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* ---------- Team Faixas / team total caption (RH-5F.3A, GERENTE only).
+   RH-5F.3B, Human UAT correction: the dedicated "Comissão Total da
+   Equipe" KPI card was removed -- the value moved into this SAME
+   caption (never re-added as a card, never deleted) so it stays visible
+   directly above the Equipe table it summarizes. A plain caption, not a
+   KPI -- it's a tally + a reference figure, not a primary result. ---------- */
+.salTeamFaixasNote { margin: var(--mod-space-control-gap) 0 0; font-size: 12.5px; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1); }
+.salTeamTotalInline { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--color-text-primary); }
+.salTeamFaixasNote .salFaixaTierBadge { font-size: 10px; padding: 2px 6px; }
+
+/* ---------- viewMode toggle (Atual / Histórico) -- only ever 2 items,
+   never a peer-level tab strip alongside Resumo/Equipe/Analistas/Gestor
+   (which V1 never had -- see the file header note in
+   salarios-comissoes.js). Reuses .modTabGroup/.modTab as-is. ---------- */
+.salViewModeToggle { margin-bottom: 0; }
+
+/* ---------- Comissão Total (RH-5F.1) -- same single-line discipline as
+   the KPI cards (H1): a mobile card's dd column already gets the
+   remaining grid width, but a real value can still be long enough to
+   want the same guarantee explicitly. ---------- */
+.salCommissionTotalValue { white-space: nowrap; }
+
+/* ---------- Analyst Details modal (RH-5F.1, Human decision H2) --
+   reuses .salOpList/.salOpRow (the same seller Detalhes visual system,
+   Gate 26 -- never a second, unrelated modal language) for the
+   operation list; only the summary header and reconciliation note above
+   it are new. ---------- */
+.salAnalystDetailSummary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mod-space-control-gap) var(--mod-space-section-gap);
+  margin-bottom: var(--mod-space-control-gap);
+  padding-bottom: var(--mod-space-control-gap);
+  border-bottom: 1px solid var(--mod-border);
+}
+.salAnalystReconcileNote { margin: 0 0 var(--mod-space-control-gap); font-size: 11.5px; }
+
+/* Período personalizado: aviso de cálculo do Portal (não oficial) e validação das datas. */
+.salCustomNotes { margin: var(--mod-space-control-gap) 0 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.salCustomNote { margin: 0; padding: var(--space-2) var(--space-3); border: 1px solid var(--color-warning); border-radius: var(--radius-sm); background: var(--color-warning-soft); color: var(--color-text-secondary); font-size: 12.5px; line-height: 1.5; }
+.salCustomNote b { color: var(--color-text-primary); }
+.salCustomError { margin: 0; color: var(--color-critical); font-size: 12.5px; }

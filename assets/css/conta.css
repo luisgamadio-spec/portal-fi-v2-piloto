@@ -1,0 +1,44 @@
+/* Páginas avulsas de conta (primeiro-acesso.html, verificar-email.html):
+   mesmo visual do login do V2 (tokens de design-tokens.css), sem o shell. */
+*{box-sizing:border-box}
+body{
+  margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:var(--color-canvas);color:var(--color-text-primary);
+  font-family:var(--font-ui);padding:16px;
+}
+.contaCard{
+  width:100%;max-width:420px;
+  background:var(--color-elevated-surface);
+  border:1px solid var(--color-hairline-strong);
+  border-radius:14px;
+  padding:var(--space-6) var(--space-5) var(--space-5);
+  box-shadow:var(--shadow-elevated);
+}
+.contaLogo{display:block;height:34px;width:auto;margin:0 0 var(--space-5)}
+.contaTitulo{font-size:19px;font-weight:700;color:var(--color-text-primary);margin:0 0 4px}
+.contaTexto{font-size:13px;line-height:1.5;color:var(--color-text-muted);margin:0}
+.contaCampo{display:flex;flex-direction:column;gap:6px;margin-top:var(--space-3)}
+.contaCampo label{font-size:11.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-secondary)}
+.contaCampo input{
+  font-family:var(--font-ui);font-size:14.5px;color:var(--color-text-primary);
+  background:var(--color-surface-2);border:1px solid var(--color-hairline-strong);
+  border-radius:9px;padding:12px 14px;
+}
+.contaCampo input:focus-visible{outline:none;border-color:var(--color-accent-primary);box-shadow:0 0 0 3px rgba(238,75,87,.16)}
+.contaBotao{
+  display:block;width:100%;margin-top:var(--space-5);
+  font-family:var(--font-ui);font-size:14.5px;font-weight:700;letter-spacing:.01em;text-align:center;text-decoration:none;
+  color:#1a0506;background:var(--color-accent-primary);border:1px solid var(--color-accent-primary);
+  border-radius:9px;padding:13px 16px;cursor:pointer;
+}
+.contaBotao:hover:not(:disabled){background:#f16571;border-color:#f16571}
+.contaBotao:disabled{opacity:.6;cursor:not-allowed}
+.contaBotao:focus-visible{outline:var(--focus-ring);outline-offset:2px}
+.contaMsg{margin-top:var(--space-3);font-size:13px;line-height:1.45;min-height:18px}
+.contaMsg.erro{color:var(--color-critical)}
+.contaMsg.ok{color:var(--color-success)}
+.contaLink{display:block;margin-top:var(--space-4);text-align:center;font-size:13px;color:var(--color-text-secondary);text-decoration:none}
+.contaLink:hover{color:var(--color-text-primary)}
+.contaRodape{margin-top:var(--space-5);padding-top:var(--space-3);border-top:1px solid var(--color-hairline);text-align:center;color:var(--color-text-muted);font-size:11px}
+.contaRodape b{color:var(--color-text-secondary)}
+.hidden{display:none !important}

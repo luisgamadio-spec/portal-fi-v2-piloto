@@ -1,0 +1,480 @@
+/* PORTAL-NEXT V2 — Score module CSS.
+   Visual authority: design-system-2.1/references/score.md (NORMATIVE
+   TEXT pattern, no executable Approved Reference exists for Score —
+   see docs/SCORE-VISUAL-AUTHORITY.md) + data-table.md (ranking table).
+   Every value is a var() from tokens.css. No speedometer/gauge/
+   trophy/medal/podium/emoji (score.md's own MUST NOT). Sortable-column
+   visual indicator is UNRESOLVED per data-table.md — not invented;
+   the table shows calcScores()'s own sort order only, not
+   interactively re-sortable this Wave. */
+
+.scPage { max-width: 1100px; }
+
+/* Wave 3D — page header and fixture banner migrated to the shared
+   module-system.css primitives (.modPageHeader/.modFixtureBanner).
+   Rules below superseded, 0 remaining reference (grep-verified before
+   editing), kept for history same as prior Waves' dead-rule discipline. */
+.scHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-5);
+}
+.scHeader h1 {
+  font-family: var(--font-ui);
+  font-weight: 300;
+  font-size: clamp(22px, 2.6vw, 30px);
+  letter-spacing: -.01em;
+  margin: 0;
+}
+.scHeader p {
+  color: var(--color-text-secondary);
+  margin: var(--space-1) 0 0;
+  font-size: 13px;
+}
+
+/* ---------- dev fixture context (Gate 30/51 — clearly dev-only) ---------- */
+.scFixtureBar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  padding: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-5);
+  border: 1px dashed var(--color-hairline-strong);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--color-text-muted);
+}
+.scFixtureBar .scFixtureLabel {
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--color-warning);
+}
+.scFixtureBar select {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-hairline-strong);
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 3px var(--space-2);
+  border-radius: var(--radius-sm);
+}
+.scFixtureBar select:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+
+/* ---------- ranking table (HIGH density -- data-table.md pattern) ---------- */
+/* Wave 3D — desktop table base (.scTableWrap/.scTable's own box model,
+   typography) is superseded by the shared .modTableWrap/.modTable, 0
+   remaining reference. table-layout:fixed + wrapping is NOT superseded
+   (same reasoning/convention as Waves 3B/3C's own widest-table
+   overrides): the shared .modTable's default white-space:nowrap isn't
+   what keeps this table at 0 horizontal scroll — this module's own
+   PORTAL-NEXT-07.6 fix (fixed layout + wrapping) is, so it's
+   re-declared as a module-specific override. */
+.scPage .modTable { table-layout: fixed; }
+.scPage .modTable thead th, .scPage .modTable td { white-space: normal; overflow-wrap: break-word; }
+/* the shared .modTable's own generic first-child sticky rule would
+   stick the RANK column (#) — this table deliberately keeps the NAME
+   column (2nd child, .scNameCell below) sticky instead, since that's
+   the more useful anchor while scrolling; cancel the shared rule on
+   the actual first column so the two don't both try to pin to left:0. */
+.scPage .modTable thead th:first-child, .scPage .modTable td:first-child { position: static; background: none; }
+
+.scTableWrap { overflow-x: auto; border: 1px solid var(--color-hairline); border-radius: var(--radius-md); }
+.scTable { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 13px; }
+.scTable thead th {
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--color-text-muted);
+  font-weight: 500;
+  padding: var(--space-3) var(--space-3);
+  border-bottom: 1px solid var(--color-hairline-strong);
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+/* RESTAURAÇÃO DE FILTROS -- item 3: cabeçalho e célula de colunas
+   numéricas (Financ.) devem compartilhar o mesmo eixo de alinhamento.
+   .modNumCol sozinho (0,1,0) perde para a regra acima (0,1,2) -- esta
+   é a correção real (mesmo padding/eixo que a célula, sem
+   margin/transform mascarando o desalinhamento), não um ajuste
+   posicional avulso. */
+.scTable thead th.modNumCol { text-align: right; }
+.scTable td {
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--color-hairline);
+  vertical-align: middle;
+}
+.scTable tbody tr:last-child td { border-bottom: none; }
+.scTable tbody tr { cursor: pointer; }
+.scTable tbody tr:hover,
+.scTable tbody tr:focus-visible { background: rgba(255,255,255,.028); }
+.scTable tbody tr:focus-visible { outline: var(--focus-ring); outline-offset: -2px; }
+/* Wave 3D — superseded by shared .modNumCol (identical rule), 0
+   remaining reference. */
+.scTable .scNumCol { font-family: var(--font-mono); text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ---------- Score linear meter (Gate 3: TRANSPLANTED from the Human
+   Approved Executable Reference — design-system-2.1/references/
+   baselines/module-landing-approved/{pages.js,styles.css}
+   .rankScoreBar/.fill, app.js's own Design Trace tags this
+   'score-list' component status:APPROVED. Track size (80x4, radius 3)
+   and the literal #232325 track background are copied AS-IS from that
+   frozen reference — not tokenized here, since that's the approved
+   value, not this Wave's to "fix". The BAR ITSELF still does not carry
+   quality-coded color (fill stays --color-accent-primary, unchanged) —
+   PORTAL-NEXT-07.7B's new .scBand element below is a SEPARATE,
+   additive interpretation layer above the score/bar (docs/SCORE-BAND-
+   NORMATIVE-07-7B.md), not a recoloring of the bar; the bar's own
+   mathematical fill relationship (Gate 13) is untouched. No fill
+   animation exists in the reference (checked directly) -- none added
+   here either. */
+.scScoreCell { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+.scScoreValueRow { display: flex; align-items: center; gap: var(--space-2); }
+.scMeterTrack { width: 80px; height: 4px; border-radius: 3px; background: #232325; overflow: hidden; flex-shrink: 0; }
+.scMeterFill { display: block; height: 100%; border-radius: 3px; background: var(--color-accent-primary); }
+@media (max-width: 480px) { .scMeterTrack { width: 48px; } }
+
+/* PORTAL-NEXT-07.7B — HUMAN-APPROVED executive Score Band (docs/
+   SCORE-BAND-NORMATIVE-07-7B.md): the textual label is authoritative
+   (Gate 14 — never color-only). Colors below are a restrained,
+   documented reuse of existing Design System semantic tokens
+   (design-system-2/tokens.css) — 4 tokens exist (success/warning/
+   critical/info) for 5 bands, so a naive 1:1 mapping doesn't cleanly
+   work (Gate 12); PERFORMANCE (the "meets expectations" baseline
+   band) deliberately stays neutral/unmarked rather than forcing a 5th
+   hue, and ELITE reuses --color-success (same as ALTA PERFORMANCE)
+   distinguished by weight + a subtle border rather than inventing a
+   new color — the same "position/weight, not just hue" principle
+   already used for Dashbi's Share/Receita Total emphasis (PORTAL-
+   NEXT-07.5). No red/orange/yellow/green/gold rainbow was assumed. */
+.scBand { font-family: var(--font-mono); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+.scBandCritico { color: var(--color-critical); }
+.scBandDesenvolvimento { color: var(--color-warning); }
+.scBandPerformance { color: var(--color-text-secondary); }
+.scBandAlta { color: var(--color-success); }
+.scBandElite { color: var(--color-success); font-weight: 700; padding: 1px 6px; border: 1px solid var(--color-success); border-radius: var(--radius-sm); }
+.scTable .scNameCell {
+  position: sticky;
+  left: 0;
+  background: var(--color-surface-1);
+  font-weight: 500;
+}
+/* PORTAL-NEXT-07.6 — was overflow:hidden + text-overflow:ellipsis
+   (truncating vendor names, real information loss and the direct
+   cause of a residual 2-4px overflow even past the ellipsis at
+   320-430px). Wraps instead, matching Gate 55's "seller names may
+   wrap" rule; the title attribute (full name on hover) stays, harmless
+   now that the name is never cut. */
+.scTable .scNameText {
+  display: block;
+  max-width: 220px;
+  overflow-wrap: break-word;
+  white-space: normal;
+}
+.scRankCol { font-family: var(--font-mono); color: var(--color-text-muted); width: 34px; }
+
+/* ---------- detail / breakdown (Gate 15-16 -- meters, not gamified) ---------- */
+.scDetail {
+  margin-top: var(--space-6);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-hairline);
+}
+.scDetail[hidden] { display: none; }
+.scDetailHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  flex-wrap: wrap;
+}
+.scDetailHead h2 { font-family: var(--font-ui); font-weight: 400; font-size: 18px; margin: 0; }
+.scDetailTotal { font-family: var(--font-mono); font-size: 13px; color: var(--color-text-secondary); font-variant-numeric: tabular-nums; }
+.scCriterion { padding: var(--space-3) 0; border-bottom: 1px solid var(--color-hairline); }
+.scCriterion:last-child { border-bottom: none; }
+.scCriterionTop { display: flex; justify-content: space-between; gap: var(--space-3); font-size: 13px; }
+.scCriterionName { color: var(--color-text-primary); }
+.scCriterionPoints { font-family: var(--font-mono); color: var(--color-text-secondary); font-variant-numeric: tabular-nums; }
+.scCriterionMeta { display: flex; justify-content: space-between; gap: var(--space-3); margin-top: 2px; font-size: 11.5px; color: var(--color-text-muted); }
+.scMeter { height: 3px; background: var(--color-hairline-strong); border-radius: 2px; margin-top: var(--space-2); overflow: hidden; }
+.scMeter span { display: block; height: 100%; background: var(--color-accent-primary); }
+.scAmostraNote { margin-top: 4px; font-size: 11px; color: var(--color-text-muted); font-style: italic; }
+
+/* ---------- close/back affordance ---------- */
+.scCloseDetail {
+  background: none; border: 1px solid var(--color-hairline-strong);
+  color: var(--color-text-secondary); font-family: var(--font-mono);
+  font-size: 11px; padding: 4px var(--space-2); border-radius: var(--radius-sm); cursor: pointer;
+}
+.scCloseDetail:focus-visible, .scCloseDetail:hover { outline: var(--focus-ring); outline-offset: 2px; color: var(--color-accent-primary); }
+
+/* RESTAURAÇÃO DE FILTROS -- item 2 (nota de ajuste de escopo). */
+.scFilterAdjustedNote { display: inline-block; font-size: 11px; color: var(--color-warning); margin-top: 2px; }
+
+/* ---------- item 4: "Ver vendas detalhadas" ---------- */
+.scSalesDetailToggle {
+  background: none; border: 1px solid var(--color-hairline-strong);
+  color: var(--color-accent-primary); font-family: var(--font-mono);
+  font-size: 11px; padding: 4px var(--space-2); border-radius: var(--radius-sm); cursor: pointer;
+}
+.scSalesDetailToggle:hover, .scSalesDetailToggle:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+.scSalesDetail { margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px dashed var(--color-hairline-strong); }
+.scSalesDetailHead { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-3); flex-wrap: wrap; }
+.scSalesDetailHead h3 { font-family: var(--font-ui); font-weight: 400; font-size: 14px; margin: 0; }
+.scSalesDetailCount { font-family: var(--font-mono); font-size: 11px; color: var(--color-text-muted); }
+.scSalesList { display: flex; flex-direction: column; gap: var(--space-2); }
+/* REFINAMENTO VISUAL -- item 2: o cabeçalho (.scSalesListHead) reaproveita
+   a MESMA .scSalesOpToggle (mesmo grid), então esta é a ÚNICA definição
+   de colunas -- nunca pode divergir entre cabeçalho e linhas. */
+.scSalesOpToggle {
+  /* item 2: colunas em fr puro (nunca auto) -- cada linha é seu
+     próprio grid independente (não uma <table> compartilhada), então
+     uma coluna "auto" dimensiona por CONTEÚDO e diverge entre o
+     cabeçalho (texto longo em maiúsculas) e cada linha (valores mais
+     curtos), quebrando o alinhamento que este item exige. Frações
+     puras garantem a MESMA largura em todo grid independente, sempre. */
+  display: grid; grid-template-columns: 2fr 1fr 1fr; gap: var(--space-4); align-items: center;
+  width: 100%; text-align: left; background: var(--color-surface-2); border: none;
+  padding: var(--space-2) var(--space-3); font-family: var(--font-mono); font-size: 12px;
+  color: var(--color-text-primary); cursor: pointer; box-sizing: border-box;
+}
+/* Grid items have an implicit min-width:auto (= their min-content) by
+   default -- a <button> (rows) and a <div> (.scSalesListHead) resolve
+   that differently, and the header's longer uppercase labels have a
+   wider min-content than a row's shorter values, so without this the
+   header's own track sizing can overflow past the shared 2fr/1fr/1fr
+   tracks and stop matching the rows' actual rendered width (the exact
+   misalignment item 2 forbids). min-width:0 lets every column honor
+   the SAME fr proportions regardless of its own content length. */
+.scSalesOpToggle > * { min-width: 0; }
+.scSalesListHead {
+  background: none; cursor: default; color: var(--color-text-muted);
+  font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em;
+  padding: 2px var(--space-3) 4px; margin-bottom: 2px;
+  /* item 2: mesma borda (1px) das linhas de dados, só transparente --
+     sem isso o header ficaria 2px mais largo que .scSalesOpRow (que
+     tem border:1px solid real), um desalinhamento sub-pixel real
+     ainda que visualmente quase imperceptível. */
+  border: 1px solid transparent;
+}
+.scSalesOpRow { border: 1px solid var(--color-hairline); border-radius: var(--radius-sm); overflow: hidden; }
+.scSalesOpToggle:hover, .scSalesOpToggle:focus-visible { outline: var(--focus-ring); outline-offset: -2px; }
+.scSalesOpRowExpanded .scSalesOpToggle { background: var(--color-surface-1); }
+.scSalesOpDateModel { display: flex; flex-direction: column; gap: 1px; text-align: left; }
+.scSalesOpDate { color: var(--color-text-muted); }
+.scSalesOpModel { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--color-text-primary); }
+.scSalesOpValue { text-align: right; font-variant-numeric: tabular-nums; }
+/* item 1: identificação textual explícita, nunca só cor; verde
+   discreto (tokens --color-success/-soft) para FINANCIADO, cinza
+   neutro (sem tokens de erro/vermelho) para NÃO FINANCIADO -- só o
+   badge/valor é colorido, nunca a linha (.scSalesOpRow) inteira. */
+.scSalesOpFin { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; text-align: right; font-variant-numeric: tabular-nums; }
+.scSalesOpFinBadge {
+  font-size: 9.5px; text-transform: uppercase; letter-spacing: .05em;
+  padding: 1px 6px; border-radius: var(--radius-sm); font-family: var(--font-ui); font-weight: 600;
+}
+.scSalesOpFinYes .scSalesOpFinBadge { color: var(--color-success); background: var(--color-success-soft); }
+.scSalesOpFinYes .scSalesOpFinValue { color: var(--color-text-primary); font-weight: 600; }
+.scSalesOpFinNo .scSalesOpFinBadge { color: var(--color-text-muted); background: var(--color-surface-1); border: 1px solid var(--color-hairline-strong); }
+.scSalesOpFinNo .scSalesOpFinValue { color: var(--color-text-muted); font-size: 11px; }
+.scSalesOpExpanded {
+  padding: var(--space-3); border-top: 1px solid var(--color-hairline);
+  display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2) var(--space-4); font-size: 12px;
+}
+.scSalesOpExpanded > div { display: flex; justify-content: space-between; gap: var(--space-2); }
+.scSalesOpExpanded > div span:first-child { color: var(--color-text-muted); }
+.scSalesOpExpanded > div span:last-child { font-family: var(--font-mono); text-align: right; font-variant-numeric: tabular-nums; }
+/* IMPLEMENTAR ENTRADA ESTIMADA -- ocupa as 2 colunas (rótulo/valor +
+   texto auxiliar discreto abaixo), por isso sobrescreve o
+   display:flex genérico acima (que colocaria as duas linhas lado a
+   lado em vez de empilhadas). */
+.scSalesOpEntradaRow { display: block; grid-column: 1 / -1; }
+.scSalesOpEntradaMain { display: flex; justify-content: space-between; gap: var(--space-2); }
+.scSalesOpEntradaMain span:first-child { color: var(--color-text-muted); }
+.scSalesOpEntradaMain span:last-child { font-family: var(--font-mono); text-align: right; font-variant-numeric: tabular-nums; }
+.scSalesOpEntradaNote { margin-top: 2px; }
+/* item 3 (sinalização discreta de inconsistência) -- âmbar/warning,
+   nunca vermelho de erro (mesma semântica já usada por
+   .scFilterAdjustedNote: algo pede atenção, não uma falha). */
+.scSalesOpEntradaInconsistente .scSalesOpEntradaMain span:last-child { color: var(--color-warning); }
+.scSalesOpEntradaInconsistente .scSalesOpEntradaNote { color: var(--color-warning); font-style: normal; }
+/* REFINAMENTO VISUAL -- item 2 (mobile): rótulo próprio junto de cada
+   valor, já que sem o cabeçalho de tabela (desktop) um número isolado
+   não diz se é venda ou financiamento. Oculto no desktop (o cabeçalho
+   .scSalesListHead já cobre esse papel lá). */
+.scSalesOpMobileLabel { display: none; }
+@media (max-width: 640px) {
+  .scSalesOpToggle, .scSalesListHead { grid-template-columns: 1fr; gap: 2px; }
+  .scSalesListHead { display: none; }
+  .scSalesOpDateModel, .scSalesOpFin { align-items: flex-start; text-align: left; }
+  .scSalesOpValue { text-align: left; }
+  .scSalesOpMobileLabel {
+    display: block; font-size: 9.5px; text-transform: uppercase; letter-spacing: .05em;
+    color: var(--color-text-muted); font-family: var(--font-ui);
+  }
+  .scSalesOpFinLabel { margin-top: 4px; }
+  .scSalesOpExpanded { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+  .scTable .scNameCell { max-width: 140px; }
+  .scTable .scNameText { max-width: 120px; }
+}
+
+/* PORTAL-NEXT-07.6.4 — human UAT rejected transforming the desktop
+   <table> into a mobile layout three times in a row (07.6, 07.6.2,
+   07.6.3-retested), even though the last version was proven correct by
+   every automated/computed-style check available — the human's actual
+   browser result is authoritative regardless. Strategy changed: two
+   independent renderers (score.js's renderDesktopTable()/
+   renderMobileCards()), fed by the same computed `rows`, no
+   recalculation. Exactly one is visible at a time; the inactive one is
+   display:none, never both. <=767px uses the non-table mobile
+   renderer; 768px+ keeps the plain table (verified readable there in
+   PORTAL-NEXT-07.6.2 — Loja/Depto/full meter+value/Financ. all fit on
+   one line with room to spare). */
+.scDesktopOnly { display: block; }
+.scMobileOnly { display: none; }
+
+@media (max-width: 767px) {
+  .scDesktopOnly { display: none; }
+  .scMobileOnly { display: block; }
+}
+
+/* ---------- mobile record cards (plain divs — no table/tr/td/th/col
+   anywhere in this block, so no legacy column geometry can ever reach
+   them again) ---------- */
+.scMobileCard {
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  margin-bottom: var(--space-3);
+  cursor: pointer;
+}
+.scMobileCard:last-child { margin-bottom: 0; }
+.scMobileCard:hover,
+.scMobileCard:focus-visible { background: rgba(255,255,255,.028); }
+.scMobileCard:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+.scMobileRank { font-family: var(--font-mono); font-size: 11px; color: var(--color-text-muted); }
+.scMobileName { font-size: 16px; font-weight: 600; color: var(--color-text-primary); margin-top: 2px; overflow-wrap: break-word; }
+.scMobileSub { font-size: 12.5px; color: var(--color-text-secondary); margin-top: 2px; overflow-wrap: break-word; }
+.scMobileLabel { font-family: var(--font-mono); font-size: 9.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--color-text-muted); }
+.scMobileScoreBlock { margin-top: var(--space-3); padding: var(--space-3); border: 1px solid var(--color-hairline-strong); border-radius: var(--radius-sm); }
+.scMobileScoreRow { display: flex; align-items: center; gap: var(--space-3); margin-top: 4px; }
+.scMobileScoreValue { font-family: var(--font-mono); font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+/* PORTAL-NEXT-07.7B — mobile hierarchy matches the approved executive
+   order (Gate 6): number, then band, then bar. .scBand's own base
+   rule handles color/weight; only position/spacing added here. */
+.scMobileBand { display: inline-block; margin-top: 4px; }
+/* overrides the base .scMeterTrack's flex-shrink:0 (correct for the
+   desktop table, where the track has a small fixed budget alongside
+   the number) — here the track is the one flexible element in the row
+   and must be allowed to shrink; found via real measurement with the
+   large_values fixture (score value "1000" widened the number enough
+   to overflow a non-shrinking 100%-width track by 52px at 320px). */
+.scMobileScoreBlock .scMeterTrack { width: 100%; flex: 1 1 0; min-width: 0; }
+.scMobileScoreValue { flex-shrink: 0; }
+.scMobileField { margin-top: var(--space-3); }
+.scMobileValue { font-family: var(--font-mono); font-size: 15px; font-variant-numeric: tabular-nums; margin-top: 2px; }
+
+/* ---------- SCORE-SIM-03 -- Inteligência de Utilização ----------
+   Observational-only section, additive below the existing ranking/
+   detail regions. Reuses .modTableWrap/.modTable/.modNumCol/
+   .modEmptyState/.modErrorState/.modInfoState (module-system.css) --
+   no new table/empty/error visual language invented. No color-coded
+   quadrant badges, no gauges, no score-like meter -- text only, same
+   score.md discipline already governing the rest of this file. */
+.sciSection {
+  margin-top: var(--space-6);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-hairline);
+}
+.sciSectionTitle {
+  font-family: var(--font-ui);
+  font-weight: 300;
+  font-size: clamp(18px, 2.2vw, 22px);
+  letter-spacing: -.01em;
+  margin: 0 0 var(--space-1);
+}
+.sciSectionSubtitle {
+  color: var(--color-text-secondary);
+  font-size: 12.5px;
+  margin: 0 0 var(--space-5);
+  max-width: 62ch;
+}
+.sciBlock { margin-bottom: var(--space-5); }
+.sciBlock:last-child { margin-bottom: 0; }
+.sciBlockTitle {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--color-text-muted);
+  font-weight: 500;
+  margin: 0 0 var(--space-2);
+}
+.sciBlockNote {
+  font-size: 11.5px;
+  color: var(--color-text-muted);
+  font-style: italic;
+  margin: 0 0 var(--space-3);
+}
+.sciMuted { color: var(--color-text-muted); font-size: 11.5px; }
+
+/* SCORE-SIM-04 -- coverage info (section 12): always visible body text,
+   never a tooltip/title attribute. .sciCoverageWarning reuses the same
+   warning token .modInfoState-adjacent surfaces already use elsewhere
+   in this design system, not a new color invented for this Wave. */
+.sciCoverageInfo {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-3);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-2);
+}
+.sciCoverageLine { margin: 0 0 4px; font-size: 12px; color: var(--color-text-secondary); }
+.sciCoverageLine:last-child { margin-bottom: 0; }
+.sciCoverageWarning { margin: var(--space-2) 0 0; font-size: 12px; color: var(--color-warning); }
+
+/* SCORE-SIM-17 -- "Utilização dos Simuladores" criterion, UNIFIED into
+   the same table/detail as the commercial criteria (human rejected a
+   separate parallel section in SCORE-SIM-16A). Reuses every existing
+   token below (--color-*, --space-*, --font-mono) -- no new color
+   invented for this Wave, same discipline as .sciCoverageWarning
+   above. */
+.scExpCol { white-space: nowrap; }
+.scExpHeaderBadge {
+  display: block; font-size: 9px; font-weight: 700; letter-spacing: .06em;
+  color: var(--color-warning); text-transform: uppercase; margin-top: 2px;
+}
+.scExpPending { color: var(--color-text-muted); font-style: italic; font-size: 12px; }
+/* SCORE-SIM-22 -- LOCAL_REAL_MODE loading/error sub-states, additive to
+   the existing .scExpPending token/style, no new color invented
+   (--color-warning already used above for .scExpHeaderBadge). */
+.scExpError { color: var(--color-warning); font-style: normal; }
+@media (prefers-reduced-motion: no-preference) {
+  .scExpLoading { animation: scExpLoadingPulse 1.4s ease-in-out infinite; }
+  @keyframes scExpLoadingPulse { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+}
+.scExpSub { font-size: 11px; color: var(--color-text-muted); margin-left: 2px; }
+.scExpCriterion { border-top: 1px dashed var(--color-hairline-strong); padding-top: var(--space-3); margin-top: var(--space-2); }
+.scExpComposition {
+  margin-top: var(--space-4); padding: var(--space-3); border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-sm); background: var(--color-surface-2);
+}
+.scExpCompositionTitle {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--color-warning); font-weight: 700; margin: 0 0 var(--space-2);
+}
+.scExpCompositionRow {
+  display: flex; justify-content: space-between; gap: var(--space-3);
+  font-size: 12.5px; color: var(--color-text-secondary); padding: 3px 0;
+  font-family: var(--font-mono); font-variant-numeric: tabular-nums;
+}
+.scExpCompositionTotal { border-top: 1px solid var(--color-hairline); margin-top: 4px; padding-top: 6px; font-weight: 700; color: var(--color-text-primary); }

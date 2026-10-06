@@ -1,0 +1,335 @@
+/* PORTAL-NEXT V2 — Coparticipado module CSS.
+   Visual authority: design-system-2.1/references/data-table.md
+   (APPROVED data-table pattern — same one Score uses) — no dedicated
+   Approved Reference exists for Coparticipado itself, so NORMATIVE
+   COMPLIANCE is reported, not VISUAL PARITY (Gate 43). Every value is
+   a var() from tokens.css. Table stays table (no cards on mobile:
+   sticky first column + horizontal scroll). Sortable-column visual
+   indicator is UNRESOLVED per data-table.md — not invented, and
+   production's own Coparticipados/Subsidiados tables aren't
+   interactively sortable either (same precedent as Score). */
+
+.cpPage { max-width: 1280px; }
+
+/* Wave 3C — page header, fixture banner, filter-field wrappers, view
+   tabs, and support-stat cards migrated to the shared module-system.css
+   primitives (.modPageHeader/.modFixtureBanner/.modFilters/.modField/
+   .modTabGroup+.modTab/.modKpiGrid+.modKpiCard). Rules below superseded,
+   0 remaining reference (grep-verified before editing), kept for
+   history same as Wave 3A/3B's dead-rule discipline. */
+.cpHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-5);
+}
+.cpHeader h1 {
+  font-family: var(--font-ui);
+  font-weight: 300;
+  font-size: clamp(22px, 2.6vw, 30px);
+  letter-spacing: -.01em;
+  margin: 0;
+}
+.cpHeader p {
+  color: var(--color-text-secondary);
+  margin: var(--space-1) 0 0;
+  font-size: 13px;
+}
+
+/* ---------- dev fixture context (same convention as score.css) ---------- */
+.cpFixtureBar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  padding: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-4);
+  border: 1px dashed var(--color-hairline-strong);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--color-text-muted);
+}
+.cpFixtureBar .cpFixtureLabel {
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--color-warning);
+}
+.cpFixtureBar select {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-hairline-strong);
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 3px var(--space-2);
+  border-radius: var(--radius-sm);
+}
+.cpFixtureBar select:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+
+/* ---------- filters (Loja / Departamento / período — real production filter set) ---------- */
+.cpFilters {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-5);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-hairline);
+}
+.cpField { display: flex; flex-direction: column; gap: var(--space-1); min-width: 160px; }
+.cpField label {
+  color: var(--color-text-muted);
+  font-size: 10.5px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.cpField select,
+.cpField input[type="date"] {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-hairline-strong);
+  color: var(--color-text-primary);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  padding: var(--space-2) var(--space-2);
+  border-radius: var(--radius-sm);
+}
+.cpField select:focus-visible,
+.cpField input:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+
+/* ---------- view switcher — superseded by shared .modTabGroup/.modTab
+   (this is that primitive's first real consumer; a genuine single-
+   active-region view switch, not a filter, so .modTab is the correct
+   semantic fit per module-system.css's own tab-vs-segmented distinction).
+   Behavior (active state / click-to-switch / re-render) is unchanged —
+   only the class names moved. ---------- */
+.cpViewSwitcher {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+.cpTab {
+  background: none;
+  border: 1px solid var(--color-hairline-strong);
+  color: var(--color-text-secondary);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.cpTab:hover:not(.cpTabActive) { color: var(--color-text-primary); }
+.cpTab:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+.cpTabActive {
+  color: var(--color-canvas);
+  background: var(--color-text-primary);
+  border-color: var(--color-text-primary);
+}
+
+/* ACTIVE — Wave 3C audit: this module's section heading is deliberately
+   tighter (18px, margin 0 0 4px, no top gap) than the shared
+   .modSectionTitle (17px, 32px top gap) because only ONE heading ever
+   renders per view here, immediately below the tabs — the shared
+   primitive's generous top margin (meant for multiple stacked sections,
+   see Gestão) would just be dead space. Classified MODULE-SPECIFIC
+   COMPOSITION, left as-is. */
+.cpPanel h2 {
+  font-family: var(--font-ui);
+  font-weight: 400;
+  font-size: 18px;
+  margin: 0 0 var(--space-1);
+}
+
+/* Wave 3C — superseded by shared .modMuted, 0 remaining reference.
+   The nested "b" rule is NOT superseded (module-system.css's .modMuted
+   has no such rule) — re-declared below, scoped to this module. */
+.cpMuted { color: var(--color-text-muted); font-size: 12.5px; margin: 0 0 var(--space-4); }
+.cpMuted b { color: var(--color-text-secondary); }
+/* ACTIVE — scoped so it only affects this module's own captions */
+.cpPage .modMuted b { color: var(--color-text-secondary); }
+
+/* FC-2.3 (GAP-003): discoverable-but-not-dominant export action, reusing
+   module-system.css's .modBtn/.modBtnGhost/.modMuted primitives -- no new
+   visual language. Only ever rendered inside Visão Coparticipados. */
+.cpExportBar { display: flex; align-items: center; gap: var(--space-3); margin: 0 0 var(--space-4); flex-wrap: wrap; }
+.cpExportStatus { margin: 0; }
+
+/* Wave 3C — Subsidiados' 3-stat summary superseded by the shared
+   .modKpiGrid + .modKpiCard.modKpiCardSecondary (same shape as Gestão's
+   "Indicadores de Apoio" cards), 0 remaining reference. */
+.cpSummary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.cpSummaryItem {
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+}
+.cpK {
+  color: var(--color-text-muted);
+  font-size: 10.5px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.cpV {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 500;
+  margin-top: var(--space-1);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- table (HIGH density — data-table.md pattern) ---------- */
+/* Wave 3C — desktop/tablet table base (.cpTableWrap/.cpTable) is
+   superseded by the shared .modTableWrap/.modTable, 0 remaining
+   reference. table-layout:fixed + wrapping is NOT superseded: this is
+   THE widest table in V2 (13/11 columns; PORTAL-NEXT-07.6's own real
+   DOM measurement found it overflowing by up to 1461px at 320px under
+   the shared default's white-space:nowrap strategy) — re-declared as a
+   module-specific override on .modTable, same convention Wave 3B
+   established for Gestão's own widest table. */
+.cpPage .modTable { table-layout: fixed; }
+.cpPage .modTable thead th, .cpPage .modTable td { white-space: normal; overflow-wrap: break-word; }
+/* rows can have irregular height (a warning cell wrapping to 2 lines,
+   e.g. "Modelo não encontrado") -- vertical-align:middle keeps a
+   shorter cell's content (the Situação badge) centered instead of
+   baseline-aligned into the row's tallest content, which visually
+   collided with the neighboring cell's wrapped second line. */
+.cpPage .modTable td { vertical-align: middle; }
+/* currency/percentage/date/chassi values are a single atomic unit
+   (Gate 26/56: must never split mid-token, e.g. "R$ 155.00" + "0" on
+   the next line). The <colgroup> floor widths (cpColGroup(), still
+   active in coparticipado.js) give them room; nowrap is the second
+   half of that fix. */
+.cpPage .modTable .modNumCol,
+.cpPage .modTable .cpAtomic { white-space: nowrap; }
+
+.cpTableWrap { overflow-x: auto; border: 1px solid var(--color-hairline); border-radius: var(--radius-md); }
+.cpTable { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 12.5px; }
+.cpTable thead th {
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--color-text-muted);
+  font-weight: 500;
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--color-hairline-strong);
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+.cpTable td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--color-hairline);
+  vertical-align: middle;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+.cpTable tbody tr:last-child td { border-bottom: none; }
+.cpTable tbody tr:hover td { background: rgba(255,255,255,.028); }
+.cpTable .cpNumCol { font-family: var(--font-mono); text-align: right; font-variant-numeric: tabular-nums; }
+.cpTable .cpNumCol,
+.cpTable .cpAtomic { white-space: nowrap; }
+.cpTable thead th:first-child,
+.cpTable td:first-child {
+  position: sticky;
+  left: 0;
+  background: var(--color-surface-1);
+}
+.cpTable thead th:first-child { background: var(--color-surface-2); z-index: 1; }
+
+/* Wave 3C fix: .cpWarn can sit inside a .modNumCol cell (e.g.
+   Coparticipação's "Modelo não encontrado" fallback), which forces
+   white-space:nowrap for real numeric values -- that's wrong for this
+   fallback's longer message (pre-existing: same unconditional nowrap
+   was already on .cpNumCol before this Wave; the new Situação badge
+   just made the resulting overflow far more visually obvious, so it's
+   fixed here rather than left as a latent bug). white-space is
+   inherited per-element, so overriding it on the span itself is
+   enough regardless of which ancestor cell it's in. */
+.cpWarn { color: var(--color-warning); white-space: normal; }
+
+/* ---------- Wave 3C — responsive financial-operation card ----------
+   Below 900px (13/11 real columns leave too little width per column
+   even wrapped) the table recomposes into a compact, GROUPED card
+   instead of the old flat one-column field stack: Cliente prominent
+   (full width, own line, no label — name is self-evident), commercial/
+   vehicle metadata and financial figures each in their own 2-column
+   band separated by a quiet divider, Situação as a small neutral badge
+   (module-system.css's .modBadgeNeutral — no color invented, this
+   field has no authoritative good/bad mapping), Data/Chassi quiet and
+   monospace at the bottom. Every field is still present, same DOM
+   order as the table headers (Gate 3 data parity + WCAG meaningful-
+   sequence: nothing is visually reordered away from its reading
+   order, only grouped and de-emphasized/emphasized in place) — same
+   single <tr>/<td> markup the desktop table uses, CSS-only transform,
+   0 duplicated rendering (Gate 20/21). */
+@media (max-width: 900px) {
+  .modTableWrap { overflow-x: visible; }
+  /* the <colgroup> floor widths (needed above 900px) otherwise force
+     the <table>'s own rendered width to their sum via
+     table-layout:fixed — auto releases that floor once rows are no
+     longer laid out as table cells. */
+  /* table-layout stays fixed here (NOT auto): with the colgroup still
+     present in the DOM, an auto-layout table sized by a flex/grid tbody
+     (rather than real table cells) falls back to the colgroup's pixel
+     column widths for the table's own intrinsic width in Chromium --
+     real measurement found 647px of overflow at 430px viewport this
+     way. Hiding the colgroup instead keeps the fix local and obvious. */
+  .modTable colgroup, .modTable col { display: none; }
+  .modTable thead { display: none; }
+  .modTable tbody tr {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-3);
+    padding: var(--space-3);
+    border-bottom: 1px solid var(--color-hairline);
+  }
+  .modTable tbody tr:last-child { border-bottom: none; }
+  .modTable td { display: block; padding: 0; border: none; position: static; background: none; flex: 1 1 45%; min-width: 130px; }
+  .modTable td[data-th]::before { content: attr(data-th); display: block; color: var(--color-text-muted); font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; }
+  .modTable .modNumCol { text-align: left; }
+
+  /* Cliente — primary identity, full width, no redundant label */
+  .modTable td[data-group="primary"] { flex-basis: 100%; font-weight: 600; font-size: 14.5px; }
+  .modTable td[data-group="primary"][data-th]::before { display: none; }
+
+  /* Situação — small neutral badge, own line (module-system.css
+     .modBadge/.modBadgeNeutral already applied in the cell markup) */
+  .modTable td[data-group="status"] { flex-basis: 100%; }
+
+  /* Data/Chassi — quiet reference footer */
+  .modTable td[data-group="reference"] { color: var(--color-text-muted); }
+  .modTable td[data-group="reference"].cpAtomic { font-family: var(--font-mono); font-size: 11.5px; }
+
+  /* Coparticipação — the single financial figure this table exists to
+     compute (Gate 17: "most decision-relevant... easier to scan"
+     without a giant number, mobile-only per the gate's own scope;
+     desktop table typography stays exactly as before). Subsidiados has
+     no equivalent single headline figure, so none was invented there
+     (Gate 5 — do not unify the two modules' structure). */
+  .modTable .cpHeadlineFin { font-weight: 600; font-size: 13.5px; }
+
+  /* group-start dividers — column counts differ between the two
+     tables (13 vs 11), so positions are addressed per table variant
+     (.cpTableCopart/.cpTableSubs, set on <table class="modTable ...">
+     in coparticipado.js) rather than by a generic attribute selector. */
+  .cpTableCopart td:nth-child(2),  /* Vendedor — start of commercial/vehicle metadata band */
+  .cpTableCopart td:nth-child(6),  /* Valor Financiado — start of financial band */
+  .cpTableCopart td:nth-child(12), /* Data — start of reference band */
+  .cpTableSubs td:nth-child(2),
+  .cpTableSubs td:nth-child(6),
+  .cpTableSubs td:nth-child(10) {
+    border-top: 1px dashed var(--color-hairline);
+    margin-top: var(--space-2);
+    padding-top: var(--space-2);
+  }
+}

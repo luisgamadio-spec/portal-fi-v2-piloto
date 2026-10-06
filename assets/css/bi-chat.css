@@ -1,0 +1,372 @@
+/* Brabus Intelligence — conversa dentro da gaveta (V2). Só tokens do Design System.
+   Escopo: .baiPanelDrawer (a gaveta vem de intelligence.css, que continua carregado). */
+.baiPanelDrawer .biLista{display:flex;flex-direction:column;gap:var(--space-3);min-height:100%}
+.baiPanelDrawer .biVazio{color:var(--color-text-secondary);font-size:var(--mod-body-size)}
+.baiPanelDrawer .biVazio p{margin:0}
+.baiPanelDrawer .biSugestoes{display:flex;flex-direction:column;gap:var(--space-2);margin-top:var(--space-3)}
+.baiPanelDrawer .biChip{text-align:left;background:var(--mod-surface-panel-2);border:1px solid var(--mod-border-strong);color:var(--color-text-primary);font-family:var(--font-ui);font-size:13px;line-height:1.4;padding:10px 12px;border-radius:var(--radius-sm);cursor:pointer}
+.baiPanelDrawer .biChip:hover{border-color:var(--mod-accent);background:var(--mod-surface-active)}
+.baiPanelDrawer .biChip:focus-visible{outline:var(--focus-ring);outline-offset:2px}
+.baiPanelDrawer .biMsg{box-sizing:border-box;min-width:0;overflow-wrap:anywhere;max-width:88%;padding:10px 14px;border-radius:var(--radius-md);font-size:14px;line-height:1.5;color:var(--color-text-primary)}
+.baiPanelDrawer .biMsg p{margin:0 0 6px}
+.baiPanelDrawer .biMsg p:last-child{margin-bottom:0}
+.baiPanelDrawer .biMsg ul,.baiPanelDrawer .biMsg ol{margin:4px 0 8px;padding-left:20px}
+.baiPanelDrawer .biMsg code{font-family:var(--font-mono);font-size:12.5px}
+.baiPanelDrawer .biMsgUser{align-self:flex-end;background:var(--mod-surface-active);border:1px solid var(--mod-border-strong)}
+.baiPanelDrawer .biMsgBot{align-self:flex-start;max-width:100%;background:var(--mod-surface-panel-2);border:1px solid var(--mod-border)}
+.baiPanelDrawer .biMsgErro{border-color:var(--mod-critical)}
+.baiPanelDrawer .biH{font-weight:600;margin-top:6px}
+.baiPanelDrawer .biFonte{margin-top:8px!important;font-family:var(--font-mono);font-size:10.5px;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.04em}
+.baiPanelDrawer .biTableWrap{overflow-x:auto;margin:6px 0;max-width:100%}
+.baiPanelDrawer .biTable{border-collapse:collapse;font-size:13px;min-width:100%}
+.baiPanelDrawer .biTable th,.baiPanelDrawer .biTable td{border-bottom:1px solid var(--mod-border);padding:6px 10px;text-align:left;white-space:nowrap}
+.baiPanelDrawer .biTable th{font-size:var(--mod-table-label-size);text-transform:uppercase;letter-spacing:.06em;color:var(--color-text-muted);font-weight:500}
+.baiPanelDrawer .biForm{display:flex;gap:var(--space-2);align-items:flex-end;border-top:1px solid var(--mod-border)}
+.baiPanelDrawer .biInput{flex:1;min-width:0;resize:none;min-height:44px;max-height:160px;background:var(--mod-surface-panel-2);border:1px solid var(--mod-border-strong);color:var(--color-text-primary);font-family:var(--font-ui);font-size:14px;padding:10px 12px;border-radius:var(--radius-sm)}
+.baiPanelDrawer .biInput:focus-visible{outline:var(--focus-ring);outline-offset:2px}
+.baiPanelDrawer .biAviso{position:relative;z-index:1;flex-shrink:0;font-size:var(--mod-metadata-size);color:var(--color-text-muted);margin:0;padding:0 var(--space-4) var(--space-3)}
+.baiPanelDrawer .biPensando{color:var(--color-text-secondary);display:flex;align-items:center;gap:4px}
+.baiPanelDrawer .biPensando span{width:6px;height:6px;border-radius:50%;background:var(--mod-accent);opacity:.35;animation:biPulse 1.2s infinite}
+.baiPanelDrawer .biPensando span:nth-child(2){animation-delay:.2s}
+.baiPanelDrawer .biPensando span:nth-child(3){animation-delay:.4s}
+@keyframes biPulse{50%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.baiPanelDrawer .biPensando span{animation:none;opacity:.8}}
+@media (max-width:480px){.baiPanelDrawer .biMsg{max-width:100%}.baiPanelDrawer .biAviso{padding:0 var(--space-3) var(--space-3)}}
+
+/* ---------- Cartões (campo `blocos`) — sempre antes do texto ---------- */
+.baiPanelDrawer .biMsgComCartoes{width:100%}
+.baiPanelDrawer .biCards{display:flex;flex-direction:column;gap:var(--space-3);margin-bottom:var(--space-3)}
+.baiPanelDrawer .biCardStack{display:flex;flex-direction:column;gap:var(--space-3)}
+.baiPanelDrawer .biCard{background:var(--mod-surface-elevated);border:1px solid var(--mod-border);border-radius:var(--radius-md);padding:var(--space-3);min-width:0}
+.baiPanelDrawer .biCardHead{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--space-2);margin-bottom:var(--space-3)}
+.baiPanelDrawer .biCardTitle{margin:0!important;font-size:var(--mod-section-title-size);font-weight:600;color:var(--color-text-primary)}
+.baiPanelDrawer .biCardChips{display:flex;flex-wrap:wrap;gap:6px}
+.baiPanelDrawer .biChipTag{display:inline-flex;align-items:center;font-family:var(--font-mono);font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-secondary);background:var(--mod-surface-panel-2);border:1px solid var(--mod-border);border-radius:var(--radius-sm);padding:3px 8px;white-space:nowrap}
+.baiPanelDrawer .biChipAccent{color:var(--color-text-primary);border-color:var(--mod-accent)}
+.baiPanelDrawer .biCardNote{margin:var(--space-2) 0 0!important;font-size:var(--mod-metadata-size);color:var(--color-text-muted)}
+.baiPanelDrawer .biEyebrow,.baiPanelDrawer .biBlockLabel{font-family:var(--font-mono);font-size:var(--mod-eyebrow-size);letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted)}
+.baiPanelDrawer .biBlockLabel{margin:0 0 var(--space-2)!important}
+
+/* opcoes */
+.baiPanelDrawer .biOpcoesGrid{display:grid;grid-template-columns:1fr;gap:var(--space-3)}
+.baiPanelDrawer .biBest{align-self:start;background:var(--mod-surface-active);border:1px solid var(--mod-accent);border-radius:var(--radius-md);padding:var(--space-3);min-width:0}
+.baiPanelDrawer .biBestTop{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--space-2)}
+.baiPanelDrawer .biBestPlano{margin:6px 0 var(--space-3)!important;font-size:15px;font-weight:600;line-height:1.35}
+/* 3 números do mesmo tamanho, em colunas, valores à direita */
+.baiPanelDrawer .biFigures{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--space-3)}
+.baiPanelDrawer .biFig{display:flex;flex-direction:column;align-items:flex-end;text-align:right;gap:2px;min-width:0}
+.baiPanelDrawer .biFig+.biFig{border-left:1px solid var(--mod-border);padding-left:var(--space-3)}
+.baiPanelDrawer .biFigLabel{font-family:var(--font-mono);font-size:var(--mod-eyebrow-size);letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted)}
+.baiPanelDrawer .biFigValue{font-size:clamp(14px,4.3cqi,22px);font-weight:600;line-height:1.2;color:var(--color-text-primary);font-variant-numeric:tabular-nums;white-space:nowrap}
+.baiPanelDrawer .biFigSub{font-size:var(--mod-metadata-size);color:var(--color-text-secondary);font-variant-numeric:tabular-nums}
+.baiPanelDrawer .biFigKey .biFigLabel,.baiPanelDrawer .biFigKey .biFigValue{color:var(--mod-accent)}
+.baiPanelDrawer .biFiguresCompact{gap:var(--space-2)}
+.baiPanelDrawer .biFiguresCompact .biFig+.biFig{padding-left:var(--space-2)}
+.baiPanelDrawer .biFiguresCompact .biFigValue{font-size:clamp(12px,3.4cqi,15px)}
+.baiPanelDrawer .biResumo{margin:var(--space-3) 0 0!important;font-size:13px;color:var(--color-text-secondary);font-variant-numeric:tabular-nums}
+.baiPanelDrawer .biResumoCompact{margin-top:var(--space-2)!important;font-size:12px}
+.baiPanelDrawer .biHowPays{margin-top:var(--space-3);padding-top:var(--space-3);border-top:1px solid var(--mod-border)}
+.baiPanelDrawer .biRows{display:flex;flex-direction:column;gap:6px;margin:0}
+.baiPanelDrawer .biRow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--space-3);align-items:baseline;font-size:13px}
+.baiPanelDrawer .biRow dt{color:var(--color-text-secondary)}
+.baiPanelDrawer .biRow dd{margin:0;text-align:right;color:var(--color-text-primary);font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.baiPanelDrawer .biDetails{margin-top:var(--space-3);padding-top:var(--space-2);border-top:1px solid var(--mod-border)}
+.baiPanelDrawer .biDetails summary{cursor:pointer;font-size:12px;color:var(--color-text-secondary);padding:4px 0;list-style-position:inside}
+.baiPanelDrawer .biDetails summary:hover{color:var(--color-text-primary)}
+.baiPanelDrawer .biDetails summary:focus-visible{outline:var(--focus-ring);outline-offset:2px;border-radius:var(--radius-sm)}
+.baiPanelDrawer .biDetails .biRows{margin-top:var(--space-2)}
+.baiPanelDrawer .biDetails .biRow dd{font-weight:500;white-space:normal}
+.baiPanelDrawer .biAlts{display:flex;flex-direction:column;gap:var(--space-2);min-width:0}
+.baiPanelDrawer .biAlt{background:var(--mod-surface-panel-2);border:1px solid var(--mod-border);border-radius:var(--radius-sm);padding:var(--space-3);display:flex;flex-direction:column;gap:var(--space-2);min-width:0}
+.baiPanelDrawer .biAltPlano{margin:0!important;font-size:13px;font-weight:600;line-height:1.35}
+.baiPanelDrawer .biCardBase{margin:var(--space-3) 0 0!important;font-size:var(--mod-metadata-size);color:var(--color-text-muted)}
+
+/* resultado */
+.baiPanelDrawer .biKpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-3)}
+.baiPanelDrawer .biKpi{display:flex;flex-direction:column;gap:2px;min-width:0}
+.baiPanelDrawer .biKpiLabel{font-size:var(--mod-kpi-label-size);color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.04em}
+.baiPanelDrawer .biKpiValue{font-size:18px;font-weight:600;color:var(--color-text-primary);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.baiPanelDrawer .biDelta{font-size:12px;font-variant-numeric:tabular-nums}
+.baiPanelDrawer .biDeltaUp{color:var(--mod-success)}
+.baiPanelDrawer .biDeltaDown{color:var(--mod-critical)}
+.baiPanelDrawer .biDeltaFlat{color:var(--color-text-muted)}
+.baiPanelDrawer .biDeltaArrow{font-size:10px}
+.baiPanelDrawer .biDeps{display:flex;flex-direction:column;gap:6px;margin-top:var(--space-3);padding-top:var(--space-3);border-top:1px solid var(--mod-border)}
+.baiPanelDrawer .biDepRow{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px var(--space-2);font-size:13px}
+.baiPanelDrawer .biDepName{font-weight:600}
+.baiPanelDrawer .biDepVals{color:var(--color-text-secondary);font-variant-numeric:tabular-nums}
+
+/* comparacao */
+.baiPanelDrawer .biCompTable .biNum{text-align:right;font-variant-numeric:tabular-nums}
+.baiPanelDrawer .biCompTable .biRowHead{text-transform:none;letter-spacing:0;font-size:13px;color:var(--color-text-secondary);font-weight:500}
+.baiPanelDrawer .biCompTable .biRowHead,.baiPanelDrawer .biCompTable thead th:first-child{position:sticky;left:0;z-index:1;background:var(--mod-surface-elevated)}
+.baiPanelDrawer .biCompTable .biLeader{font-weight:600;color:var(--color-text-primary);background:var(--color-success-soft);box-shadow:inset 2px 0 0 var(--mod-success)}
+
+/* score / antecipacao / cash — partes comuns */
+.baiPanelDrawer .biSection{margin-top:var(--space-3);padding-top:var(--space-3);border-top:1px solid var(--mod-border)}
+.baiPanelDrawer .biToneGood{--bi-tone:var(--mod-success)}
+.baiPanelDrawer .biToneNeutral{--bi-tone:var(--color-text-muted)}
+.baiPanelDrawer .biToneBad{--bi-tone:var(--mod-accent)}
+.baiPanelDrawer .biBar{height:6px;border-radius:var(--radius-sm);background:var(--mod-border);overflow:hidden}
+.baiPanelDrawer .biBarFill{display:block;height:100%;background:var(--bi-tone);border-radius:inherit}
+.baiPanelDrawer .biDataTable .biNum{text-align:right;font-variant-numeric:tabular-nums}
+.baiPanelDrawer .biDataTable td{font-variant-numeric:tabular-nums}
+.baiPanelDrawer .biStickyFirst th:first-child,.baiPanelDrawer .biStickyFirst td:first-child{position:sticky;left:0;z-index:1;background:var(--mod-surface-elevated)}
+.baiPanelDrawer .biStickyFirst .biRowBalao td:first-child{background:var(--mod-surface-active)}
+.baiPanelDrawer .biRowBalao td{background:var(--mod-surface-active);font-weight:600}
+.baiPanelDrawer .biRowBalao td:first-child{box-shadow:inset 2px 0 0 var(--mod-accent)}
+.baiPanelDrawer .biGapRow{text-align:center;color:var(--color-text-muted);letter-spacing:.2em}
+.baiPanelDrawer .biChipGood{color:var(--color-text-primary);background:var(--color-success-soft);border-color:var(--mod-success)}
+.baiPanelDrawer .biChipNeutral{color:var(--color-text-primary);border-color:var(--mod-border-strong)}
+.baiPanelDrawer .biChipMuted{color:var(--color-text-muted)}
+
+/* score */
+.baiPanelDrawer .biScoreHead{display:flex;align-items:center;gap:var(--space-2);min-width:0;margin-bottom:var(--space-3)}
+.baiPanelDrawer .biScoreName{font-size:var(--mod-section-title-size);font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.baiPanelDrawer .biScoreLoja{font-size:13px;color:var(--color-text-secondary);white-space:nowrap}
+.baiPanelDrawer .biScoreChips{display:flex;gap:6px;margin-left:auto;flex-shrink:0}
+.baiPanelDrawer .biScoreTop{display:grid;grid-template-columns:auto minmax(0,1fr);gap:var(--space-3);align-items:center}
+.baiPanelDrawer .biScoreRing{--bi-p:0;width:72px;height:72px;border-radius:50%;background:conic-gradient(var(--bi-tone) calc(var(--bi-p) * 1%), var(--mod-border) 0);display:grid;place-items:center}
+.baiPanelDrawer .biScoreRingInner{width:58px;height:58px;border-radius:50%;background:var(--mod-surface-elevated);display:flex;flex-direction:column;align-items:center;justify-content:center}
+.baiPanelDrawer .biScoreValue{font-size:18px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
+.baiPanelDrawer .biScoreMax{font-size:10px;color:var(--color-text-muted);margin-top:2px;font-variant-numeric:tabular-nums}
+.baiPanelDrawer .biMiniKpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-2) var(--space-3)}
+.baiPanelDrawer .biMiniKpi{display:flex;flex-direction:column;align-items:flex-end;text-align:right;min-width:0}
+.baiPanelDrawer .biMiniLabel{font-family:var(--font-mono);font-size:var(--mod-eyebrow-size);letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted)}
+.baiPanelDrawer .biMiniValue{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
+.baiPanelDrawer .biCompList{display:flex;flex-direction:column;gap:var(--space-2)}
+.baiPanelDrawer .biCompRow{display:grid;grid-template-columns:minmax(0,9fr) minmax(0,7fr) auto;gap:var(--space-2) var(--space-3);align-items:center;font-size:13px}
+.baiPanelDrawer .biToggle{cursor:pointer;border-radius:var(--radius-sm);margin:0 -6px;padding:3px 6px}
+.baiPanelDrawer .biToggle:hover,.baiPanelDrawer .biToggle[aria-expanded="true"]{background:var(--mod-surface-hover)}
+.baiPanelDrawer .biToggle:focus-visible{outline:var(--focus-ring);outline-offset:1px}
+.baiPanelDrawer .biExpand{margin:2px 0 4px!important;padding-left:2px;font-size:12px;line-height:1.4;color:var(--color-text-secondary)}
+.baiPanelDrawer .biCompItem{color:var(--color-text-primary);min-width:0;overflow-wrap:anywhere}
+.baiPanelDrawer .biCompPts{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right;min-width:56px}
+.baiPanelDrawer .biChipXs{font-size:9.5px;padding:1px 6px;vertical-align:1px}
+.baiPanelDrawer .biCompSub{margin:-2px 0 0!important;font-size:12px;color:var(--color-text-muted);font-variant-numeric:tabular-nums}
+.baiPanelDrawer .biLossList{list-style:none;margin:0!important;padding:0!important;display:flex;flex-direction:column;gap:4px}
+.baiPanelDrawer .biLossItem{display:flex;justify-content:space-between;gap:var(--space-2);font-size:13px}
+.baiPanelDrawer .biLossName{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.baiPanelDrawer .biLossPts{color:var(--mod-accent);font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.baiPanelDrawer .biRankDetails .biRankList{margin-top:var(--space-2)!important}
+.baiPanelDrawer .biRankList{list-style:none;margin:0!important;padding:0!important;display:flex;flex-direction:column;gap:2px}
+.baiPanelDrawer .biRankItem{display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:var(--space-2);align-items:baseline;font-size:13px;padding:5px 8px;border-radius:var(--radius-sm)}
+.baiPanelDrawer .biRankPos{color:var(--color-text-muted);font-variant-numeric:tabular-nums}
+.baiPanelDrawer .biRankName{min-width:0;overflow-wrap:anywhere}
+.baiPanelDrawer .biRankLoja{color:var(--color-text-muted);font-size:12px}
+.baiPanelDrawer .biRankScore{font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+.baiPanelDrawer .biRankMe{background:var(--mod-surface-active);box-shadow:inset 2px 0 0 var(--mod-accent)}
+.baiPanelDrawer .biRankMe .biRankName{font-weight:600}
+
+/* cash */
+.baiPanelDrawer .biCashTop{display:grid;grid-template-columns:1fr;gap:var(--space-3)}
+.baiPanelDrawer .biCashHero{display:flex;flex-direction:column;gap:4px}
+.baiPanelDrawer .biCashValue{font-size:26px;font-weight:600;line-height:1.15;font-variant-numeric:tabular-nums;color:var(--color-text-primary)}
+.baiPanelDrawer .biCashRead{font-size:13px;color:var(--color-text-secondary)}
+
+/* salario */
+.baiPanelDrawer .biSalHead{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-2);margin-bottom:2px}
+.baiPanelDrawer .biSalWho{display:flex;flex-wrap:wrap;align-items:center;gap:6px var(--space-2);min-width:0}
+.baiPanelDrawer .biSalName{font-size:var(--mod-section-title-size);font-weight:600;min-width:0;overflow-wrap:anywhere}
+.baiPanelDrawer .biSalLoja{font-size:13px;color:var(--color-text-secondary)}
+.baiPanelDrawer .biSalHead>.modBadge{flex-shrink:0;white-space:nowrap}
+.baiPanelDrawer .biSalComp{margin:0 0 var(--space-3)!important;font-size:var(--mod-metadata-size);color:var(--color-text-muted);font-variant-numeric:tabular-nums}
+.baiPanelDrawer .biSalMain{display:flex;flex-direction:column;gap:4px}
+.baiPanelDrawer .biSalTotalRow{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2) var(--space-3)}
+.baiPanelDrawer .biSalTotal{font-family:var(--font-mono);font-size:26px;font-weight:600;line-height:1.15;font-variant-numeric:tabular-nums;color:var(--color-text-primary)}
+.baiPanelDrawer .biSalSteps dd{font-family:var(--font-mono);font-weight:500}
+.baiPanelDrawer .biSalStepTotal{padding-top:6px;border-top:1px solid var(--mod-border)}
+.baiPanelDrawer .biSalStepTotal dt{color:var(--color-text-primary);font-weight:600}
+.baiPanelDrawer .biSalStepTotal dd{font-weight:600}
+.baiPanelDrawer .biSalKpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-2)}
+.baiPanelDrawer .biSalKpi{min-width:0;margin:0}
+.baiPanelDrawer .biSalKpi .modKpiLabel,.baiPanelDrawer .biSalKpi .modKpiValue{margin-bottom:0!important}
+.baiPanelDrawer .biSalKpi .modKpiValue{font-family:var(--font-mono);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.baiPanelDrawer .biSalTable td{font-family:var(--font-mono)}
+.baiPanelDrawer .biSalTable td:first-child,.baiPanelDrawer .biSalTable td:nth-child(2){font-family:var(--font-ui)}
+
+/* fandi — mesma linguagem da Análise F&I (modKpiCard, modBadge, mono) */
+.baiPanelDrawer .biToneWarn{--bi-tone:var(--mod-warning)}
+.baiPanelDrawer .biPlanLinear{--bi-tone:var(--color-text-muted)}
+.baiPanelDrawer .biPlanBalao{--bi-tone:var(--color-info)}
+.baiPanelDrawer .biPlanSubsidiado{--bi-tone:var(--color-success)}
+.baiPanelDrawer .biPlanReversao{--bi-tone:var(--color-warning)}
+.baiPanelDrawer .biPlanCoparticipado{--bi-tone:var(--color-accent-primary)}
+.baiPanelDrawer .biFandiHero{display:flex;flex-direction:column;gap:6px;padding:var(--space-3);border:1px solid var(--mod-border);border-left:3px solid var(--bi-tone,var(--mod-warning));border-radius:var(--radius-md);background:var(--mod-surface-panel-2)}
+.baiPanelDrawer .biFandiHero .biRows{max-width:420px}
+.baiPanelDrawer .biFandiHero .biRows dd{font-family:var(--font-mono)}
+.baiPanelDrawer .biFandiKpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-2)}
+.baiPanelDrawer .biFandiKpi{min-width:0;margin:0}
+.baiPanelDrawer .biFandiKpi .modKpiLabel,.baiPanelDrawer .biFandiKpi .modKpiValue,.baiPanelDrawer .biFandiKpi .modKpiHint{margin-bottom:0!important}
+.baiPanelDrawer .biFandiKpi .modKpiValue{font-size:20px;overflow-wrap:anywhere}
+.baiPanelDrawer .biFandiKpi .modKpiHint{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.baiPanelDrawer .biFandiTable td.biNum{font-family:var(--font-mono)}
+.baiPanelDrawer .biRateCell{display:inline-grid;grid-template-columns:56px auto;gap:6px;align-items:center;justify-items:end;min-width:96px}
+.baiPanelDrawer .biRateCell .biBar{width:56px}
+.baiPanelDrawer .biRateVal{font-family:var(--font-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.baiPanelDrawer .biCardFandi .biSalName{white-space:nowrap}
+.baiPanelDrawer .biKpiExplain{margin:6px 0 0!important;font-size:12px;line-height:1.4;color:var(--color-text-secondary);text-transform:none;letter-spacing:0}
+.baiPanelDrawer .biClientKpis .modKpiLabel{text-transform:none;letter-spacing:0;font-size:12px;line-height:1.35}
+.baiPanelDrawer .biClientView{margin-top:var(--space-3)}
+.baiPanelDrawer .biClientView>summary{font-size:13px;color:var(--color-text-primary)}
+.baiPanelDrawer .biClientBody{margin-top:var(--space-2)}
+.baiPanelDrawer .biWarnStrip{display:block;margin:var(--space-2) 0!important;padding:8px 10px;font-family:var(--font-ui);font-size:12.5px;line-height:1.45;text-transform:none;letter-spacing:0;border-left-width:3px;background:var(--color-warning-soft)}
+.baiPanelDrawer .biFunnelWrap{display:grid;grid-template-columns:1fr;gap:var(--space-3)}
+.baiPanelDrawer .biFunnel{display:flex;flex-direction:column;gap:var(--space-2)}
+.baiPanelDrawer .biFunnelStep{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"lab val" "bar pct";gap:4px var(--space-3);align-items:center;padding:var(--space-2) var(--space-3);border:1px solid var(--mod-border);border-radius:var(--radius-sm);background:var(--mod-surface-panel-2);min-width:0}
+.baiPanelDrawer .biFunnelStep .biFigLabel{grid-area:lab}
+.baiPanelDrawer .biFunnelValue{grid-area:val;font-family:var(--font-mono);font-size:20px;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums;text-align:right}
+.baiPanelDrawer .biFunnelStep .biBar{grid-area:bar}
+.baiPanelDrawer .biFunnelPct{grid-area:pct;font-family:var(--font-mono);font-size:12px;color:var(--color-text-secondary);font-variant-numeric:tabular-nums;text-align:right;min-width:52px}
+.baiPanelDrawer .biFunnelArrow{align-self:center;color:var(--color-text-muted);font-size:14px;line-height:1;transform:rotate(90deg)}
+.baiPanelDrawer .biFunnelSide{display:flex;flex-direction:column;gap:2px;padding:var(--space-2) var(--space-3);border:1px solid var(--mod-border);border-radius:var(--radius-sm)}
+.baiPanelDrawer .biFunnelSideRow{display:grid;grid-template-columns:minmax(0,1fr) auto 52px;gap:var(--space-3);align-items:baseline;padding:4px 0;font-size:13px}
+.baiPanelDrawer .biFunnelSideRow+.biFunnelSideRow{border-top:1px solid var(--mod-border)}
+.baiPanelDrawer .biFunnelSideLabel{color:var(--color-text-secondary)}
+.baiPanelDrawer .biFunnelSideVal{font-family:var(--font-mono);font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;text-align:right}
+.baiPanelDrawer .biFunnelSidePct{font-family:var(--font-mono);font-size:12px;color:var(--color-text-muted);font-variant-numeric:tabular-nums;text-align:right}
+.baiPanelDrawer .biFunnelWarn .biFunnelSideLabel,.baiPanelDrawer .biFunnelWarn .biFunnelSideVal{color:var(--mod-warning)}
+.baiPanelDrawer .biThShort{display:none}
+.baiPanelDrawer .biPlanMix{display:flex;flex-direction:column;gap:var(--space-2)}
+.baiPanelDrawer .biPlanRow{display:grid;grid-template-columns:minmax(0,110px) minmax(0,1fr) auto;gap:var(--space-3);align-items:center;font-size:13px}
+.baiPanelDrawer .biPlanName{font-family:var(--font-mono);font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-secondary)}
+.baiPanelDrawer .biPlanVal{font-family:var(--font-mono);font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right;min-width:88px}
+
+/* largura da gaveta, não da janela (a .baiPanelBody é container) */
+@container (min-width:640px){
+  .baiPanelDrawer .biOpcoesGrid{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}
+  .baiPanelDrawer .biFigValue{font-size:22px}
+  .baiPanelDrawer .biFiguresCompact .biFigValue{font-size:14px}
+  .baiPanelDrawer .biMiniKpis{grid-template-columns:repeat(4,minmax(0,110px));justify-content:start}
+  .baiPanelDrawer .biSalKpis{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .baiPanelDrawer .biFandiKpis{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .baiPanelDrawer .biFandiKpis2{grid-template-columns:repeat(2,minmax(0,280px))}
+  .baiPanelDrawer .biFunnelWrap{grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);align-items:start}
+  .baiPanelDrawer .biFunnel{flex-direction:row;align-items:stretch}
+  .baiPanelDrawer .biFunnelStep{flex:1 1 0;grid-template-columns:1fr;grid-template-areas:"lab" "val" "bar" "pct";text-align:left}
+  .baiPanelDrawer .biFunnelValue,.baiPanelDrawer .biFunnelPct{text-align:left}
+  .baiPanelDrawer .biFunnelArrow{transform:none}
+  .baiPanelDrawer .biSalSteps{max-width:420px}
+  .baiPanelDrawer .biCompRow{grid-template-columns:minmax(0,260px) minmax(0,1fr) auto}
+  .baiPanelDrawer .biCashTop{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--space-5);align-items:start}
+  .baiPanelDrawer .biKpis{grid-template-columns:repeat(6,minmax(0,1fr))}
+}
+/* gaveta estreita (celular): os 3 números viram linhas — rótulo à esquerda,
+   valor à direita, mesmo tamanho; os centavos ficam alinhados numa coluna */
+@container (max-width:439px){
+  .baiPanelDrawer .biScoreHead{flex-wrap:wrap;row-gap:6px}
+  .baiPanelDrawer .biScoreName{white-space:normal;overflow-wrap:anywhere}
+  .baiPanelDrawer .biScoreLoja{white-space:normal;min-width:0;overflow-wrap:anywhere}
+  .baiPanelDrawer .biDataTable td:not(.biNum){white-space:normal;overflow-wrap:normal;word-break:normal}
+  .baiPanelDrawer table.biDataTable th,.baiPanelDrawer table.biDataTable td{padding:6px 5px}
+  .baiPanelDrawer table.biSalTable td.biNum{font-size:11px;letter-spacing:-.02em}
+  .baiPanelDrawer table.biSalTable .modBadge{padding:2px 5px}
+  .baiPanelDrawer .biRateCell{grid-template-columns:1fr;min-width:0;gap:3px}
+  .baiPanelDrawer .biRateCell .biBar{width:100%;min-width:44px;grid-row:2}
+  .baiPanelDrawer .biThLong{display:none}
+  .baiPanelDrawer .biThShort{display:inline}
+  .baiPanelDrawer .biFandiKpi .modKpiValue{overflow-wrap:normal;word-break:normal}
+  .baiPanelDrawer .biCardFandi .biSalHead{flex-wrap:wrap}
+  .baiPanelDrawer .biCardFandi .biSalHead .modBadge{white-space:nowrap}
+  .baiPanelDrawer .biCardFandi .biSalWho{flex-basis:100%}
+  .baiPanelDrawer .biCardFandi .biSalWho .modBadge{white-space:normal;overflow-wrap:anywhere}
+  .baiPanelDrawer table.biFandiTable td.biNum{font-size:11px}
+  .baiPanelDrawer .biPlanRow{grid-template-columns:minmax(0,92px) minmax(0,1fr) auto;gap:var(--space-2)}
+  .baiPanelDrawer .biPlanVal{min-width:0;font-size:12px}
+  .baiPanelDrawer .biFandiKpi .modKpiValue{font-size:17px}
+  .baiPanelDrawer .biCompRow{grid-template-columns:minmax(0,1fr) 60px auto;column-gap:var(--space-2)}
+  .baiPanelDrawer .biCompPts{min-width:52px}
+  .baiPanelDrawer .biFigures{grid-template-columns:1fr;gap:0}
+  .baiPanelDrawer .biFig{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:var(--space-3);align-items:baseline;padding:6px 0}
+  .baiPanelDrawer .biFig+.biFig{border-left:0;padding-left:0;border-top:1px solid var(--mod-border)}
+  .baiPanelDrawer .biFiguresCompact .biFig+.biFig{padding-left:0}
+  .baiPanelDrawer .biFigLabel{grid-column:1;grid-row:1;text-align:left}
+  .baiPanelDrawer .biFigValue,.baiPanelDrawer .biFiguresCompact .biFigValue{grid-column:2;grid-row:1;font-size:18px}
+  .baiPanelDrawer .biFiguresCompact .biFigValue{font-size:14px}
+  .baiPanelDrawer .biFigSub{grid-column:2;grid-row:2;text-align:right}
+}
+@container (max-width:639px){
+  .baiPanelDrawer .biCompTable,.baiPanelDrawer .biDataTable{font-size:12px}
+  .baiPanelDrawer .biCompTable th,.baiPanelDrawer .biCompTable td,.baiPanelDrawer .biDataTable th,.baiPanelDrawer .biDataTable td{padding:6px 8px}
+  .baiPanelDrawer .biCompTable thead th,.baiPanelDrawer .biDataTable thead th{white-space:normal;overflow-wrap:normal;word-break:normal;vertical-align:bottom}
+}
+@container (min-width:420px) and (max-width:639px){
+  .baiPanelDrawer .biKpis{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+
+/* ---------- Cartão "plano" (Coparticipado / Taxa Subsidiada / Semestral Taxa 0%) ----------
+   Mesmas classes do Simulador de Novos (simuladores.css: kpiLabel, smTermGrid, smSubsidiada*,
+   smSchedule*, smEmphasis*, resultHero, resultSecondaryGrid); aqui só o encaixe no cartão do chat. */
+.baiPanelDrawer .biCardPlano .resultSecondaryGrid{margin-top:var(--space-3);padding:var(--space-3) 0;gap:var(--space-3)}
+.baiPanelDrawer .biCardPlano .resultSecondaryGrid .val{margin:0;font-size:15px}
+.baiPanelDrawer .biCardPlano .kpiLabel{margin-bottom:4px}
+.baiPanelDrawer .biPlanoSub{margin:2px 0 0;font-family:var(--font-mono);font-size:10.5px;color:var(--color-text-muted);font-variant-numeric:tabular-nums}
+.baiPanelDrawer .biPlanoSecao{margin-top:var(--space-3)}
+.baiPanelDrawer .biPlanoPrazos{margin-top:var(--space-2)}
+.baiPanelDrawer .biPlanoRebate{margin-top:var(--space-3)}
+.baiPanelDrawer .biPlanoRebate .resultSecondaryGrid{margin-top:0}
+.baiPanelDrawer .biPlanoFinal{margin:var(--space-2) 0 0}
+.baiPanelDrawer .biPlanoHero{margin-top:var(--space-3)}
+.baiPanelDrawer .biPlanoHero .resultValue{margin:0;font-size:clamp(26px,4vw,36px)}
+.baiPanelDrawer .biPlanoMelhor{margin:var(--space-3) 0 var(--space-2);font-size:13px;color:var(--color-text-secondary);display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.baiPanelDrawer .biPlanoAbas{margin:var(--space-2) 0 var(--space-3);max-width:100%}
+.baiPanelDrawer .biPlanoSubGrid{grid-template-columns:repeat(auto-fill,minmax(270px,1fr))}
+.baiPanelDrawer .biPlanoSubGrid[hidden]{display:none}
+.baiPanelDrawer .biCardPlano .smSubsidiadaCardRow strong,.baiPanelDrawer .biCardPlano .smSubsidiadaCardRebatePct,.baiPanelDrawer .biCardPlano .val{white-space:nowrap}
+.baiPanelDrawer .biCardPlano .smSubsidiadaCardRow .kpiLabel{margin:0;min-width:0}
+.baiPanelDrawer .biPlanoSemestrais{gap:var(--space-4)}
+/* 390px: a grade de prazos vira lista (prazo · parcela · taxa numa linha) */
+@container (max-width:480px){
+  .baiPanelDrawer .biPlanoPrazos{grid-template-columns:1fr !important}
+  .baiPanelDrawer .biPlanoPrazos .smTermCard{display:grid;grid-template-columns:52px 1fr auto;align-items:baseline;gap:var(--space-2);text-align:left;padding:10px 12px}
+  .baiPanelDrawer .biPlanoPrazos .smTermCard .term{margin:0;font-size:13px;color:var(--color-text-secondary)}
+  .baiPanelDrawer .biPlanoPrazos .smTermCard .rate{margin:0;text-align:right}
+  .baiPanelDrawer .biCardPlano .resultSecondaryGrid{grid-template-columns:1fr 1fr}
+  .baiPanelDrawer .biPlanoSubGrid{grid-template-columns:1fr}
+  .baiPanelDrawer .biPlanoAbas button{padding:7px 9px}
+}
+
+/* ---------- Voz: Voice Orb (palco + botão do microfone) ----------
+   Botão: .baiVoiceBtn/.baiVoiceOrb* de intelligence.css (V2-UAT-02), estados
+   pelas classes .baiVoiceStateVOICE_*. Palco: canvas Fluid Aperture (bi-voice-orb.js). */
+.baiPanelDrawer .biSrOnly{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.baiPanelDrawer .biForm{align-items:center}
+/* sempre círculo: a pílula expandida no hover distorce o anel do Orb */
+.baiPanelDrawer .biMic,.baiPanelDrawer .biMic:hover,.baiPanelDrawer .biMic:focus-visible{width:36px;padding:0;justify-content:center}
+.baiPanelDrawer .biMic[aria-disabled="true"]{opacity:.42;cursor:not-allowed}
+/* gravando: o microfone vira "enviar" (seta para cima) em botão cheio, com pulso suave */
+.baiPanelDrawer .biMicIconeEnviar{display:none;position:relative;line-height:0}
+.baiPanelDrawer .biMic[aria-pressed="true"]{background:var(--color-accent-primary);border-color:transparent;color:#fff}
+.baiPanelDrawer .biMic[aria-pressed="true"]:hover{background:var(--color-accent-primary);filter:brightness(1.08)}
+.baiPanelDrawer .biMic[aria-pressed="true"] .biMicIconeMic{display:none}
+.baiPanelDrawer .biMic[aria-pressed="true"] .biMicIconeEnviar{display:block}
+.baiPanelDrawer .biMic[aria-pressed="true"] .baiVoiceOrbRing{border-color:rgba(255,255,255,.55)}
+.baiPanelDrawer .biMic[aria-pressed="true"] .baiVoiceOrbArc{border-top-color:rgba(255,255,255,.8);border-right-color:rgba(255,255,255,.25)}
+@keyframes biMicPulso{0%{box-shadow:0 0 0 0 rgba(238,75,87,.55)}70%{box-shadow:0 0 0 10px rgba(238,75,87,0)}100%{box-shadow:0 0 0 0 rgba(238,75,87,0)}}
+@media (prefers-reduced-motion:no-preference){.baiPanelDrawer .biMic[aria-pressed="true"]{animation:biMicPulso 1.6s ease-out infinite}}
+/* balão de primeira vez sobre o microfone */
+.baiPanelDrawer .biMicDica{position:absolute;right:var(--space-4);bottom:calc(100% + 8px);z-index:3;max-width:240px;padding:8px 12px;border-radius:var(--radius-sm);background:var(--mod-surface-elevated);border:1px solid var(--color-accent-primary);color:var(--color-text-primary);font-size:13px;line-height:1.35;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+.baiPanelDrawer .biMicDica[hidden]{display:none}
+.baiPanelDrawer .biMicDica::after{content:"";position:absolute;right:92px;top:100%;border:6px solid transparent;border-top-color:var(--color-accent-primary)}
+.baiPanelDrawer .biMic[aria-disabled="true"]:active{transform:none}
+.baiPanelDrawer .biVoz{position:relative;z-index:1;flex-shrink:0;display:flex;align-items:center;gap:var(--space-3);padding:var(--space-2) var(--space-4);border-top:1px solid var(--mod-border)}
+.baiPanelDrawer .biVoz[hidden]{display:none}
+.baiPanelDrawer .biVozOrb{width:72px;height:72px;flex-shrink:0}
+.baiPanelDrawer .biVozCanvas{display:block;width:100%;height:100%}
+.baiPanelDrawer .biVozStatus{flex:1;min-width:0;margin:0;display:flex;flex-direction:column;gap:2px;font-size:14px;color:var(--color-text-primary)}
+.baiPanelDrawer .biVoz[data-estado="pensando"] .biVozStatus{color:var(--mod-warning)}
+.baiPanelDrawer .biVozSeta{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;vertical-align:-5px;border-radius:50%;background:var(--color-accent-primary);color:#fff}
+.baiPanelDrawer .biVozSeta svg{width:13px;height:13px}
+.baiPanelDrawer .biVozTempo{font-family:var(--font-mono);font-size:11px;color:var(--color-text-muted)}
+.baiPanelDrawer .biVozAcao{width:36px;height:36px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border-radius:50%;background:var(--mod-surface-panel-2);border:1px solid var(--mod-border-strong);color:var(--color-text-primary);cursor:pointer}
+.baiPanelDrawer .biVozAcao[hidden]{display:none}
+.baiPanelDrawer .biVozAcao:hover{border-color:var(--mod-accent)}
+.baiPanelDrawer .biVozAcao:focus-visible{outline:var(--focus-ring);outline-offset:2px}
+.baiPanelDrawer .biVozParar{color:var(--color-accent-primary)}
+.baiPanelDrawer .biVozAviso{position:relative;z-index:1;flex-shrink:0;margin:0;padding:var(--space-2) var(--space-4) 0;font-size:var(--mod-metadata-size);color:var(--mod-warning)}
+.baiPanelDrawer .biVozAviso[hidden]{display:none}
+.baiPanelDrawer .biTempos{margin-top:6px!important;font-family:var(--font-mono);font-size:10.5px;color:var(--color-text-muted);overflow-wrap:anywhere}
+.baiPanelDrawer .biTemposBanco{text-decoration:underline dotted;cursor:help}
+.baiPanelDrawer .biAvisoVoz{margin-top:8px!important;font-size:var(--mod-metadata-size);color:var(--color-text-muted)}
+.baiPanelDrawer .biMsgVozPendente{opacity:.7;font-style:italic}
+@media (max-width:480px){.baiPanelDrawer .biVoz{padding:var(--space-2) var(--space-3)}.baiPanelDrawer .biVozOrb{width:60px;height:60px}}

@@ -1,0 +1,103 @@
+/* PORTAL-NEXT V2 — Launch Experience (prototype, local-only).
+   Its own dedicated, top-level node appended directly to <body> --
+   NOT nested inside the shared #nxOverlayRoot (z-index:100). Reusing
+   that shared root was tried first, but .nxDevBadge (assets/css/
+   shell.css) is deliberately z-index:150, ABOVE it, by existing
+   design (always-on-top dev diagnostic) -- a pre-existing, unrelated
+   decision correctly out of this prototype's scope to change. A
+   dedicated z-index:9999 root is the minimal way to let THIS overlay
+   genuinely dominate the screen without touching shell.css. */
+
+.nxLaunchXp {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  pointer-events: auto;
+  opacity: 1;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .nxLaunchXp { transition: opacity .6s var(--ease-precise); }
+}
+.nxLaunchXp.isLeaving { opacity: 0; }
+
+.nxLaunchXpVideo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* preserves original proportion, never deforms; letterbox blends into the pure-black background */
+  background: #000;
+}
+
+/* ---------- discreet skip control -- never a default HTML <button>
+   look, matches the codebase's low-emphasis-chrome convention (see
+   .nxDevBadge in shell.css: quiet by default, brightens on hover/
+   focus, never removed). ---------- */
+.nxLaunchXpSkip {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, .28);
+  background: rgba(0, 0, 0, .35);
+  color: rgba(255, 255, 255, .78);
+  font: 500 13px/1 var(--font-ui);
+  letter-spacing: .02em;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .nxLaunchXpSkip { transition: opacity .25s var(--ease-smooth), border-color .25s var(--ease-smooth), color .25s var(--ease-smooth); }
+}
+.nxLaunchXpSkip:hover,
+.nxLaunchXpSkip:focus-visible {
+  color: #fff;
+  border-color: rgba(255, 255, 255, .55);
+}
+
+/* ---------- tap-to-start fallback (only shown when the browser
+   blocks unmuted autoplay) -- one clear, elegant interaction, never a
+   dense control bar. ---------- */
+.nxLaunchXpStart {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, .55);
+  border: 0;
+  cursor: pointer;
+  color: #fff;
+}
+.nxLaunchXpStartInner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+.nxLaunchXpStartIcon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, .7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.nxLaunchXpStartIcon::after {
+  content: "";
+  border-style: solid;
+  border-width: 12px 0 12px 20px;
+  border-color: transparent transparent transparent #fff;
+  margin-left: 4px;
+}
+.nxLaunchXpStartLabel {
+  font: 500 14px/1 var(--font-ui);
+  letter-spacing: .03em;
+  color: rgba(255, 255, 255, .85);
+}
+
+body.nxLaunchXpOpen { overflow: hidden; }

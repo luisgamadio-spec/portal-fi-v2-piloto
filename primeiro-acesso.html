@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Primeiro acesso — Portal F&amp;I</title>
+<link rel="stylesheet" href="assets/css/vendor/fonts.css">
+<link rel="stylesheet" href="assets/css/vendor/design-tokens.css">
+<link rel="stylesheet" href="assets/css/conta.css">
+</head>
+<body>
+  <main class="contaCard">
+    <img class="contaLogo" src="assets/images/brabus-logo.png" alt="Grupo Brabus Mitsubishi">
+
+    <div id="loadingState">
+      <h1 class="contaTitulo">Validando convite...</h1>
+      <p class="contaTexto">Aguarde um instante.</p>
+    </div>
+
+    <form id="formState" class="hidden" novalidate>
+      <h1 class="contaTitulo" id="formTitle">Criar minha senha</h1>
+      <p class="contaTexto" id="welcomeText">Defina a senha que você usará para acessar o Portal F&amp;I.</p>
+      <div class="contaCampo">
+        <label for="senha1">Nova senha</label>
+        <input id="senha1" type="password" autocomplete="new-password" placeholder="Mínimo 6 caracteres">
+      </div>
+      <div class="contaCampo">
+        <label for="senha2">Confirmar nova senha</label>
+        <input id="senha2" type="password" autocomplete="new-password" placeholder="Repita a senha">
+      </div>
+      <button class="contaBotao" id="btnConfirmar" type="submit">Criar minha senha</button>
+      <div id="formMsg" class="contaMsg" role="status" aria-live="polite"></div>
+    </form>
+
+    <div id="errorState" class="hidden">
+      <h1 class="contaTitulo">Link inválido ou expirado</h1>
+      <p class="contaTexto">Este link de convite não é mais válido. Solicite um novo convite ao administrador do portal.</p>
+      <a class="contaLink" href="index.html">Voltar ao Portal →</a>
+    </div>
+
+    <div id="successState" class="hidden">
+      <h1 class="contaTitulo" id="successTitle">Conta ativada</h1>
+      <p class="contaTexto" id="successText">Sua senha foi definida. Você já pode entrar no portal.</p>
+      <a class="contaBotao" href="index.html">Ir para o login</a>
+    </div>
+
+    <div class="contaRodape">Desenvolvido por <b>BLISTIQ</b> em 2026.</div>
+  </main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.0" integrity="sha384-De+l/Df7qym5QBDVocD3+gW1S7IjR3epf+6KbRDjB3FCCzM/LqVTwqckT6FhFar8" crossorigin="anonymous"></script>
+<script src="assets/js/intelligence-runtime-config.js"></script>
+<script>
+// Mesma escolha de config por hostname exato do index.html.
+if(location.hostname==='127.0.0.1'||location.hostname==='localhost'){
+  document.write('<script src="assets/js/intelligence-runtime-config.local.js"><\/script>');
+} else if(location.hostname==='luisgamadio-spec.github.io'){
+  document.write('<script src="assets/js/intelligence-runtime-config.homolog.js"><\/script>');
+} else if(location.hostname==='brabus.blistiq.com.br'){
+  document.write('<script src="assets/js/intelligence-runtime-config.production.js"><\/script>');
+} else if(location.hostname==='v2.brabus.blistiq.com.br'){
+  document.write('<script src="assets/js/intelligence-runtime-config.piloto.js"><\/script>');
+}
+</script>
+<script>
+(function(){
+  'use strict';
+  // Porte do primeiro-acesso.html do Portal oficial (mesmo comportamento,
+  // inclusive a distinção convite × recuperação do Incidente 12.4), com o
+  // visual do V2. O link de convite/recuperação do Supabase Auth autentica
+  // ao abrir a página e dispara SIGNED_IN/PASSWORD_RECOVERY com uma sessão
+  // provisória, que só serve para definir a senha.
+  function show(id){
+    ['loadingState','formState','errorState','successState'].forEach(function(s){
+      document.getElementById(s).classList.toggle('hidden', s!==id);
+    });
+  }
+  function setMsg(msg,err){
+    const el=document.getElementById('formMsg');
+    el.textContent=msg||'';
+    el.className='contaMsg '+(err?'erro':'ok');
+  }
+
+  const cfg=window.NX_INTELLIGENCE_CONFIG||{};
+  if(!window.supabase||!cfg.supabaseUrl||!cfg.supabasePublishableKey){ show('errorState'); return; }
+  // Sessão provisória só nesta aba (mesmo armazenamento por aba do V2):
+  // nunca fica uma sessão de convite gravada no navegador.
+  const client=window.supabase.createClient(cfg.supabaseUrl,cfg.supabasePublishableKey,{
+    auth:{storage:window.sessionStorage,storageKey:'nx-primeiro-acesso',persistSession:true,detectSessionInUrl:true,autoRefreshToken:true}
+  });
+
+  let sessaoValida=false;
+  let modoAcesso='convite';
+  if(/[#&]type=recovery(&|$)/.test(location.hash)) modoAcesso='recovery';
+
+  function aplicarTextosModo(){
+    const rec=modoAcesso==='recovery';
+    document.getElementById('formTitle').textContent=rec?'Redefinir senha':'Criar minha senha';
+    document.getElementById('welcomeText').textContent=rec
+      ?'Defina a nova senha que você usará para acessar o Portal F&I.'
+      :'Defina a senha que você usará para acessar o Portal F&I.';
+    document.getElementById('btnConfirmar').textContent=rec?'Salvar nova senha':'Criar minha senha';
+  }
+
+  client.auth.onAuthStateChange(function(event, session){
+    if(event==='PASSWORD_RECOVERY') modoAcesso='recovery';
+    if((event==='SIGNED_IN'||event==='PASSWORD_RECOVERY') && session){
+      sessaoValida=true;
+      aplicarTextosModo();
+      const nome=session.user&&session.user.user_metadata&&session.user.user_metadata.nome;
+      if(nome && modoAcesso==='convite') document.getElementById('welcomeText').textContent='Olá, '+nome+'. Defina a senha que você usará para acessar o Portal F&I.';
+      show('formState');
+    }
+  });
+
+  // Sem sessão pelo token da URL após um tempo curto: link inválido, expirado ou já usado.
+  setTimeout(async function(){
+    if(sessaoValida) return;
+    const r=await client.auth.getSession();
+    if(r.data&&r.data.session){ sessaoValida=true; aplicarTextosModo(); show('formState'); }
+    else show('errorState');
+  }, 2500);
+
+  document.getElementById('formState').addEventListener('submit', async function(ev){
+    ev.preventDefault();
+    const s1=document.getElementById('senha1').value;
+    const s2=document.getElementById('senha2').value;
+    const btn=document.getElementById('btnConfirmar');
+    if(s1.length<6){ setMsg('A senha deve ter no mínimo 6 caracteres.',true); return; }
+    if(s1!==s2){ setMsg('As senhas não coincidem.',true); return; }
+    btn.disabled=true;
+    setMsg('Salvando...');
+    try{
+      const upd=await client.auth.updateUser({password:s1});
+      if(upd.error) throw upd.error;
+      if(modoAcesso==='recovery'){
+        // Recuperação não é conclusão de convite: não chama concluir_convite_usuario().
+        await client.auth.signOut();
+        document.getElementById('successTitle').textContent='Senha redefinida';
+        document.getElementById('successText').textContent='Sua senha foi redefinida com sucesso. Entre novamente com seu e-mail e a nova senha.';
+      }else{
+        const rpc=await client.rpc('concluir_convite_usuario');
+        if(rpc.error) throw rpc.error;
+        await client.auth.signOut();
+        document.getElementById('successTitle').textContent='Conta ativada';
+        document.getElementById('successText').textContent='Sua senha foi definida e sua conta está ativa. Entre novamente com seu e-mail e a nova senha.';
+      }
+      document.getElementById('senha1').value='';
+      document.getElementById('senha2').value='';
+      show('successState');
+    }catch(e){
+      setMsg(String((e&&e.message)||e),true);
+      btn.disabled=false;
+    }
+  });
+})();
+</script>
+</body>
+</html>

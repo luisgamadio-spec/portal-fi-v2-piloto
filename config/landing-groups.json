@@ -1,0 +1,11 @@
+{
+  "note": "Gate 5 — real content mapped onto the Approved Reference's 6-category grammar. Full reasoning: docs/LANDING-CONTENT-MAP.md. moduleIds reference config/module-registry.json ids. 'Simuladores' category from the reference is deliberately unused (redundant given real V1 content). 'coparticipado' was held back from the Landing canvas through PORTAL-NEXT-04 (content-fit guard, Gate 39) while NOT_MIGRATED; PORTAL-NEXT-05 Gate 28 placed it under the existing 'Gestão' category (no new category invented — same grammar as before) now that it is a real migrated route, alongside dashbi/gestao as the other financial-operations analysis surfaces.",
+  "groups": [
+    { "label": "Gestão", "moduleIds": ["dashbi", "gestao", "coparticipado"] },
+    { "label": "Novos & Seminovos", "moduleIds": ["simulador-novos", "simulador-seminovos"] },
+    { "label": "Score & Salários", "moduleIds": ["score", "salarios-comissoes"] },
+    { "label": "Atendimento F&I", "moduleIds": ["painel-analista-fi", "central-atendimento-fi"] },
+    { "label": "Brabus Intelligence", "moduleIds": ["brabus-intelligence"] },
+    { "label": "Auditoria", "moduleIds": ["shell-admin"] }
+  ]
+}

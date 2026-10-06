@@ -1,0 +1,1143 @@
+/* PORTAL-NEXT V2 — Brabus Intelligence module CSS (IA-V2-1).
+
+   Loaded after module-system.css, alongside the other per-module
+   stylesheets (index.html). Built entirely on shared --mod-* tokens
+   and .mod* primitives — no new visual language invented (Gate 8 of
+   IA-V2-1). A professional F&I workspace, not a consumer chatbot: no
+   giant avatars, no oversized bubbles, no gimmicks. Single, width-
+   capped conversation column — the module has no second,
+   independently useful information source that would justify a side
+   panel (Gate 15 of IA-V2-PLAN-01).
+
+   The width cap applies ONLY to .baiWorkspace (the conversation/
+   composer), left-aligned, not to .baiPage as a whole -- an earlier
+   version capped+centered the whole page, which also shifted the
+   page HEADER ~120px right of every other module's (found live during
+   IA-V2-1-VISUAL-QA-01's Red Precision Fit pass, comparing left edges
+   against Dashbi/Score/Coparticipado/Simuladores). Header and fixture
+   banner now flow full-width like every other module; only the
+   reading column beneath them is capped, for comfortable line length. */
+
+/* ---------- Conversation surface ---------- */
+.baiWorkspace{display:flex;flex-direction:column;gap:var(--mod-space-control-gap);max-width:820px}
+.baiConversation{display:flex;flex-direction:column;gap:var(--mod-space-card-gap);min-height:120px}
+
+.baiMessage{display:flex;flex-direction:column;gap:var(--mod-space-micro);max-width:100%}
+.baiMessageUser{align-items:flex-end}
+.baiMessageAssistant{align-items:flex-start}
+
+.baiRoleLabel{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--mod-muted)}
+
+.baiBubble{border-radius:var(--radius-md);padding:10px 14px;font-size:var(--mod-body-size);line-height:1.5;max-width:640px;white-space:pre-wrap;overflow-wrap:break-word}
+.baiMessageUser .baiBubble{background:var(--mod-surface-active);border:1px solid rgba(238,75,87,.28)}
+.baiMessageAssistant .baiBubble{background:var(--mod-surface-panel-2);border:1px solid var(--mod-border)}
+/* border/color match module-system.css's own .modErrorState exactly
+   (also hardcoded there, no token exists for this shade) -- reusing
+   the established value, not inventing a new one. */
+.baiBubbleError{background:none;border:1px solid rgba(226,84,58,.4);color:#f3c7ba}
+.baiBubbleLoading{display:flex;align-items:center;gap:var(--mod-space-compact);color:var(--mod-muted);background:none;border:1px dashed var(--mod-border-strong)}
+
+/* Assistant Markdown prose (HOTFIX-03) -- block content replaces the
+   plain pre-wrap text node, so the bubble itself stops pre-wrapping
+   raw newlines (paragraphs/lists carry their own spacing instead).
+   Density stays compact on purpose -- conversational replies, not an
+   article. */
+.baiBubbleMd{white-space:normal}
+.baiBubbleMd p{margin:0 0 var(--mod-space-micro)}
+.baiBubbleMd p:last-child{margin-bottom:0}
+.baiBubbleMd ul,.baiBubbleMd ol{margin:var(--mod-space-micro) 0;padding-left:1.2em;display:flex;flex-direction:column;gap:2px}
+.baiBubbleMd li{margin:0}
+.baiBubbleMd strong{font-weight:600}
+.baiBubbleMd em{font-style:italic}
+.baiBubbleMd code{font-family:var(--font-mono);background:var(--mod-surface-panel-2);border:1px solid var(--mod-border-strong);border-radius:var(--radius-sm);padding:0 4px;font-size:.92em}
+.baiBubbleMd .baiMdHeading{font-weight:600;font-size:var(--mod-body-size);margin:var(--mod-space-micro) 0 2px}
+
+/* ---------- Structured results ---------- */
+.baiStructuredRegion{display:flex;flex-direction:column;gap:var(--mod-space-card-gap);width:100%;max-width:640px}
+.baiBlockTitle{font-family:var(--font-ui);font-size:var(--mod-section-title-size);font-weight:400;margin:0 0 var(--mod-space-compact)}
+.baiBlockPeriod{color:var(--mod-muted);font-size:var(--mod-metadata-size);margin:0 0 var(--mod-space-card-gap)}
+
+.baiMetricsGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:var(--mod-space-card-gap)}
+/* IA-3G.3 -- .modKpiLabel/.modKpiValue are plain <p> tags; neither rule
+   below ever reset the browser's own default UA paragraph margin
+   (1em 0, computed against EACH element's own font-size), so ~9.5px
+   above/below the label and ~15px below the value leaked through
+   unintentionally on every single metric item -- found by measuring
+   real rendered row height (70.75px) against the label+value's own
+   actual content height (~37-41px) and tracing the ~30-40px gap to
+   these two unreset margins, not a grid/flex stretching behavior
+   (ruled out empirically: forcing align-items/align-content/
+   justify-items:start made no difference). Explicit margin:0 base,
+   with only the top gap between label and value re-added on purpose. */
+.baiMetricItem .modKpiLabel{color:var(--mod-muted);font-size:var(--mod-kpi-label-size);font-weight:500;text-transform:uppercase;letter-spacing:.06em;margin:0}
+.baiMetricItem .modKpiValue{font-family:var(--font-mono);font-size:18px;font-weight:500;margin:var(--mod-space-micro) 0 0;font-variant-numeric:tabular-nums}
+
+.baiComparisonGrid{display:grid;grid-template-columns:1fr 1fr;gap:var(--mod-space-card-gap)}
+@media(max-width:600px){.baiComparisonGrid{grid-template-columns:1fr}}
+.baiComparisonSide{border:1px solid var(--mod-border);border-radius:var(--radius-md);padding:var(--mod-space-control-gap)}
+.baiComparisonSideLabel{font-weight:500;margin:0 0 var(--mod-space-compact)}
+
+.baiOperationsList{display:flex;flex-direction:column;gap:var(--mod-space-micro)}
+.baiOperationRow{display:flex;justify-content:space-between;gap:var(--mod-space-control-gap);padding:var(--mod-space-compact) 0;border-bottom:1px solid var(--mod-border)}
+.baiOperationRow:last-child{border-bottom:none}
+
+/* Operations block (HOTFIX-05) -- cards, not a table, per the backend
+   source's own intent ("nunca uma tabela — mobile-first"). Each card
+   reuses .baiOperationRow for its own data lines. */
+.baiOperationCard{border:1px solid var(--mod-border);border-radius:var(--radius-md);padding:var(--mod-space-compact) var(--mod-space-card-gap);margin-bottom:var(--mod-space-micro)}
+.baiOperationCard:last-child{margin-bottom:0}
+.baiOperationCard .baiOperationRow:last-child{border-bottom:none}
+.baiOpCardHeader{display:flex;gap:var(--mod-space-compact);align-items:baseline;font-weight:500}
+.baiOpRef{font-family:var(--font-mono);font-size:12.5px}
+
+/* ---------- Composer ---------- */
+.baiComposer{display:flex;gap:var(--mod-space-compact);align-items:flex-end;border-top:1px solid var(--mod-border);padding-top:var(--mod-space-control-gap)}
+.baiComposerInput{flex:1;resize:none;min-height:44px;max-height:160px;background:var(--mod-surface-panel-2);border:1px solid var(--mod-border-strong);color:var(--color-text-primary);font-family:var(--font-ui);font-size:13px;padding:10px 12px;border-radius:var(--radius-sm);line-height:1.4}
+.baiComposerInput:focus-visible{outline:var(--focus-ring);outline-offset:2px}
+.baiComposerActions{display:flex;gap:var(--mod-space-compact);flex-shrink:0}
+
+/* ---------- Voice entry control (IA-3H.1, refined IA-3H.2.1C) ----------
+   One affordance inside the existing composer actions -- never a
+   second toolbar. State is carried by the button's own text label
+   (VOICE_LABEL_BY_STATE in intelligence-panel.js) first; the mini
+   Fluid Aperture mark's color/motion is a secondary, non-exclusive
+   signal (Section 44) -- never the only cue.
+
+   IA-3H.2.1C: replaces the earlier plain-link treatment (underlined
+   text + tiny dot, `.modBtnGhost`) the Human found too weak/secondary
+   -- a dark bordered surface with a small Fluid-Aperture-family mark,
+   deliberately NOT the "Enviar" primary-fill treatment and NOT a
+   neon/glowing button (Section 7). The mark is decorative-only SVG:
+   no analyser, no microphone, no second Voice runtime (Section 9). */
+.baiVoiceBtn{
+  display:flex;align-items:center;gap:8px;position:relative;padding:0 14px;height:40px;
+  background:var(--color-surface-1);border:1px solid var(--color-hairline-strong);color:var(--color-text-secondary);
+  transition:background-color .15s ease,border-color .15s ease,transform .1s ease;
+}
+.baiVoiceBtn:hover:not(:disabled){background:var(--color-surface-2);border-color:color-mix(in srgb,var(--color-accent-primary) 55%,var(--color-hairline-strong) 45%)}
+.baiVoiceBtn:hover:not(:disabled) .baiVoiceBtnMark{filter:brightness(1.25)}
+.baiVoiceBtn:active:not(:disabled){transform:scale(.97)}
+.baiVoiceBtn:focus-visible{outline:var(--focus-ring);outline-offset:2px}
+.baiVoiceBtn:disabled{opacity:.42;cursor:not-allowed}
+.baiVoiceBtnMark{color:var(--color-accent-primary);flex-shrink:0;transition:filter .15s ease}
+.baiVoiceBtnMarkContour{opacity:.9}
+.baiVoiceBtnMarkSeam{opacity:.5}
+.baiVoiceBtnLabel{max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;color:var(--color-text-primary)}
+
+.baiVoiceStateVOICE_LISTENING .baiVoiceBtnMark,.baiVoiceStateVOICE_INTERRUPTED .baiVoiceBtnMark,.baiVoiceStateVOICE_SPEAKING .baiVoiceBtnMark{color:var(--color-accent-primary)}
+.baiVoiceStateVOICE_CONNECTING .baiVoiceBtnMark,.baiVoiceStateVOICE_THINKING .baiVoiceBtnMark{color:var(--mod-warning);animation:baiVoicePulse 1.1s ease-in-out infinite}
+.baiVoiceStateVOICE_SPEAKING .baiVoiceBtnMark{animation:baiVoicePulse 1.1s ease-in-out infinite}
+.baiVoiceStateVOICE_ERROR .baiVoiceBtnMark{color:#e2543a}
+@keyframes baiVoicePulse{0%,100%{opacity:1}50%{opacity:.35}}
+@media(prefers-reduced-motion:reduce){
+  .baiVoiceStateVOICE_CONNECTING .baiVoiceBtnMark,.baiVoiceStateVOICE_THINKING .baiVoiceBtnMark,.baiVoiceStateVOICE_SPEAKING .baiVoiceBtnMark{animation:none}
+}
+
+/* V2-UAT-02 (Section B) -- Voice Orb decorative ring/arc, same Living
+   Core family as the floating launcher (assets/js/intelligence/
+   intelligence-panel.js's baiLauncherCore/Ring/Orbit/Nucleus), reused
+   token-for-token (--p-red-1/2, same keyframe names). Distinct
+   function from the Living Core: this one wraps a real microphone
+   glyph, not an abstract nucleus, and its motion/color are driven by
+   the REAL Voice lifecycle state (voiceStateClass(), fixed above to
+   actually match these selectors) instead of being purely idle/hover. */
+/* Circular ring/arc only makes sense inside the compact circular
+   composer variant -- the routed full-page's own wider rectangular
+   button keeps its plain mic icon, no distorted oval ring. */
+.baiVoiceOrbCore{display:none}
+.baiPanelComposer .baiVoiceBtn .baiVoiceOrbCore{display:block;position:absolute;inset:0;pointer-events:none}
+.baiVoiceOrbRing{position:absolute;inset:3px;border-radius:50%;border:1px solid rgba(238,75,87,.3)}
+.baiVoiceOrbArc{
+  position:absolute;inset:0;border-radius:50%;
+  border:1.1px solid transparent;
+  border-top-color:rgba(238,75,87,.55);border-right-color:rgba(238,75,87,.16);
+}
+@media(prefers-reduced-motion:no-preference){
+  .baiVoiceOrbRing{animation:baiCoreGlow 8s ease-in-out infinite}
+  .baiVoiceOrbArc{animation:baiCoreOrbit 20s linear infinite}
+}
+/* IDLE/DISCONNECTED/ERROR -- quiet, "ready but not active." */
+.baiVoiceStateVOICE_ERROR .baiVoiceOrbRing,.baiVoiceStateVOICE_ERROR .baiVoiceOrbArc{animation:none;border-color:rgba(226,84,58,.5)}
+.baiVoiceStateVOICE_ERROR .baiVoiceBtnMark{color:#e2543a}
+/* CONNECTING/THINKING -- amber, faster pulse: a transitional/"working"
+   state, distinct from the steady red of LISTENING. */
+.baiVoiceStateVOICE_CONNECTING .baiVoiceOrbRing,.baiVoiceStateVOICE_THINKING .baiVoiceOrbRing{border-color:var(--mod-warning)}
+.baiVoiceStateVOICE_CONNECTING .baiVoiceOrbArc,.baiVoiceStateVOICE_THINKING .baiVoiceOrbArc{border-top-color:var(--mod-warning);border-right-color:rgba(219,166,72,.25)}
+@media(prefers-reduced-motion:no-preference){
+  .baiVoiceStateVOICE_CONNECTING .baiVoiceOrbArc,.baiVoiceStateVOICE_THINKING .baiVoiceOrbArc{animation-duration:2.4s}
+  .baiVoiceStateVOICE_CONNECTING .baiVoiceOrbRing,.baiVoiceStateVOICE_THINKING .baiVoiceOrbRing{animation:baiVoicePulse 1.1s ease-in-out infinite}
+}
+/* LISTENING/INTERRUPTED -- the most "alive" state: full red, fastest
+   arc rotation, brightened ring -- the Human is actively being heard. */
+.baiVoiceStateVOICE_LISTENING .baiVoiceOrbRing,.baiVoiceStateVOICE_INTERRUPTED .baiVoiceOrbRing{border-color:var(--color-accent-primary)}
+.baiVoiceStateVOICE_LISTENING .baiVoiceOrbArc,.baiVoiceStateVOICE_INTERRUPTED .baiVoiceOrbArc{border-top-color:var(--color-accent-primary);border-right-color:rgba(238,75,87,.35)}
+@media(prefers-reduced-motion:no-preference){
+  .baiVoiceStateVOICE_LISTENING .baiVoiceOrbArc,.baiVoiceStateVOICE_INTERRUPTED .baiVoiceOrbArc{animation-duration:4s}
+}
+/* SPEAKING -- red, pulsing (the AI is talking back) -- distinguishable
+   from LISTENING's steady rotation by rhythm, not just label text. */
+.baiVoiceStateVOICE_SPEAKING .baiVoiceOrbRing{border-color:var(--color-accent-primary)}
+.baiVoiceStateVOICE_SPEAKING .baiVoiceOrbArc{border-top-color:var(--color-accent-primary);border-right-color:rgba(238,75,87,.35);animation-duration:4s}
+@media(prefers-reduced-motion:no-preference){
+  .baiVoiceStateVOICE_SPEAKING .baiVoiceOrbRing{animation:baiVoicePulse 1.1s ease-in-out infinite}
+}
+@media(prefers-reduced-motion:reduce){
+  .baiVoiceOrbRing,.baiVoiceOrbArc{animation:none}
+}
+
+.baiHeaderActions{display:flex;gap:var(--mod-space-compact)}
+
+/* A <select> sizes to its widest <option> by default -- without a cap
+   a long fixture-scenario description silently pushes the whole page
+   wider than the viewport (found live during IA-V2-1's own responsive
+   pass). text-overflow needs an explicit block context, hence the
+   wrapping span-like treatment via display + overflow, not just
+   white-space on the select itself (limited select style support). */
+#baiFixtureSelect{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:480px){#baiFixtureSelect{max-width:100%}}
+
+/* ---------- Responsive ---------- */
+@media(max-width:768px){
+  .baiBubble{max-width:100%}
+  .baiStructuredRegion{max-width:100%}
+}
+@media(max-width:480px){
+  .baiComposer{flex-direction:column;align-items:stretch}
+  .baiComposerActions{justify-content:flex-end}
+  .baiVoiceBtnLabel{max-width:64px}
+}
+
+/* ============================================================
+   PERSISTENT PANEL (IA-3E) — the shell-level launcher + drawer,
+   mounted once into #nxOverlayRoot (assets/js/intelligence/
+   intelligence-panel.js), independent of the routed full-page module
+   above (#/brabus-intelligence, unchanged). Reuses every .bai* content
+   class already defined above (bubbles/blocks/composer) for visual
+   consistency — only wrapper/chrome classes are new here.
+
+   #nxOverlayRoot itself is `position:fixed;inset:0;pointer-events:none`
+   (shell.css) so every interactive element below must opt back into
+   pointer-events:auto individually — the empty space around the
+   launcher/drawer stays click-through to whatever module is underneath,
+   which is what keeps navigation to other modules possible while the
+   panel is open (IA-3E Section 12/57). ============================ */
+
+.baiLauncherRoot{position:fixed;inset:0;pointer-events:none;z-index:1}
+
+/* IA-ENTRY-01: "Living Core" launcher -- re-skins the entry point
+   only (idle dark capsule, small live red core) and, on hover/focus,
+   expands into a compact pill revealing "Brabus Intelligence" (brief
+   Section 4/7). The underlying #baiLauncherBtn id, aria contract, and
+   single click listener (togglePanel, wired once in buildPanelDom())
+   are unchanged -- everything below is visual only. Motion is CSS-only
+   (no canvas/JS timers): width/border/box-shadow transitions, plus a
+   few slow @keyframes on the decorative core nodes. */
+.baiLauncherBtn{
+  position:fixed;right:var(--space-4);bottom:var(--space-4);
+  height:52px;width:52px;max-width:calc(100vw - (2 * var(--space-4)));
+  border-radius:26px;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;padding:0;
+  background:var(--p-black-2);border:1px solid var(--color-hairline-strong);
+  box-shadow:var(--shadow-elevated);cursor:pointer;
+  pointer-events:auto;font-family:var(--font-ui);
+}
+@media(prefers-reduced-motion:no-preference){
+  .baiLauncherBtn{transition:width var(--duration-context) var(--ease-precise),
+    justify-content var(--duration-context) var(--ease-precise),
+    border-color var(--duration-standard) var(--ease-smooth),
+    box-shadow var(--duration-standard) var(--ease-smooth),
+    transform var(--duration-fast) var(--ease-precise)}
+}
+.baiLauncherBtn:hover,.baiLauncherBtn:focus-visible{
+  width:212px;justify-content:flex-start;padding:0 18px 0 14px;
+  border-color:var(--color-accent-primary);
+  box-shadow:var(--shadow-elevated),0 0 18px rgba(238,75,87,.22);
+}
+.baiLauncherBtn:focus-visible{outline:var(--focus-ring);outline-offset:var(--focus-ring-offset)}
+.baiLauncherBtn:active{transform:scale(.96)}
+
+.baiLauncherCore{position:relative;width:26px;height:26px;flex-shrink:0}
+.baiLauncherRing{position:absolute;inset:0;border-radius:50%;border:1px solid rgba(238,75,87,.4)}
+.baiLauncherOrbit{
+  position:absolute;inset:-5px;border-radius:50%;
+  border:1.2px solid transparent;
+  border-top-color:rgba(238,75,87,.68);border-right-color:rgba(238,75,87,.2);
+}
+.baiLauncherNucleus{
+  position:absolute;top:50%;left:50%;width:8px;height:8px;margin:-4px 0 0 -4px;
+  border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--p-red-1),var(--p-red-2) 75%);
+  box-shadow:0 0 5px 1px rgba(238,75,87,.5)
+}
+.baiLauncherBtn:hover .baiLauncherRing,.baiLauncherBtn:focus-visible .baiLauncherRing{border-color:rgba(238,75,87,.78)}
+.baiLauncherBtn:hover .baiLauncherNucleus,.baiLauncherBtn:focus-visible .baiLauncherNucleus{box-shadow:0 0 9px 3px rgba(238,75,87,.8)}
+@media(prefers-reduced-motion:no-preference){
+  .baiLauncherNucleus{animation:baiCoreBreathe 6s ease-in-out infinite}
+  .baiLauncherOrbit{animation:baiCoreOrbit 16s linear infinite}
+  .baiLauncherRing{animation:baiCoreGlow 9s ease-in-out infinite}
+  .baiLauncherBtn:hover .baiLauncherOrbit,.baiLauncherBtn:focus-visible .baiLauncherOrbit{animation-duration:7s}
+  .baiLauncherBtn:hover .baiLauncherNucleus,.baiLauncherBtn:focus-visible .baiLauncherNucleus{animation-duration:3.2s}
+}
+
+.baiLauncherLabel{
+  max-width:0;opacity:0;overflow:hidden;white-space:nowrap;
+  font-size:13px;letter-spacing:.01em;color:var(--color-text-primary);margin-left:0
+}
+@media(prefers-reduced-motion:no-preference){
+  .baiLauncherLabel{transition:max-width var(--duration-context) var(--ease-precise),
+    opacity var(--duration-fast) var(--ease-precise),
+    margin-left var(--duration-context) var(--ease-precise)}
+}
+.baiLauncherBtn:hover .baiLauncherLabel,.baiLauncherBtn:focus-visible .baiLauncherLabel{
+  max-width:160px;opacity:1;margin-left:10px
+}
+
+/* Shared slow keyframes for the Living Core (also reused by the small
+   landing-row core in landing.css -- both stylesheets are always
+   loaded together, see index.html). Ranges stay in the brief's
+   "4-10s, never a spinner" band. */
+@keyframes baiCoreBreathe{
+  0%,100%{transform:scale(1);box-shadow:0 0 5px 1px rgba(238,75,87,.45)}
+  50%{transform:scale(1.2);box-shadow:0 0 9px 2px rgba(238,75,87,.78)}
+}
+@keyframes baiCoreOrbit{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes baiCoreGlow{0%,100%{opacity:.65}50%{opacity:1}}
+
+/* IA-3I (Section 2/7): the Intelligence Workspace's shared dark scrim
+   -- ALWAYS shown while the Workspace is open (Text or Voice mode
+   alike, every breakpoint), unlike the old side-drawer's "no backdrop
+   on desktop" behavior (see this Wave's report for the documented
+   behavior change). No backdrop-filter/blur by default (Section 7:
+   "no blur required unless existing performance proves acceptable" --
+   kept simple/cheap; a flat, sufficiently dark scrim already achieves
+   "Portal clearly secondary"). */
+.baiPanelBackdrop{
+  position:fixed;inset:0;background:var(--color-overlay-scrim);
+  pointer-events:auto;display:block
+}
+/* Same explicit [hidden] convention already used for .baiVoiceFocusRoot/
+   .baiVoiceDiagPanel below -- openPanel()/closePanel() already toggle
+   this element's real `hidden` attribute; nothing else needs to know
+   about open/closed state. */
+.baiPanelBackdrop[hidden]{display:none}
+
+.baiPanelDrawer{
+  display:flex;flex-direction:column;
+  pointer-events:auto;
+}
+/* Open/close is the `hidden` attribute (matching every other overlay
+   in this codebase, e.g. pNavBackdrop/nxDesignTrace) — no transform/
+   transition invented here (Gate: no new motion this Wave). */
+
+.baiPanelHeader{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-3);
+  padding:var(--space-4);border-bottom:1px solid var(--mod-border);flex-shrink:0
+}
+.baiPanelTitle{font-family:var(--font-ui);font-weight:300;font-size:18px;margin:2px 0 0}
+.baiPanelContextChip{
+  margin:var(--space-2) 0 0;font-family:var(--font-mono);font-size:11px;
+  color:var(--mod-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:260px
+}
+/* Reserved flex slot for a future Voice control (mic/connection state/
+   mute) — IA-3E Section 45. No element lives here yet; the layout
+   itself (a flex row that already accepts more than one action) is
+   the only thing "reserved" — adding a button later needs no redesign. */
+.baiPanelHeaderActions{display:flex;gap:var(--space-2);align-items:center;flex-shrink:0}
+.baiPanelCloseBtn{
+  background:none;border:none;color:var(--mod-muted);font-size:20px;line-height:1;
+  cursor:pointer;padding:4px 6px;border-radius:var(--radius-sm)
+}
+.baiPanelCloseBtn:hover{color:var(--color-text-primary)}
+.baiPanelCloseBtn:focus-visible{outline:var(--focus-ring);outline-offset:2px}
+
+.baiPanelBody{flex:1;min-height:0;overflow-y:auto;padding:var(--space-4);container-type:inline-size}
+.baiPanelBody .baiConversation{min-height:0}
+.baiPanelBody .baiStructuredRegion,
+.baiPanelBody .baiBubble{max-width:100%}
+
+.baiPanelComposer{padding:var(--space-3) var(--space-4);flex-shrink:0}
+.baiPanelStatusLine{
+  margin:0;padding:var(--space-2) var(--space-4);font-size:12px;
+  color:var(--color-critical);border-top:1px solid var(--mod-border);flex-shrink:0
+}
+
+/* IA-3I (Section 2/7): the old "floating drawer, no backdrop, Portal
+   stays interactive underneath" desktop behavior is RETIRED -- this
+   was a deliberate product decision the Human made this Wave, not an
+   oversight (see this Wave's report, Section 4: the Intelligence
+   Workspace is now a large, DOMINANT surface with Portal deliberately
+   darkened/subdued behind it, on every breakpoint, not just mobile).
+   The backdrop is unconditional now; the INTELLIGENCE WORKSPACE
+   section further below defines its real (dark, no-blur-by-default)
+   appearance and the large centered shell geometry. */
+
+@media(max-width:768px){
+  .baiLauncherBtn{right:var(--space-3);bottom:var(--space-3)}
+  /* IA-ENTRY-01 Section 7: no hover on touch, so keep the compact
+     circle only -- never expand into the desktop label pill here
+     (prevents it from ever being reachable via a rare external-
+     keyboard focus-visible on a touch viewport too). */
+  .baiLauncherBtn:hover,.baiLauncherBtn:focus-visible{width:52px;justify-content:center;padding:0}
+  .baiLauncherLabel{display:none}
+}
+
+/* ============================================================
+   PANEL COMPOSITION SYSTEM (IA-3E.3) — Human rejected IA-3E.2
+   ("desalinhado, estranho"): several independently aligned
+   components, not a whitespace problem. This is a full recompose,
+   not another layer of overrides — it REPLACES the IA-3E.2 block that
+   used to live here. Still scoped entirely under .baiPanelHeader/
+   .baiPanelBody/.baiPanelComposer/#baiLauncherRoot, so none of it
+   touches the routed #/brabus-intelligence page's own, separately
+   approved visual language (the unscoped .baiBubble/.baiBlockPanel/
+   .modPanelResult rules above stay exactly as they were).
+
+   ONE shared horizontal rail (--bai-rail) is the spine every major
+   region derives its inline padding from: header, context, the
+   conversation column, and the composer all use the exact same 16px
+   inset (--space-4) — nothing here uses an arbitrary one-off margin.
+   No new hex/shadow; --bai-content-radius is the one new value
+   (a plain px), used everywhere a rounded surface appears (bubble,
+   composer, send button) for one coherent corner language. ========= */
+.baiPanelDrawer{
+  --bai-rail: var(--space-4);
+  --bai-turn-gap: var(--space-4);
+  --bai-content-radius: 12px;
+}
+
+/* ---------- Header / context: same rail, one identity line ---------- */
+.baiPanelHeader{padding:var(--space-3) var(--bai-rail)}
+.baiPanelTitle{font-size:16px;font-weight:400;margin:0}
+.baiPanelContextChip{
+  display:flex;align-items:center;gap:6px;margin:4px 0 0;
+  font-family:var(--font-ui);font-size:11.5px;color:var(--mod-muted);
+  max-width:260px;
+}
+.baiPanelContextDot{width:5px;height:5px;border-radius:50%;background:var(--color-accent-primary);flex-shrink:0}
+.baiPanelContextChip .baiPanelContextText{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ---------- Conversation column: same rail ---------- */
+.baiPanelBody{padding:var(--space-4) var(--bai-rail) var(--space-3)}
+.baiPanelBody .baiConversation{gap:var(--bai-turn-gap)}
+.baiPanelBody .baiMessage{gap:4px}
+
+/* No VISIBLE sender label on either side (Section 9, option A) --
+   right/left alignment plus a distinct bubble tone already say who's
+   speaking; a "VOCÊ" label sitting a few pixels from its own bubble
+   read as a floating, detached fragment, not clarity. Both labels
+   stay screen-reader-only (clip-rect, not display:none) so turn
+   ownership is still announced — Section 41 explicitly requires
+   preserving identity/announcements, decluttering must not cost that. */
+.baiPanelBody .baiRoleLabel{
+  position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+  overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;
+}
+
+.baiPanelBody .baiMessageUser .baiBubble{
+  max-width:82%;border-radius:var(--bai-content-radius) var(--bai-content-radius) 4px var(--bai-content-radius);
+  border-color:transparent; /* surface tone alone now carries the distinction — Section 10/18: prefer surface tone over borders */
+}
+
+/* ---------- Assistant turn: conversation first, data second (Section
+   11, the major change) — NO card. Prose sits directly on the
+   conversation surface at full measure, exactly like the routed
+   page's own reading column, never boxed in by default.
+
+   BUGFIX found live comparing drawer widths (Section 19): the base,
+   unscoped `.baiMessageAssistant{align-items:flex-start}` rule (used
+   so a BUBBLE shrink-wraps its own text) was also shrinking
+   .baiAnswerProse/.baiAnswerMetrics down to their content width in a
+   flex column, instead of letting them use the full conversation
+   width — the KPI grid measured 250px wide inside a 387px-wide
+   message regardless of drawer width, because it was never actually
+   given the room to stretch. Overridden back to `stretch` here, the
+   correct behavior once these are full-width blocks, not bubbles. */
+.baiPanelBody .baiMessageAssistant{align-items:stretch}
+.baiPanelBody .baiAnswerProse{white-space:normal;font-size:var(--mod-body-size);line-height:1.55;max-width:100%}
+.baiPanelBody .baiAnswerProse p{margin:0 0 8px}
+.baiPanelBody .baiAnswerProse p:last-child{margin-bottom:0}
+.baiPanelBody .baiAnswerProse ul,.baiPanelBody .baiAnswerProse ol{margin:8px 0;padding-left:1.1em;display:flex;flex-direction:column;gap:2px}
+
+/* ---------- Structured facts: a subtle divided section, not a card,
+   never a competing bordered box (Section 15). ---------- */
+.baiPanelBody .baiAnswerMetrics{margin-top:10px;padding-top:10px;border-top:1px solid var(--mod-border)}
+.baiPanelBody .baiAnswerMetrics .modPanelResult,
+.baiPanelBody .baiAnswerMetrics .baiBlockPanel{background:none;border:none;padding:0;border-radius:0}
+
+/* Title + period merged onto ONE visual line (a middle-dot separator,
+   not two stacked near-duplicate lines) — this is a LAYOUT change
+   only: period_label is never hidden, since on other tools' fixtures
+   it carries a real disclaimer ("Simulação — não é proposta nem
+   aprovação de crédito"), not decorative text, and this Wave does not
+   touch response data/renderer contracts (Section 27/46). Fully
+   removing the wording overlap for cases like this fixture's own
+   "Grupo — mês anterior" + "mês anterior" would require changing the
+   fixture/backend title text itself — out of scope here, carried as
+   an open item (§36). */
+.baiPanelBody .baiAnswerMetrics .baiBlockTitle{
+  display:inline;margin:0;font-family:var(--font-ui);font-size:10.5px;
+  font-weight:500;text-transform:uppercase;letter-spacing:.04em;color:var(--mod-muted);
+}
+.baiPanelBody .baiAnswerMetrics .baiBlockPeriod{display:inline;margin:0;font-size:10.5px;color:var(--mod-muted)}
+.baiPanelBody .baiAnswerMetrics .baiBlockPeriod::before{content:" · "}
+
+/* Still used by score_breakdown's own summary .baiMetricsGrid (IA-3E.4
+   Section 21: unrelated block types unchanged) -- the compact `metrics`
+   type itself no longer emits .baiMetricsGrid at all (see
+   .baiCompactMetrics below), so this rule no longer applies to the
+   Human's own fixture, only to score_breakdown's identity/summary grid. */
+.baiPanelBody .baiMetricsGrid{margin-top:8px;grid-template-columns:1fr 1fr;gap:12px 16px}
+.baiPanelBody .baiMetricItem .modKpiLabel{font-size:9.5px}
+.baiPanelBody .baiMetricItem .modKpiValue{font-size:15px;margin-top:2px}
+
+/* Other structured-block types (ranking/operations/score_*) get the
+   same border-reduction treatment generically (Section 40) — the
+   same shared renderers, unmodified; only the wrapper differs. */
+.baiPanelBody .baiAnswerMetrics .modTableWrap{border-color:var(--mod-border);border-radius:8px;margin-bottom:0}
+.baiPanelBody .baiAnswerMetrics .baiOperationCard{border-color:var(--mod-border);border-radius:8px;padding:8px 10px}
+
+/* IA-3G.1 — comparison overflow fix (Human UAT finding: "E comparado
+   ao mês anterior?" produced two side-by-side comparison cards that
+   overflowed the drawer). Root cause: .baiComparisonGrid's own
+   side-by-side -> single-column breakpoint (below) reacts to the
+   VIEWPORT's width, but the drawer is a fixed min(420px,100vw)
+   overlay (Section 5/13/38 across IA-3E) — its usable content width
+   (~420px minus the --bai-rail padding on both sides, well under
+   400px) stays narrow even on a full desktop viewport, where that
+   media query never fires. A container query reacts to the panel's
+   OWN width instead (.baiPanelBody establishes the containment
+   context above), so this self-corrects for this architecture instead
+   of guessing a viewport number, and keeps working if this same
+   renderer is ever reused in a differently-sized surface later
+   (Section 22: one Intelligence core, reusable by a future Voice
+   surface too). The routed full page's own existing viewport rule
+   right below (@media(max-width:600px)) is untouched — correct as-is
+   there, since that page has no narrow container to query. Threshold
+   (520px) is comfortably above the drawer's real max content width, so
+   this always stacks inside the panel today, and would still allow
+   genuine side-by-side if the panel is ever widened past that in a
+   future Wave — never a hardcoded "always 1 column" assumption. */
+@container (max-width:520px){
+  .baiPanelBody .baiComparisonGrid{grid-template-columns:1fr}
+}
+
+/* IA-3G.3 — comparison DENSITY fix. IA-3G.1's own inner-grid rule
+   (forcing .baiComparisonSide .baiMetricsGrid to a single column
+   whenever the outer comparison stacked) over-corrected: a real
+   comparison side carries up to 9 governed metrics (Vendas,
+   Financiamentos, Share, Produção, Retorno, Retorno Médio, SPF, SPF
+   Líquido, Rentabilidade), and forcing all 9 into ONE column stacked
+   each period card to roughly 500px tall — two of them consumed
+   nearly the entire drawer viewport (Human: "ficou muito espaçada,
+   ruim de ler"), even though nothing about the actual spacing tokens
+   changed (--mod-space-card-gap stayed 12px throughout — the
+   regression was column COUNT, not gap size). Replaces the forced
+   single column with the same auto-fit pattern the base .baiMetricsGrid
+   already uses elsewhere (line 60), just with a smaller minmax floor
+   sized for a comparison side's own half-ish width: at the drawer's
+   real content width (~380px, comfortably ≤520px, where the outer
+   grid above is already stacked so each side gets the FULL ~380px, not
+   half), 130px×2 + gap fits with room to spare -- 2 columns render
+   naturally, no container query needed for this tier. Only at a
+   genuinely narrow width (Section 10's own "Level B") does auto-fit
+   itself fall back to 1 column, exactly the brief's own two-level
+   contract, driven by the grid algorithm rather than a second guessed
+   breakpoint number. */
+.baiPanelBody .baiComparisonSide .baiMetricsGrid{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
+
+/* ---------- Compact metrics evidence (IA-3E.4) — the `metrics` block
+   type's OWN presentation, built by intelligence-panel.js's
+   compactMetricsHtml(), not by the shared renderer. Two lanes, split
+   purely by item.format (real metadata already on every item, never
+   an invented rule): currency items are "facts" (label above value,
+   2 per row, normal UI typography with tabular numerals — NOT
+   monospace, Section 10's explicit "not a developer console");
+   everything else is a compact, wrapping inline "strip" chip
+   ("13 Vendas"), read as a phrase rather than a tile. ---------- */
+.baiSrOnly{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+.baiCompactMetrics{display:flex;flex-direction:column;gap:10px}
+
+.baiMetricStrip{display:flex;flex-wrap:wrap;align-items:baseline;row-gap:6px;font-size:12.5px;color:var(--color-text-secondary)}
+/* BUGFIX found live testing a pathologically long label (IA-3E.4):
+   `white-space:nowrap` here kept a value+label pair unbreakable, but
+   for a genuinely long label that meant the whole chip could exceed
+   the strip's own width and visually escape the drawer's right edge
+   -- undetected by every scrollWidth-based overflow check this Wave
+   had been using, because content overflowing a `position:fixed`
+   ancestor (the drawer) does not expand document.documentElement's
+   own scrollWidth the way normal in-flow overflow does. Found instead
+   by directly comparing the chip's own getBoundingClientRect().right
+   against the viewport width. Fixed by letting the label wrap inside
+   its own chip (max-width + overflow-wrap) instead of forcing the
+   whole chip onto one unbreakable line — short labels (the common
+   case) are unaffected since they have no wrap opportunity anyway. */
+.baiMetricChip{display:inline-flex;align-items:baseline;gap:4px;max-width:100%;overflow-wrap:break-word}
+.baiMetricChip strong{font-family:var(--font-ui);font-weight:600;color:var(--color-text-primary);font-variant-numeric:tabular-nums;flex-shrink:0}
+/* Decorative dot only, hidden from assistive tech (Section 19) -- the
+   DOM order of the chips themselves already gives a screen reader an
+   unambiguous, individually-readable "13 Vendas", "10 Financiamentos"
+   sequence without needing the separator announced. */
+.baiMetricChip:not(:last-child)::after{content:"·";margin:0 8px 0 4px;color:var(--mod-muted)}
+
+.baiMetricFacts{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px}
+.baiMetricFact{display:flex;flex-direction:column;gap:2px;min-width:0}
+.baiMetricFactLabel{margin:0;font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--mod-muted)}
+/* Normal UI typography, not --font-mono (Section 10) -- tabular-nums
+   keeps digits aligned without a monospace/terminal aesthetic. */
+.baiMetricFactValue{margin:0;font-family:var(--font-ui);font-weight:500;font-size:14px;font-variant-numeric:tabular-nums;color:var(--color-text-primary);overflow-wrap:break-word}
+
+@media(max-width:380px){
+  .baiMetricFacts{grid-template-columns:1fr}
+}
+
+/* ---------- Financing plan cards (IA-3J.4C) — a Balão/Linear
+   recommendation is exactly the case compactMetricsHtml's own hidden-
+   title design (above) gets wrong: the title is the ONLY thing telling
+   two plans apart, so it cannot stay screen-reader-only here. Each
+   plan (financing_card metadata, portal-ai-homolog) renders as its own
+   bordered card with a visible header -- same border/radius/padding/
+   typography scale as .baiRankCard above, no new hex/shadow/radius
+   token. The recommended card gets a thin brand-red rule + small
+   uppercase badge (the same institutional --color-brand-red used
+   elsewhere for "this is the primary/never-error signal", never the
+   functional --color-accent-primary) -- restrained, not a fully red
+   card, per the explicit design brief. Wrap+flex-basis (not a fixed
+   2-column grid) lets cards sit side by side on a wide panel and stack
+   naturally at narrow widths with zero media-query breakpoint logic;
+   the 380px rule below only tightens the per-card facts grid, mirroring
+   .baiMetricFacts's own existing breakpoint. ---------- */
+.baiPlanCardGroup{display:flex;flex-wrap:wrap;gap:10px;min-width:0}
+.baiPlanCard{
+  flex:1 1 260px;min-width:0;border-radius:10px;padding:12px 14px;
+  border:1px solid var(--mod-border);background:var(--color-surface-2);
+}
+.baiPlanCardPrimary{border-color:color-mix(in srgb,var(--color-brand-red) 45%,var(--mod-border) 55%);box-shadow:inset 3px 0 0 var(--color-brand-red)}
+.baiPlanCardSecondary{opacity:.9}
+.baiPlanCardHeader{display:flex;flex-direction:column;gap:2px;margin-bottom:10px}
+.baiPlanCardBadge{
+  margin:0 0 2px;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+  color:var(--color-brand-red)
+}
+.baiPlanCardKind{margin:0;font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--color-text-secondary)}
+.baiPlanCardHero{margin:0;font-family:var(--font-ui);font-weight:600;font-size:20px;font-variant-numeric:tabular-nums;color:var(--color-text-primary);overflow-wrap:break-word}
+.baiPlanCardHeroUnit{font-size:12px;font-weight:400;color:var(--color-text-secondary)}
+.baiPlanCardFacts{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;margin-top:8px}
+.baiPlanFact{display:flex;flex-direction:column;gap:2px;min-width:0}
+.baiPlanFactLabel{margin:0;font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--mod-muted)}
+.baiPlanFactValue{margin:0;font-family:var(--font-ui);font-weight:500;font-size:13px;font-variant-numeric:tabular-nums;color:var(--color-text-primary);overflow-wrap:break-word}
+.baiPlanCardBalloons{padding-top:8px;border-top:1px solid var(--mod-border)}
+.baiPlanCardTarget{margin:10px 0 0;padding-top:8px;border-top:1px solid var(--mod-border);font-size:11.5px;color:var(--color-text-secondary)}
+@media(max-width:380px){
+  .baiPlanCardFacts{grid-template-columns:1fr}
+}
+
+/* ---------- "Ver todas as simulações" disclosure (INTELLIGENCE-UX-
+   RECOVERY-01) — a native <details>/<summary>, zero new JS state, zero
+   new visual language: reuses the exact same border/radius/spacing/
+   typography tokens as every card above (--mod-border, --color-text-
+   secondary, var(--font-ui)), closed by default. Overflow alternative
+   cards inside it reuse .baiPlanCard/.baiPlanCardGroup completely
+   unstyled-different (only a touch of opacity, mirroring
+   .baiPlanCardSecondary's own existing "not the primary" treatment) so
+   expanding never looks like a different feature bolted on. ---------- */
+.baiAllSimulationsDisclosure{margin-top:10px}
+.baiAllSimulationsSummary{
+  cursor:pointer;list-style:none;font-size:12px;font-weight:500;color:var(--color-text-secondary);
+  padding:6px 0;user-select:none;
+}
+.baiAllSimulationsSummary::-webkit-details-marker{display:none}
+.baiAllSimulationsSummary::before{content:"▸ ";color:var(--mod-muted)}
+.baiAllSimulationsDisclosure[open] .baiAllSimulationsSummary::before{content:"▾ "}
+.baiPlanCardGroupSecondary{margin-top:8px;opacity:.85}
+
+/* ---------- Commercial alternative cards (IA-COMMERCIAL4) — Subsidiado/
+   Coparticipado, always an ADDITIONAL offer, never the primary
+   financing recommendation. Reuses .baiPlanCard's own shell (no new
+   radius/border/background token), but its OWN badge using the design
+   system's existing --color-info token (design-tokens.css) — a genuine
+   non-red semantic color, deliberately NOT --color-accent-primary
+   (which this theme maps to the SAME red hue family as
+   --color-brand-red/"Recomendado", confirmed by direct visual check —
+   reusing it here would have defeated the whole point of a distinct
+   identity) — so this badge can never be visually mistaken for the
+   primary card even at a glance. The Trade-In warning uses the design
+   system's own --color-warning/--color-warning-soft semantic pair
+   (amber — "needs the seller's attention/confirmation", never
+   --color-critical/error, since nothing is broken here) instead of
+   inventing a new color. ---------- */
+.baiCommercialAltCard{border-style:dashed}
+.baiCommercialAltBadge{
+  margin:0 0 2px;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+  color:var(--color-info)
+}
+.baiCommercialAltTitle{margin:2px 0 0;font-size:11.5px;color:var(--color-text-secondary)}
+.baiCommercialAltIneligible{margin:10px 0 0;padding-top:8px;border-top:1px solid var(--mod-border);font-size:11.5px;color:var(--mod-muted)}
+.baiCommercialAltTradeInWarning{
+  margin:10px 0 0;padding:8px 10px;border-radius:8px;font-size:11.5px;line-height:1.4;
+  background:var(--color-warning-soft);border:1px solid color-mix(in srgb,var(--color-warning) 45%,transparent);color:var(--color-warning)
+}
+
+/* ---------- Commercial alternative GROUP cards (IA-COMMERCIAL4-D) —
+   one term, multiple valid Subsidiado rates (Human UAT #1: the seller
+   asked for "36 meses" with no rate named, and the real engine
+   returned 4 valid rate conditions for that term). Each rate is its
+   own labeled sub-section inside ONE .baiCommercialAltCard shell —
+   deliberately no ranking/position number and no highlighted "best"
+   option, since the Human-approved policy is that the seller/manager
+   picks the rate, never the Intelligence. ---------- */
+.baiCommercialAltOption{padding-top:10px;margin-top:10px;border-top:1px dashed var(--mod-border)}
+.baiCommercialAltOption:first-child{padding-top:0;margin-top:0;border-top:none}
+.baiCommercialAltOptionLabel{margin:0 0 4px;font-family:var(--font-ui);font-weight:600;font-size:12.5px;color:var(--color-text-primary)}
+
+/* ---------- Compact ranking cards (IA-3H.1C.3) — the `ranking` block
+   type's OWN drawer presentation, built by intelligence-panel.js's
+   rankingCardsHtml(), not by the shared table renderer (still used
+   unchanged by the routed full page and by every other structured
+   type). One labeled fact per value, same visual language as
+   .baiMetricFact/.baiOperationCard above (no new hex/shadow/radius
+   token) -- a bordered card per ranked item, never a table, so it
+   never needs a horizontal-scroll escape hatch regardless of how many
+   metric fields a real payload carries. ---------- */
+.baiRankList{display:flex;flex-direction:column;gap:8px;min-width:0}
+.baiRankCard{border:1px solid var(--mod-border);border-radius:8px;padding:10px 12px;min-width:0}
+.baiRankCardHeader{display:flex;align-items:baseline;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.baiRankPos{font-family:var(--font-mono);font-size:11px;color:var(--mod-muted);flex-shrink:0}
+.baiRankName{font-weight:500;font-size:13px;overflow-wrap:break-word;min-width:0}
+.baiRankMetrics{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;min-width:0}
+.baiRankMetric{display:flex;flex-direction:column;gap:2px;min-width:0}
+.baiRankMetricLabel{margin:0;font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--mod-muted)}
+.baiRankMetricValue{margin:0;font-family:var(--font-ui);font-weight:500;font-size:13px;font-variant-numeric:tabular-nums;color:var(--color-text-primary);overflow-wrap:break-word}
+/* The block's own declared primary metric (Section 13's "primary
+   metric emphasized") -- larger, accent-colored, and always the first
+   card in reading order (rankingItemKeys already sorts it first). */
+.baiRankMetricPrimary .baiRankMetricValue{font-size:15px;color:var(--color-accent-primary)}
+@media(max-width:380px){
+  .baiRankMetrics{grid-template-columns:1fr}
+}
+
+/* ---------- Composer: same rail, one composed control group ---------- */
+.baiPanelComposer{display:flex;gap:var(--space-2);align-items:flex-end;padding:var(--space-3) var(--bai-rail) var(--space-4)}
+.baiPanelComposer .baiComposerInput{
+  min-height:40px;max-height:132px;padding:9px 12px;
+  border-radius:var(--bai-content-radius);
+  scrollbar-width:thin;scrollbar-color:var(--mod-border-strong) transparent;
+}
+.baiPanelComposer .baiComposerInput::-webkit-scrollbar{width:6px}
+.baiPanelComposer .baiComposerInput::-webkit-scrollbar-track{background:transparent}
+.baiPanelComposer .baiComposerInput::-webkit-scrollbar-thumb{background:var(--mod-border-strong);border-radius:3px}
+.baiPanelComposer .baiComposerActions{align-self:flex-end}
+/* Same V2 red (Section 22 explicitly keeps it — no desaturation), but
+   sized/shaped to match --bai-content-radius so it reads as part of
+   the same composed control instead of a separate loud rectangle. */
+.baiPanelComposer #baiPanelSendBtn{padding:0 16px;height:40px;border-radius:var(--bai-content-radius);font-size:13px}
+.baiPanelComposer .baiVoiceBtn{border-radius:var(--bai-content-radius);font-size:13px}
+
+/* Drawer WIDTH is now owned by .baiWorkspaceShell (IA-3I, section
+   below) -- the old fixed min(420px,100vw) right-docked sizing is
+   retired along with the side-drawer presentation itself. */
+
+@media(max-width:768px){
+  .baiPanelHeader{padding:var(--space-3)}
+  .baiPanelBody{padding:var(--space-3)}
+  .baiPanelComposer{padding:var(--space-3)}
+}
+
+/* ============================================================
+   INTELLIGENCE WORKSPACE (IA-3I) -- replaces the lateral drawer as
+   the primary Brabus Intelligence presentation. Human's own product
+   decision after IA-3H.2.1C: the surrounding UI "sem sal" (bland),
+   should feel like "a real, distinctive experience" rather than "a
+   chatbot attached to the side of the Portal" -- Text and Voice are
+   now ONE Intelligence core with TWO interaction modes, sharing one
+   large centered shell (.baiWorkspaceShell, applied to BOTH
+   #baiPanelDrawer and .baiVoiceFocusPanel) instead of a small side
+   panel plus a separate full-viewport Voice modal stacked on top.
+
+   DELIBERATE BEHAVIOR CHANGE (documented, not an oversight): the old
+   drawer kept the rest of Portal fully interactive underneath on
+   desktop (no backdrop >=769px) specifically so a Human could
+   navigate to another module while it stayed open. The Workspace is
+   now a genuinely modal, dominant surface on every breakpoint (Portal
+   "darkened, subdued, clearly secondary" per the brief) -- that
+   underlying multitasking affordance no longer exists. See this
+   Wave's report for the explicit trade-off disclosure. ============ */
+
+.baiWorkspaceShell{
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:min(1180px,88vw);height:min(860px,86vh);
+  background:var(--color-canvas);
+  border:1px solid var(--color-hairline-strong);
+  border-radius:20px;
+  box-shadow:0 24px 80px rgba(0,0,0,.55),0 2px 0 rgba(255,255,255,.02) inset;
+  overflow:hidden;
+  /* A very slight red environmental presence (Section 8) -- a single
+     soft, mostly-invisible glow low in the frame, not a border tint --
+     stacked UNDER the ambient line field/content, never competing
+     with either. */
+  background-image:radial-gradient(ellipse 900px 420px at 50% 112%,rgba(238,75,87,.10),transparent 70%);
+}
+
+@media(max-width:1024px){
+  .baiWorkspaceShell{width:min(920px,92vw);height:min(760px,88vh)}
+}
+@media(max-width:900px){
+  .baiWorkspaceShell{width:94vw;height:90vh;border-radius:16px}
+}
+@media(max-width:480px){
+  .baiWorkspaceShell{
+    width:100vw;height:100vh;height:100dvh;
+    top:0;left:0;transform:none;
+    border-radius:0;border:none;
+  }
+}
+
+/* ---------- Text-mode ambient field (Section 9/28) -- CSS-only, no
+   Canvas/rAF loop in Text mode (Section 31's own explicit performance
+   rule) -- a static, extremely subtle radial hint of the same red
+   identity Voice's own canvas-driven ambient ribbons use, never
+   animated, never competing with reading. ---------- */
+.baiPanelAmbient{
+  position:absolute;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    radial-gradient(1px 1px at 20% 30%,rgba(238,75,87,.14) 0,transparent 60%),
+    radial-gradient(1px 1px at 78% 62%,rgba(238,75,87,.10) 0,transparent 60%),
+    radial-gradient(600px 260px at 85% 8%,rgba(238,75,87,.05),transparent 70%);
+}
+
+/* ---------- Text drawer / Voice Focus panel share the shell; each
+   keeps only ITS OWN internal layout on top. ---------- */
+.baiPanelDrawer{position:relative;z-index:1}
+.baiPanelHeader,.baiPanelBody,.baiPanelComposer,.baiPanelStatusLine,.baiPanelProvenanceBanner{position:relative;z-index:1}
+
+/* Voice Focus becomes a STATE of this shell, not a second modal
+   (Section 26) -- hidden purely presentationally while Text mode is
+   dominant, restored the instant Voice ends (intelligence-voice-
+   focus.js's own syncTextWorkspaceVisibility()). */
+.baiPanelDrawerReceded{display:none}
+
+/* ---------- Header (Section 10) ---------- */
+.baiIconBtn{
+  display:flex;align-items:center;justify-content:center;
+  width:32px;height:32px;border-radius:var(--radius-sm);
+  background:none;border:1px solid transparent;color:var(--color-text-secondary);
+  cursor:pointer;
+}
+.baiIconBtn:hover{color:var(--color-text-primary);border-color:var(--color-hairline-strong)}
+.baiIconBtn:focus-visible{outline:var(--focus-ring);outline-offset:2px}
+
+/* ---------- Empty state (Section 11/12) ---------- */
+.baiPanelEmptyState{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;gap:var(--space-2);
+  min-height:100%;padding:var(--space-6,48px) var(--space-4);
+}
+/* Explicit, matching the .baiVoiceFocusRoot/.baiVoiceDiagPanel
+   convention already used elsewhere in this file -- an author
+   `display` rule above would otherwise silently override the UA
+   stylesheet's own [hidden]{display:none} regardless of the actual
+   hidden attribute. */
+.baiPanelEmptyState[hidden]{display:none}
+.baiEmptyMark{color:var(--color-brand-red);opacity:.9;margin-bottom:var(--space-2)}
+.baiEmptyTitle{font-family:var(--font-ui);font-weight:300;font-size:22px;margin:0;color:var(--color-text-primary)}
+.baiEmptySubtitle{font-size:13px;color:var(--color-text-secondary);margin:0;max-width:420px}
+.baiSuggestions{display:flex;flex-wrap:wrap;gap:var(--space-2);justify-content:center;margin-top:var(--space-4);max-width:560px}
+.baiSuggestionChip{
+  font-family:var(--font-ui);font-size:12.5px;color:var(--color-text-secondary);
+  background:var(--color-surface-1);border:1px solid var(--color-hairline-strong);
+  border-radius:999px;padding:7px 14px;cursor:pointer;
+}
+.baiSuggestionChip:hover{color:var(--color-text-primary);border-color:color-mix(in srgb,var(--color-accent-primary) 45%,var(--color-hairline-strong) 55%)}
+.baiSuggestionChip:focus-visible{outline:var(--focus-ring);outline-offset:2px}
+
+/* ---------- Command surface (Section 13/14/19) -- ONE integrated
+   control system, not three separate widgets beside an input. ---------- */
+.baiPanelComposer{
+  background:var(--color-surface-1);border:1px solid var(--color-hairline-strong);
+  border-radius:16px;align-items:flex-end;
+}
+.baiPanelComposer .baiComposerInput{
+  background:none;border:none;color:var(--color-text-primary);
+  padding:9px 4px;min-height:22px;
+}
+.baiPanelComposer .baiComposerInput:focus-visible{outline:none}
+.baiPanelComposer:focus-within{border-color:color-mix(in srgb,var(--color-accent-primary) 50%,var(--color-hairline-strong) 50%)}
+.baiPanelComposer .baiComposerActions{display:contents}
+
+/* ---------- Voice Orb (V2-UAT-02, Section B) -- a compact circular
+   Living-Core-family control (dark surface, thin red ring, orbiting
+   arc) wrapping a real microphone glyph. On hover/focus it expands
+   into a pill revealing its own live state label ("Conversar por
+   voz" / "Ouvindo" / "Pensando…" / etc -- the SAME text
+   updateVoiceButton() already writes into #baiPanelVoiceBtnLabel, not
+   a second hardcoded string), exactly like the floating launcher's
+   own hover-reveal, clipped via overflow:hidden + width transition so
+   the composer's flex textarea simply narrows/reflows -- never an
+   overlay, never breaks layout. Disabled below 480px (Section B5):
+   touch never depends on hover, tap still opens/closes Voice via the
+   same unmodified click listener. ---------- */
+.baiPanelComposer .baiVoiceBtn{
+  width:36px;height:36px;padding:0;border-radius:18px;flex-shrink:0;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;position:relative;
+  background:none;border:1px solid var(--color-hairline-strong);color:var(--color-brand-red);
+}
+@media(prefers-reduced-motion:no-preference){
+  .baiPanelComposer .baiVoiceBtn{transition:width var(--duration-context) var(--ease-precise),border-color .15s ease,background-color .15s ease,transform .1s ease}
+}
+.baiPanelComposer .baiVoiceBtn:hover{border-color:color-mix(in srgb,var(--color-accent-primary) 55%,var(--color-hairline-strong) 45%);background:var(--color-surface-2)}
+.baiPanelComposer .baiVoiceBtn:hover .baiVoiceBtnMark{filter:brightness(1.25)}
+.baiPanelComposer .baiVoiceBtn:active{transform:scale(.94)}
+.baiPanelComposer .baiVoiceBtn:focus-visible{outline:var(--focus-ring);outline-offset:2px}
+.baiVoiceBtnMark{transition:filter .15s ease;position:relative;flex-shrink:0}
+@media(min-width:481px){
+  .baiPanelComposer .baiVoiceBtn:hover,.baiPanelComposer .baiVoiceBtn:focus-visible{
+    width:196px;justify-content:flex-start;padding-left:10px;
+    background:var(--color-surface-2);
+    border-color:color-mix(in srgb,var(--color-accent-primary) 55%,var(--color-hairline-strong) 45%);
+  }
+}
+/* Scoped to the persistent-panel's compact circle only -- the routed
+   full-page's own simpler composer keeps using the pre-existing base
+   .baiVoiceBtnLabel rule above (always visible, max-width:120px),
+   untouched. */
+.baiPanelComposer .baiVoiceBtnLabel{
+  max-width:0;opacity:0;overflow:hidden;white-space:nowrap;margin-left:0;flex-shrink:0;
+}
+@media(prefers-reduced-motion:no-preference){
+  .baiPanelComposer .baiVoiceBtnLabel{transition:max-width var(--duration-context) var(--ease-precise),opacity var(--duration-fast) var(--ease-precise),margin-left var(--duration-context) var(--ease-precise)}
+}
+@media(min-width:481px){
+  .baiPanelComposer .baiVoiceBtn:hover .baiVoiceBtnLabel,.baiPanelComposer .baiVoiceBtn:focus-visible .baiVoiceBtnLabel{
+    max-width:150px;opacity:1;margin-left:8px;
+  }
+}
+
+/* ---------- Send control (Section 17/18) -- EMPTY: subdued/disabled;
+   TEXT PRESENT: red gains authority; a compact directional glyph, no
+   "Enviar" text. ---------- */
+/* IA-3I.1-002 (Section 16/17/20): root cause of "looks like a blank
+   square" -- the disabled glyph color (--color-text-muted, #808080)
+   was ADDITIONALLY dimmed by a blanket opacity:.55 on the whole
+   control, compounding to a near-invisible stroke against the dark
+   composer background. Fixed by giving the disabled state its own
+   deliberately readable neutral (--color-text-secondary, lighter than
+   text-muted) at FULL opacity, plus a slightly raised fill
+   (--color-surface-2) so the control reads as "a real button, just
+   inactive" rather than empty space -- no blanket opacity reduction
+   anywhere in this rule set anymore. */
+.baiSendBtn{
+  width:36px;height:36px;padding:0;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--color-surface-2);border:1px solid var(--color-hairline-strong);color:var(--color-text-secondary);
+  cursor:pointer;transition:background-color .15s ease,border-color .15s ease,color .15s ease,transform .1s ease;
+}
+.baiSendBtn:disabled{cursor:not-allowed}
+.baiSendBtnActive{background:var(--color-accent-primary);border-color:transparent;color:#fff}
+.baiSendBtnActive:hover{filter:brightness(1.08)}
+.baiSendBtn:active:not(:disabled){transform:scale(.94)}
+.baiSendBtn:focus-visible{outline:var(--focus-ring);outline-offset:2px}
+
+@media(max-width:480px){
+  /* Overrides the shared .baiComposer{flex-direction:column} rule
+     (used by the routed full-page's own simpler composer at this
+     width) -- the integrated command surface's compact circular
+     Voice/Send controls stay in ONE row even on mobile, unlike the
+     old full-width "Enviar" text button that rule was written for. */
+  .baiPanelComposer{flex-direction:row;align-items:center}
+  .baiPanelComposer .baiVoiceBtn,.baiPanelComposer .baiSendBtn{width:38px;height:38px}
+}
+
+/* ============================================================
+   VOICE DIAGNOSTICS (IA-3H.1) — LOCAL DEV TOOLING ONLY, mirrors
+   shell.css's own #nxDesignTraceToggle/#nxDesignTrace convention
+   (same font-mono/opacity treatment, same "never part of any future
+   product experience" framing) so a Human or Codex can read the last
+   Voice session's sanitized diagnostics without ever opening DevTools
+   (Section 38/39). Not part of the approved drawer -- a sibling node
+   under #nxOverlayRoot, never inside .baiPanelDrawer's own markup.
+   ============================================================ */
+/* Anchored to the RIGHT, stacked above the launcher FAB
+   (.baiLauncherBtn, right:var(--space-3);bottom:var(--space-3), 52px
+   tall) -- deliberately NOT left-anchored like #nxDevBadge/
+   #nxDesignTrace: those live inside .pMain, whose ancestor chain
+   happens to form a containing block for position:fixed that keeps
+   them clear of #pGlobalNav's persistent 232px desktop column; this
+   root is appended to #nxOverlayRoot (a sibling of .pShell, outside
+   that containing block), so position:fixed here resolves against the
+   true viewport -- a left anchor would sit UNDER the nav at >=1280px
+   (found live testing this Wave's own responsive suite: the
+   nav's subtree intercepted every click at 1366px). The right edge has
+   no nav at any breakpoint (persistent column and off-canvas drawer
+   are both left-anchored), so it is the only safe default here. */
+/* IA-3I: re-anchored from the bottom-right corner to the TOP-right
+   corner. The old bottom anchor was chosen specifically to dodge the
+   composer, which used to sit at the bottom of a right-docked,
+   viewport-edge drawer -- the Intelligence Workspace is now a large
+   CENTERED shell (up to 94vw/90vh, fullscreen at 480px), so a
+   bottom-anchored fixed toggle now routinely lands on top of the
+   Workspace's own composer/controls instead of clearing them. A
+   top anchor stays clear of the composer (always at the WORKSPACE's
+   own bottom edge) regardless of breakpoint or Workspace size. */
+.baiVoiceDiagToggle{
+  position:fixed;right:var(--space-2);top:var(--space-2);z-index:300;pointer-events:auto;
+  background:none;border:none;color:var(--color-text-muted);
+  font-family:var(--font-mono);font-size:9px;letter-spacing:.03em;
+  text-decoration:underline;cursor:pointer;opacity:.5;padding:3px 5px;
+}
+.baiVoiceDiagToggle:hover,.baiVoiceDiagToggle:focus-visible{opacity:1;color:var(--color-accent-primary)}
+.baiVoiceDiagToggle:focus-visible{outline:var(--focus-ring);outline-offset:2px}
+.baiVoiceDiagPanel{
+  position:fixed;right:var(--space-3);top:36px;z-index:300;pointer-events:auto;
+  width:340px;max-width:calc(100vw - 2 * var(--space-3));max-height:50vh;
+  overflow:auto;background:var(--color-elevated-surface);
+  border:1px solid var(--color-hairline-strong);border-radius:var(--radius-md);
+  box-shadow:var(--shadow-elevated);padding:var(--space-4);
+  font-family:var(--font-mono);font-size:10.5px;color:var(--color-text-secondary);
+}
+.baiVoiceDiagPanel[hidden]{display:none}
+.baiVoiceDiagHeader{display:flex;align-items:center;justify-content:space-between;gap:var(--space-2);margin-bottom:var(--space-2)}
+.baiVoiceDiagHeader h2{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--color-text-muted);margin:0}
+.baiVoiceDiagHeader button{background:none;border:1px solid var(--color-hairline-strong);border-radius:var(--radius-sm);color:var(--color-text-secondary);font-family:var(--font-mono);font-size:9px;cursor:pointer;padding:2px 6px}
+#baiVoiceDiagBody{white-space:pre-wrap;word-break:break-word;margin:0;max-width:100%}
+/* IA-3I: the old bottom-anchored 480px override (IA-3H.1A) is retired
+   along with the bottom anchor itself above -- the top anchor already
+   stays clear of the composer at every breakpoint, including a
+   fullscreen 480px Workspace, so no per-breakpoint repositioning is
+   needed here anymore; only the panel's own width still needs to
+   adapt to the narrow viewport. */
+@media(max-width:480px){
+  .baiVoiceDiagPanel{left:var(--space-2);right:var(--space-2);width:auto}
+}
+
+/* ============================================================
+   VOICE FOCUS MODE (IA-3H.2) -- a shell-level overlay, sibling of the
+   drawer/backdrop/diag panel under #nxOverlayRoot, never a second
+   Intelligence surface or a second conversation store (intelligence-
+   voice-focus.js only ever reads NX_INTELLIGENCE_STATE, already
+   rendered by the drawer). Built entirely on the existing mod-,
+   color- and space- prefixed tokens -- no new hex, no gaming/neon aesthetic
+   (Section 21): the presence uses the SAME --color-accent-primary red
+   every other Voice-state signal in this file already uses, at low
+   opacity, never a rainbow/RGB equalizer.
+   ============================================================ */
+.baiVoiceFocusRoot{position:fixed;inset:0;z-index:250;pointer-events:none}
+.baiVoiceFocusRoot[hidden]{display:none}
+/* IA-3I (Section 26): no own scrim/blur here anymore -- Voice Focus is
+   a STATE of the same Intelligence Workspace now, and the ONE shared
+   #baiPanelBackdrop (already visible from when the Workspace opened)
+   is the single scrim for both Text and Voice modes. Two stacked
+   scrims/blurs was exactly the "modal inside a modal" look the Human
+   rejected. */
+.baiVoiceFocusOverlay{
+  position:absolute;inset:0;pointer-events:auto;
+  display:flex;align-items:center;justify-content:center;padding:var(--space-4);
+}
+/* Recovered ambient line field (IA-3H.2.1B, Section 15) -- a very
+   thin, very-low-opacity Lissajous ribbon field, painted behind the
+   panel. Visible mainly in the scrim margin around the panel, by
+   design: the CURRENT V2 panel-based Focus Mode layout stays the
+   layout authority (Section 16), this only restores the recovered
+   atmosphere, never the old prototype's full-bleed chrome. */
+.baiVoiceFocusAmbientCanvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+/* IA-3H.2.1C: darkened from --color-elevated-surface (#191a1c, the
+   shared modal/drawer/toast token -- Section 13 forbids changing that
+   token globally) to the existing, already-darker --color-surface-2
+   (#161616) token, LOCAL to this selector only. Moves the panel toward
+   the recovered LAB's near-black hierarchy while staying one real,
+   already-established tonal step above the page/scrim behind it --
+   elevation via that step + the existing border/shadow, not via a
+   brighter gray (Section 12). */
+/* IA-3I: width/height/background/border/radius/shadow now come from
+   the shared .baiWorkspaceShell class (also applied to this same
+   element, INTELLIGENCE WORKSPACE section below) -- only Voice
+   Focus's own internal flex layout stays declared here. */
+.baiVoiceFocusPanel{
+  display:flex;flex-direction:column;gap:var(--space-4);
+  padding:var(--space-5,24px) var(--space-4);
+}
+
+.baiVoiceFocusHeader{display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.baiVoiceFocusTitle{font-family:var(--font-ui);font-weight:400;font-size:15px;color:var(--color-text-secondary)}
+.baiVoiceFocusCloseBtn{
+  background:none;border:none;color:var(--color-text-muted);font-size:22px;line-height:1;
+  cursor:pointer;padding:2px 6px;border-radius:var(--radius-sm)
+}
+.baiVoiceFocusCloseBtn:hover{color:var(--color-text-primary)}
+.baiVoiceFocusCloseBtn:focus-visible{outline:var(--focus-ring);outline-offset:2px}
+
+/* ---------- Center stage: the animated presence is the protagonist
+   (Section 9's own "Voice is the protagonist") -- everything else on
+   this panel is quiet by comparison. ---------- */
+.baiVoiceFocusStage{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--space-4);
+  min-height:260px;flex:1;
+}
+/* Fluid Aperture presence (IA-3H.2.1B) -- the Human-selected design,
+   recovered from the old facelift-prototype-01 lab (see this Wave's
+   report). 220px matches the recovered original's own restrained
+   scale exactly -- deliberately NOT the 260-340px exploratory scale
+   used by the IA-3H.2.1A LAB. All motion/deformation is drawn by the
+   canvas itself (intelligence-voice-focus.js's drawFluidAperture) --
+   no CSS keyframes here; state is still readable via .baiVoiceFocusStatus text alone (Section 27). */
+.baiVoiceFocusPresence{
+  position:relative;width:220px;height:220px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+}
+.baiVoiceFocusOrbCanvas{display:block;width:100%;height:100%}
+
+/* Status text is the state's PRIMARY, non-optional signal (Section 27
+   -- comprehension must never depend on animation alone). */
+.baiVoiceFocusStatus{
+  margin:0;font-family:var(--font-ui);font-size:14px;font-weight:500;
+  color:var(--color-text-secondary);text-align:center;
+}
+.baiVoiceFocusStateERROR ~ .baiVoiceFocusStatus,
+.baiVoiceFocusStage:has(.baiVoiceFocusStateERROR) .baiVoiceFocusStatus{color:var(--color-critical,#e2543a)}
+
+/* ---------- Compact transcript preview (Section 18) -- the LATEST
+   exchange only, never a scrolling chat; full history stays in the
+   drawer/Text surface, unmodified by this file. ---------- */
+.baiVoiceFocusTranscript{
+  flex-shrink:0;min-height:36px;max-height:88px;overflow-y:auto;
+  padding:var(--space-2) var(--space-3);border-top:1px solid var(--mod-border);
+  font-size:12.5px;line-height:1.5;color:var(--color-text-secondary);
+}
+.baiVoiceFocusTranscript:empty{border-top-color:transparent}
+.baiVoiceFocusTranscriptRole{display:block;font-family:var(--font-mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--mod-muted);margin-bottom:2px}
+.baiVoiceFocusTranscriptText{display:block;overflow-wrap:break-word;color:var(--color-text-primary)}
+
+/* ---------- Bottom controls ---------- */
+.baiVoiceFocusControls{display:flex;gap:var(--space-3);flex-shrink:0}
+.baiVoiceFocusTextBtn,.baiVoiceFocusEndBtn{
+  flex:1;min-height:44px;border-radius:var(--radius-md);font-family:var(--font-ui);font-size:13px;font-weight:500;
+  cursor:pointer;border:1px solid var(--color-hairline-strong);
+}
+.baiVoiceFocusTextBtn{background:none;color:var(--color-text-secondary)}
+.baiVoiceFocusTextBtn:hover{color:var(--color-text-primary);border-color:var(--color-text-secondary)}
+.baiVoiceFocusEndBtn{background:var(--color-accent-primary);color:var(--p-white-1,#fff);border-color:transparent}
+.baiVoiceFocusEndBtn:hover{filter:brightness(1.08)}
+.baiVoiceFocusTextBtn:focus-visible,.baiVoiceFocusEndBtn:focus-visible{outline:var(--focus-ring);outline-offset:2px}
+
+/* ---------- Reduced motion (Section 27/28) -- the canvas's own JS
+   loop (animationLoop/startAmbient in intelligence-voice-focus.js)
+   short-circuits to a SINGLE static drawn frame, no rAF loop, when
+   prefers-reduced-motion is set -- the Fluid Aperture silhouette
+   stays visible and identifiable, only the continuous motion stops.
+   State remains fully comprehensible via .baiVoiceFocusStatus text
+   alone regardless. Nothing to disable here at the CSS layer. */
+
+/* ---------- Responsive / zero horizontal scroll (Section 23-26) ----------
+   IA-3I: .baiVoiceFocusPanel's own width/max-height is now inherited
+   from the shared .baiWorkspaceShell sizing (INTELLIGENCE WORKSPACE
+   section below) -- only the things still genuinely SPECIFIC to Voice
+   (the orb's own responsive scale, the controls stacking on mobile)
+   stay declared here. */
+@media(max-width:900px){
+  .baiVoiceFocusPresence{width:180px;height:180px}
+}
+@media(max-width:480px){
+  .baiVoiceFocusControls{flex-direction:column}
+  /* 160px matches the recovered original's own mobile value exactly
+     (facelift-prototype-01/styles.css: .vfOrbFrame @480px). */
+  .baiVoiceFocusPresence{width:160px;height:160px}
+}
+

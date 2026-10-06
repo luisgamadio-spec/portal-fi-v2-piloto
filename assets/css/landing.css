@@ -1,0 +1,350 @@
+/* PORTAL-NEXT V2 — Shell + Landing CSS.
+   TRANSPLANTED VERBATIM from the Human Approved Executable Reference:
+   design-system-2.1/references/baselines/module-landing-approved/styles.css
+   (selectors: .pShell .pGlobalNav .brandMark .gNavBtn .pMain .pTopBar
+   .pBreadcrumb .pUserArea .pUserChip .pUserAvatar .pContent .ctxBeam
+   .ambientLayer .fShell .contextBeam .fNav .fNavItem .fCanvas
+   .motionProtectFull .fCanvasInner .fModuleBlock .fModuleTop
+   .fModuleTitle .fModuleArrow .fModuleDesc, plus the body.landing-active
+   override). Not reconstructed from memory or approximated — copied,
+   then adapted ONLY where V2 needs a different id strategy (documented
+   inline where that happens). Every value is a var() from tokens.css —
+   nothing hardcoded here, per Gate 9. */
+
+.pShell{display:flex;min-height:100vh}
+.pGlobalNav{width:64px;flex-shrink:0;background:var(--color-surface-1);border-right:1px solid var(--color-hairline);display:flex;flex-direction:column;align-items:center;padding:16px 0;gap:18px;position:sticky;top:0;height:100vh}
+.pGlobalNav .brandMark{width:28px;height:28px;border:1.5px solid var(--color-brand-red);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:11px;color:var(--color-brand-red);font-weight:700}
+.pGlobalNav .gNavBtn{width:36px;height:36px;border-radius:6px;background:none;border:0;color:var(--color-text-muted);font-family:var(--font-mono);font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;text-decoration:none}
+.pGlobalNav .gNavBtn.active,.pGlobalNav .gNavBtn:hover{color:var(--color-accent-primary);background:rgba(238,75,87,.1)}
+.pGlobalNav .gNavBtn:focus-visible{outline:var(--focus-ring);outline-offset:2px}
+.pMain{flex:1;min-width:0;display:flex;flex-direction:column}
+.pTopBar{position:sticky;top:0;z-index:40;background:rgba(10,10,10,.92);backdrop-filter:blur(4px);border-bottom:1px solid var(--color-hairline);display:flex;align-items:center;gap:16px;padding:0 20px;height:52px}
+.pBreadcrumb{font-family:var(--font-mono);font-size:11px;color:var(--color-text-muted)}
+.pBreadcrumb b{color:var(--color-text-primary);font-weight:500}
+.pUserArea{margin-left:auto;display:flex;align-items:center;gap:12px}
+.pUserChip{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--color-text-secondary)}
+.pUserAvatar{width:26px;height:26px;border-radius:50%;background:var(--color-surface-2);border:1px solid var(--color-hairline-strong);display:flex;align-items:center;justify-content:center;font-size:10px;font-family:var(--font-mono);color:var(--color-text-muted)}
+.pContent{flex:1;padding:28px 40px 100px;max-width:1500px;width:100%;margin:0 auto;position:relative}
+
+.ctxBeam{position:fixed;top:52px;left:64px;width:0;height:2px;background:linear-gradient(90deg,var(--color-accent-primary),transparent);opacity:0;pointer-events:none;z-index:50}
+@media(prefers-reduced-motion:no-preference){ .ctxBeam{transition:width .42s var(--ease-precise),opacity .3s var(--ease-precise)} }
+.ctxBeam.active{width:280px;opacity:.85}
+@media(max-width:900px){ .ctxBeam{top:auto;left:0} }
+
+.ambientLayer{position:absolute;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.ambientLayer canvas{position:absolute;inset:0;width:100%;height:100%}
+
+/* body.landing-active zeroes out the content outlet's own padding so
+   the Landing's fShell can use the full available box exactly as the
+   reference does — this is the same fix documented in
+   design-system-2.1/references/module-landing.md for the "huge dead
+   space" incident, transplanted verbatim, not rediscovered. */
+body.landing-active .pShell{min-height:0}
+body.landing-active #nxContentOutlet{padding:0;max-width:none;flex:none}
+
+.fShell{display:flex;min-height:calc(100vh - 78px);position:relative;border-top:1px solid var(--color-hairline)}
+.contextBeam{position:absolute;top:0;left:0;width:0;height:1.5px;background:linear-gradient(90deg,var(--color-accent-primary),transparent);opacity:0;pointer-events:none;z-index:5}
+@media(prefers-reduced-motion:no-preference){ .contextBeam{transition:width var(--duration-context) var(--ease-precise), opacity calc(var(--duration-context) * .7) var(--ease-precise)} }
+@media(max-width:1000px){ .contextBeam{display:none} }
+
+/* AUTH FOUNDATION Phase 2E, Gate 6: sizing/box model moved from
+   .fNav onto a new .fNavCol wrapper so a small "Categorias" eyebrow
+   can sit above the tab list, inside the same column, without
+   affecting .fNav's own flex/gap role. */
+.fNavCol{width:42%;flex-shrink:0;background:var(--color-surface-1);padding:70px 0 70px 56px;display:flex;flex-direction:column;justify-content:center;border-right:1px solid var(--color-hairline);position:relative}
+.fNavEyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--color-text-muted);margin:0 0 20px;padding-right:40px}
+.fNav{display:flex;flex-direction:column;gap:4px}
+.fNavItem{position:relative;display:flex;align-items:baseline;gap:15px;background:none;border:0;padding:11px 40px 11px 0;text-align:left;cursor:pointer;color:var(--color-text-muted);width:100%}
+.fNavItem:before{content:"";position:absolute;left:-56px;top:-6px;bottom:-6px;width:120px;background:radial-gradient(ellipse at left, rgba(238,75,87,.14), transparent 72%);opacity:0}
+@media(prefers-reduced-motion:no-preference){
+  .fNavItem{transition:color var(--duration-fast) var(--ease-precise)}
+  .fNavItem:before{transition:opacity calc(var(--duration-fast) * 1.25) var(--ease-precise)}
+  .fNavItem .idx{transition:opacity var(--duration-fast) var(--ease-precise)}
+}
+.fNavItem .idx{font-family:var(--font-mono);font-size:12.5px;color:var(--color-accent-primary);font-variant-numeric:tabular-nums;opacity:0;width:22px;flex-shrink:0}
+.fNavItem .label{font-family:var(--font-ui);font-size:clamp(27px,3.5vw,45px);font-weight:300;letter-spacing:-.012em;line-height:1.06;color:inherit}
+.fNavItem:hover{color:var(--color-text-secondary)}
+.fNavItem:hover:before{opacity:.55}
+.fNavItem.active{color:var(--color-text-primary)}
+.fNavItem.active:before{opacity:1}
+.fNavItem.active .idx{opacity:1}
+.fNavItem:focus-visible{outline:2px solid var(--color-accent-primary);outline-offset:6px}
+
+/* IA-ENTRY-01 Section 6: tiny Living Core beside the "Brabus
+   Intelligence" row only (fNavItemIntel, set in landing.js, matched by
+   label not index). Idle = quiet/discreet; .active reuses the exact
+   same class selectGroup() already toggles, so the core visibly
+   "wakes up" together with the row's existing red-accent/typography
+   state -- no new interaction logic. @keyframes baiCoreBreathe/Glow
+   are defined once in intelligence.css; both stylesheets always load
+   together (index.html), so they're available here. */
+.fNavLivingCore{position:relative;width:13px;height:13px;flex-shrink:0;align-self:center}
+.fNavCoreRing{position:absolute;inset:0;border-radius:50%;border:1px solid rgba(238,75,87,.32)}
+.fNavCoreNucleus{
+  position:absolute;top:50%;left:50%;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;
+  border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--p-red-1),var(--p-red-2) 75%);
+  box-shadow:0 0 3px 1px rgba(238,75,87,.4)
+}
+@media(prefers-reduced-motion:no-preference){
+  .fNavCoreNucleus{animation:baiCoreBreathe 7s ease-in-out infinite}
+  .fNavCoreRing{animation:baiCoreGlow 10s ease-in-out infinite}
+  .fNavItemIntel:hover .fNavCoreRing,.fNavItemIntel.active .fNavCoreRing{transition:border-color var(--duration-standard) var(--ease-smooth)}
+}
+.fNavItemIntel:hover .fNavCoreRing,.fNavItemIntel.active .fNavCoreRing{border-color:rgba(238,75,87,.7)}
+.fNavItemIntel.active .fNavCoreNucleus{box-shadow:0 0 6px 2px rgba(238,75,87,.75)}
+
+/* SIM-REG-01 / SIM-REG-01B: "Falar com um Analista" Home CTA -- a
+   persistent attendance shortcut under the category list, visible
+   regardless of which category tab is active (outside
+   #landingModuleDetail, never re-rendered by selectGroup()).
+   SIM-REG-01B (Human UAT: position/layout/copy all approved --
+   "aumentar o destaque visual" only): now reuses the EXACT SAME
+   filled-accent authority already used by "Calcular" in the
+   simulators (.btn-primary, simuladores.css) -- background/border-
+   color/foreground values copied verbatim from that already-
+   approved, already-Human-tested button family, not a new invented
+   treatment; same single visual authority across all 3 entry points
+   (brief §5). ~5.4:1 contrast (#1a0506 on #ee4b57, computed) clears
+   WCAG AA. */
+.fAnalystCta{margin-top:28px;padding-top:24px;padding-right:40px;border-top:1px solid var(--color-hairline)}
+.fAnalystCtaHint{font-size:13px;line-height:1.5;color:var(--color-text-muted);margin:0 0 12px;max-width:36ch}
+.fAnalystCtaBtn{display:inline-flex;align-items:center;gap:9px;min-height:44px;background:var(--color-accent-primary);border:1px solid var(--color-accent-primary);border-radius:var(--radius-sm);padding:0 18px;font-family:var(--font-ui);font-size:13.5px;font-weight:500;color:#1a0506;cursor:pointer}
+.fAnalystCtaIcon{color:inherit;flex-shrink:0}
+@media(prefers-reduced-motion:no-preference){ .fAnalystCtaBtn{transition:background var(--duration-fast) var(--ease-precise),filter var(--duration-fast) var(--ease-precise)} }
+.fAnalystCtaBtn:hover{background:#f16571;border-color:#f16571}
+.fAnalystCtaBtn:active{filter:brightness(.92)}
+.fAnalystCtaBtn:focus-visible{outline:var(--focus-ring);outline-offset:2px}
+
+.fCanvas{flex:1;min-width:0;padding:70px 64px;display:flex;align-items:center;position:relative;overflow:hidden}
+.motionProtectFull{position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(90deg,var(--color-canvas) 0%,rgba(10,10,10,.55) 38%,transparent 62%)}
+.fCanvasInner{max-width:640px;width:100%;position:relative;z-index:2}
+
+/* AUTH FOUNDATION Phase 2E, Gate 8: names the active category above
+   the module list -- the explicit, textual link between columns
+   (complements the eyebrow on the left) that also gives a single-item
+   category (e.g. Brabus Intelligence) the same confirming signal every
+   multi-item category gets, without a special-cased interaction. */
+.fDetailEyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--color-accent-primary);margin:0 0 22px}
+
+/* AUTH FOUNDATION Phase 2E, Gate 7/17: .fModuleBlock is now a real
+   <a href> for an available module (moduleBlockHtml) -- reset link
+   defaults so it reads identically to the prior div. */
+.fModuleBlock{display:block;text-decoration:none;color:inherit;padding:21px 18px;margin:0 -18px;border-radius:2px;cursor:pointer}
+@media(prefers-reduced-motion:no-preference){ .fModuleBlock{transition:background-color var(--duration-fast) var(--ease-precise)} }
+.fModuleBlock:hover,.fModuleBlock:focus-visible{background:rgba(255,255,255,.028)}
+.fModuleBlock:focus-visible{outline:var(--focus-ring);outline-offset:2px}
+.fModuleTop{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.fModuleTitle{font-size:19.5px;font-weight:500;letter-spacing:-.004em;margin:0;color:var(--color-text-primary)}
+/* Gate 4/7 fix: the arrow previously only existed on hover (opacity:0
+   at rest) -- the single strongest missing "this is a destination"
+   signal identified in the human-confirmed UX audit. Visible-but-quiet
+   at rest, brightens on interaction; a restrained, standard
+   list-of-links convention, not a new decorative element. */
+.fModuleArrow{color:var(--color-text-muted);flex-shrink:0;opacity:.4}
+@media(prefers-reduced-motion:no-preference){ .fModuleArrow{transition:opacity var(--duration-fast) var(--ease-precise), transform var(--duration-fast) var(--ease-precise)} }
+.fModuleBlock:hover .fModuleArrow,.fModuleBlock:focus-visible .fModuleArrow{opacity:1;transform:translateX(3px);color:var(--color-accent-primary)}
+.fModuleDesc{font-size:14px;line-height:1.62;color:var(--color-text-secondary);margin:7px 0 0;max-width:54ch}
+
+/* AUTH FOUNDATION Phase 2E, Gate 10/16: deferred/unauthorized module
+   destinations (moduleBlockHtml) -- truthfully non-interactive, never
+   styled to look clickable when the route only leads to a placeholder
+   or a denial-redirect. Mirrors the sidebar's existing pNavItemDeferred
+   restraint (dim, no hover response) rather than inventing a new
+   "locked" visual language. */
+.fModuleBlockDeferred{cursor:default;opacity:.45}
+.fModuleBlockDeferred:hover{background:none}
+.fModuleSoon{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.04em;color:var(--color-text-muted);border:1px solid var(--color-hairline-strong);border-radius:3px;padding:2px 7px;flex-shrink:0}
+
+@media(max-width:1000px){
+  .fNavCol{width:46%;padding-left:32px}
+  .fCanvas{padding:60px 32px}
+}
+@media(max-width:900px){ .ctxBeam{top:auto;left:0} }
+@media(max-width:768px){
+  .fShell{flex-direction:column;min-height:0}
+  /* PORTAL-NEXT-07.6 — was overflow-x:auto (a hidden horizontal
+     scrollbar carrying the category labels sideways off-screen); the
+     global no-horizontal-scroll directive forbids that pattern.
+     flex-wrap lets the same items reflow onto additional lines
+     instead — 0 label removed, 0 new component, same fNavItem markup. */
+  .fNavCol{width:100%;padding:18px;border-right:0;border-bottom:1px solid var(--color-hairline)}
+  .fNavEyebrow{padding-right:0;margin-bottom:10px}
+  .fNav{flex-direction:row;flex-wrap:wrap;justify-content:flex-start;gap:10px 24px}
+  .fNavItem{padding:5px 0 9px;flex-shrink:0;width:auto}
+  .fNavItem:before{display:none}
+  .fNavItem .idx{display:none}
+  .fNavItem .label{font-size:17px;font-weight:300}
+  .fNavItem.active .label{font-weight:500}
+  .fCanvas{padding:26px 18px 48px;align-items:flex-start}
+  .fCanvasInner{max-width:none}
+  .fModuleTitle{font-size:18px}
+  .fDetailEyebrow{margin-bottom:14px}
+  .fAnalystCta{padding-right:0;margin-top:16px;padding-top:16px}
+  .fAnalystCtaBtn{width:100%;justify-content:center}
+}
+
+/* ---------- headerLogo (Gate 42 — real institutional asset, V2 addition,
+   not present in the reference's own fictional prototype, which used a
+   text "B" brandMark only) ---------- */
+.pHeaderLogo{height:20px;width:auto;display:block}
+
+/* ---------- Shell Wave 2A: grouped sidebar + top-bar user area ----------
+   V2-SPECIFIC ADDITION, beyond the flat reference's icon-only rail —
+   the reference had no grouping/label concept to transplant here. Every
+   value is still a var() from tokens.css; no new hex/radius/shadow
+   introduced (Gate 15). .pGlobalNav's width/alignment are intentionally
+   overridden below (documented deviation, same discipline as the
+   body.landing-active override above) because a labeled, grouped nav
+   cannot fit a 64px icon-only rail. .pUserArea/.pUserChip/.pUserAvatar
+   above are reused as-is; only their inner sub-elements are new. */
+.pGlobalNav{width:232px;align-items:stretch;padding:20px 0;gap:0;overflow-y:auto}
+.pBrand{display:flex;align-items:center;gap:9px;padding:0 16px;margin:0 8px 22px;text-decoration:none;color:var(--color-text-primary)}
+.pBrand:focus-visible{outline:var(--focus-ring);outline-offset:2px;border-radius:var(--radius-sm)}
+.pBrandLogo{height:15px;width:auto;display:block;opacity:.92}
+.pBrandWord{font-family:var(--font-mono);font-size:10px;font-weight:500;letter-spacing:.03em;color:var(--color-text-secondary);padding-left:9px;border-left:1px solid var(--color-hairline-strong)}
+.pNavGroups{display:flex;flex-direction:column}
+.pNavGroup + .pNavGroup{margin-top:16px}
+.pNavGroupLabel{font-family:var(--font-mono);font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted);padding:0 16px;margin:0 8px 6px;opacity:.75}
+.pGlobalNav .pNavItem{display:flex;align-items:center;gap:10px;padding:8px 14px;margin:0 8px 2px;border-radius:var(--radius-sm);color:var(--color-text-secondary);text-decoration:none;font-family:var(--font-ui);font-size:12.5px;border-left:2px solid transparent}
+.pGlobalNav .pNavItem:hover{color:var(--color-text-primary);background:rgba(255,255,255,.04)}
+.pGlobalNav .pNavItem:hover .pNavIcon{background:var(--color-elevated-surface)}
+.pGlobalNav .pNavItem.active{color:var(--color-text-primary);border-left-color:var(--color-accent-primary);background:rgba(238,75,87,.08)}
+.pGlobalNav .pNavItem:focus-visible{outline:var(--focus-ring);outline-offset:2px}
+.pGlobalNav .pNavItem .pNavIcon{color:inherit;width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;background:var(--color-surface-2);flex-shrink:0}
+.pGlobalNav .pNavItem .pNavIconFallback{font-family:var(--font-mono);font-size:9.5px}
+.pGlobalNav .pNavItem.active .pNavIcon{color:var(--color-accent-primary);background:rgba(238,75,87,.14)}
+.pNavLabel{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pGlobalNav .pNavItemDeferred{display:flex;align-items:center;gap:10px;padding:8px 14px;margin:0 8px 2px;border-radius:var(--radius-sm);color:var(--color-text-muted);opacity:.62;cursor:default;border-left:2px solid transparent}
+.pNavSoon{font-family:var(--font-mono);font-size:8px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted);border:1px solid var(--color-hairline-strong);border-radius:var(--radius-sm);padding:1px 5px;flex-shrink:0}
+
+/* ---------- Shell Wave 2A.1 Gate 3: top-bar breadcrumb hierarchy ----------
+   "Portal F&I" demoted to a small system tag; the current module now
+   carries the actual visual weight, reading as a product label rather
+   than a developer path segment. Same 52px .pTopBar height, no new
+   vertical chrome. */
+.pBreadcrumbTag{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)}
+.pBreadcrumbSep{color:var(--color-hairline-strong);margin:0 10px;font-size:13px;font-weight:300}
+.pBreadcrumbCurrent{font-family:var(--font-ui);font-size:14px;font-weight:500;letter-spacing:-.005em;color:var(--color-text-primary)}
+
+.pUserInfo{display:flex;flex-direction:column;gap:1px;line-height:1.25;min-width:0}
+.pUserName{display:flex;align-items:center;gap:6px;color:var(--color-text-primary);font-size:12.5px;font-weight:500;min-width:0}
+.pUserNameText{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px}
+.pUserBadge{font-family:var(--font-mono);font-size:8.5px;letter-spacing:.05em;color:var(--color-accent-primary);border:1px solid rgba(238,75,87,.35);border-radius:var(--radius-sm);padding:1px 5px;flex-shrink:0}
+.pUserContext{font-size:10.5px;color:var(--color-text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ============================================================
+   Shell Wave 2B — responsive drawer (tablet/mobile)
+   ============================================================
+   Desktop (>=1280px) is frozen (Wave 2A.1 contract, 7c7bba0) — nothing
+   in this section applies above that width. Below it, the SAME
+   #pGlobalNav element (identical markup from renderGlobalNav, same
+   groups/icons/active/deferred treatment) becomes a fixed off-canvas
+   drawer instead of a persistent column: 0 duplicated navigation data,
+   only position/visibility differ. Open/close JS lives in shell.js
+   setupNavDrawer(). */
+.pNavTrigger{display:none;align-items:center;justify-content:center;width:34px;height:34px;flex-shrink:0;border-radius:var(--radius-sm);background:none;border:1px solid transparent;color:var(--color-text-secondary);cursor:pointer}
+.pNavTrigger:hover{color:var(--color-text-primary);background:rgba(255,255,255,.04)}
+.pNavTrigger:focus-visible{outline:var(--focus-ring);outline-offset:2px}
+
+.pNavBackdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:55;display:none}
+body.nav-drawer-open .pNavBackdrop{display:block}
+
+@media(max-width:1279px){
+  .pNavTrigger{display:flex}
+  .pGlobalNav{
+    position:fixed;top:0;left:0;height:100vh;z-index:60;
+    transform:translateX(-100%);
+    box-shadow:var(--shadow-elevated);
+  }
+  @media(prefers-reduced-motion:no-preference){
+    .pGlobalNav{transition:transform var(--duration-fast) var(--ease-precise)}
+  }
+  body.nav-drawer-open .pGlobalNav{transform:translateX(0)}
+  .pContent{padding:20px 24px 90px}
+  .pBreadcrumb{min-width:0;overflow:hidden;display:flex;align-items:center}
+  .pBreadcrumbCurrent{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+}
+
+/* ============================================================
+   Menu recolhido em ícones dentro dos módulos (>= 1280 px only;
+   below that the drawer above is unchanged).
+   body.module-open (landing.js renderRoute) → 64 px icon rail,
+   fixed, opening to 232 px OVER the content (the page keeps a 64 px
+   gutter, so nothing is pushed). Opens on hover, keyboard focus or a
+   click on the rail (.nav-rail-aberto); an item click closes it until
+   the mouse leaves (.nav-rail-recolhido). body.nav-pinned = "fixar
+   menu aberto": the normal 232 px column, as on the landing.
+   ============================================================ */
+.pNavPin{display:none}
+@media(min-width:1280px){
+  body.module-open .pNavPin{
+    display:flex;align-items:center;gap:10px;margin:auto 8px 0;padding:8px 14px;border:0;border-left:2px solid transparent;
+    border-radius:var(--radius-sm);background:none;color:var(--color-text-muted);font-family:var(--font-ui);font-size:12px;cursor:pointer;text-align:left
+  }
+  body.module-open .pNavPin .pNavIcon{width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  body.module-open .pNavPin:hover{color:var(--color-text-primary);background:rgba(255,255,255,.04)}
+  body.module-open .pNavPin:focus-visible{outline:var(--focus-ring);outline-offset:2px}
+  body.module-open.nav-pinned .pNavPin{color:var(--color-accent-primary)}
+
+  body.module-open:not(.nav-pinned) .pShell{padding-left:64px}
+  body.module-open:not(.nav-pinned) .pGlobalNav{
+    position:fixed;top:0;left:0;bottom:0;height:100vh;z-index:60;width:64px;overflow-x:hidden;overflow-y:auto
+  }
+  body.module-open:not(.nav-pinned) .pGlobalNav .pNavItem,
+  body.module-open:not(.nav-pinned) .pGlobalNav .pNavItemDeferred,
+  body.module-open:not(.nav-pinned) .pNavPin{padding-left:11px;padding-right:11px}
+  /* collapsed: labels/section titles take no space but stay in the accessibility tree */
+  body.module-open:not(.nav-pinned) .pNavLabel,
+  body.module-open:not(.nav-pinned) .pBrandWord,
+  body.module-open:not(.nav-pinned) .pNavSoon{flex:0 0 auto;max-width:0;opacity:0;overflow:hidden;padding:0;margin:0;border:0}
+  body.module-open:not(.nav-pinned) .pNavGroupLabel{height:0;margin:0;opacity:0;overflow:hidden}
+  body.module-open:not(.nav-pinned) .pNavGroup + .pNavGroup{margin-top:10px;padding-top:10px;border-top:1px solid var(--color-hairline)}
+  body.module-open:not(.nav-pinned) .pBrand{padding:0 12px;gap:0}
+  /* the wide BRABUS logo shrinks to fit the 64 px rail; full size again when the menu opens */
+  body.module-open:not(.nav-pinned) .pBrandLogo{max-width:40px;height:auto;flex-shrink:0}
+  body.module-open:not(.nav-pinned):not(.nav-rail-recolhido) .pGlobalNav:is(:hover,:focus-within) .pBrandLogo,
+  body.module-open.nav-rail-aberto:not(.nav-pinned) .pGlobalNav .pBrandLogo{max-width:none;height:15px}
+  body.module-open:not(.nav-pinned) .nxDevBadge{display:none}
+
+  /* open over the content: hover, keyboard focus, or a click on the rail */
+  body.module-open:not(.nav-pinned):not(.nav-rail-recolhido) .pGlobalNav:hover,
+  body.module-open:not(.nav-pinned):not(.nav-rail-recolhido) .pGlobalNav:focus-within,
+  body.module-open.nav-rail-aberto:not(.nav-pinned) .pGlobalNav{width:232px;box-shadow:var(--shadow-elevated)}
+  body.module-open:not(.nav-pinned):not(.nav-rail-recolhido) .pGlobalNav:is(:hover,:focus-within) :is(.pNavLabel,.pBrandWord,.pNavSoon),
+  body.module-open.nav-rail-aberto:not(.nav-pinned) .pGlobalNav :is(.pNavLabel,.pBrandWord,.pNavSoon){max-width:200px;opacity:1}
+  body.module-open:not(.nav-pinned):not(.nav-rail-recolhido) .pGlobalNav:is(:hover,:focus-within) .pBrandWord,
+  body.module-open.nav-rail-aberto:not(.nav-pinned) .pGlobalNav .pBrandWord{padding-left:9px;margin-left:9px;border-left:1px solid var(--color-hairline-strong)}
+  body.module-open:not(.nav-pinned):not(.nav-rail-recolhido) .pGlobalNav:is(:hover,:focus-within) .pNavGroupLabel,
+  body.module-open.nav-rail-aberto:not(.nav-pinned) .pGlobalNav .pNavGroupLabel{height:auto;margin:0 8px 6px;opacity:.75}
+  body.module-open:not(.nav-pinned):not(.nav-rail-recolhido) .pGlobalNav:is(:hover,:focus-within) .pNavGroup + .pNavGroup,
+  body.module-open.nav-rail-aberto:not(.nav-pinned) .pGlobalNav .pNavGroup + .pNavGroup{margin-top:16px;padding-top:0;border-top:0}
+
+  @media(prefers-reduced-motion:no-preference){
+    body.module-open:not(.nav-pinned) .pGlobalNav{transition:width .18s var(--ease-precise) .06s,box-shadow .18s var(--ease-precise)}
+    body.module-open:not(.nav-pinned) .pNavLabel,
+    body.module-open:not(.nav-pinned) .pBrandWord{transition:opacity .14s var(--ease-precise),max-width .18s var(--ease-precise)}
+  }
+}
+
+/* Top-bar priority compaction (Gate 6): 1 nav access, 2 BRABUS
+   identity, 3 current module, 4 essential user context, 5 secondary
+   user metadata -- the LAST priority is the first to compact. */
+@media(max-width:600px){
+  .pUserContext{display:none}
+  .pUserNameText{max-width:110px}
+}
+@media(max-width:480px){
+  /* User context (priority 5, then 4) compacts further HERE, at the
+     same breakpoint the breadcrumb tag/separator drop -- freeing space
+     for the higher-priority current-module text (priority 3) instead
+     of letting it starve down to an unreadable 1-2 character ellipsis. */
+  .pBreadcrumbTag,.pBreadcrumbSep{display:none}
+  .pUserNameText{max-width:64px}
+  .pUserBadge{padding:1px 4px}
+  .pHeaderLogo{height:17px}
+  .pTopBar{padding:0 12px;gap:8px}
+  .pContent{padding:16px 14px 72px}
+}
+@media(max-width:340px){
+  .pUserNameText{display:none}
+}

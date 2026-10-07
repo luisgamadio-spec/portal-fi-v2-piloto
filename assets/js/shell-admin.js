@@ -3150,10 +3150,94 @@
     if (peopleDir.list) return storeSelectHtml(id, selected);
     return '<input type="text" id="' + id + '" value="' + esc(selected) + '">';
   }
+  // ---- Analista ausente / substituto: lista com busca (analistas ativos, como o v1) ----
+  var ABS_ROLES = {
+    aus: { label: 'Analista ausente', cpf: 'cpfAnalistaAusente', nome: 'nomeAnalistaAusente' },
+    sub: { label: 'Substituto', cpf: 'cpfAnalistaSubstituto', nome: 'nomeAnalistaSubstituto' }
+  };
+  function absFindAnalyst(key) {
+    return SC_VM.analystOptions(peopleDir.list).filter(function (u) { return scSellerKey(u) === key; })[0] || null;
+  }
+  function absAnalystItemsHtml(role, query) {
+    var f = absState.createForm || {};
+    var other = role === 'aus' ? f.subKey : f.ausKey;
+    var items = SC_VM.filterPeople(SC_VM.analystOptions(peopleDir.list), query).filter(function (u) { return scSellerKey(u) !== other; });
+    if (!items.length) return '<p class="maSubtle scPickEmpty">Nenhum analista ativo encontrado.</p>';
+    return items.map(function (u) {
+      return '<button type="button" role="option" class="scPickOpt absPickOpt" data-role="' + role + '" data-key="' + esc(scSellerKey(u)) + '">' +
+        '<b>' + esc(u.nome) + '</b> <span class="maSubtle">· ' + esc(u.loja || 'sem loja') + '</span></button>';
+    }).join('');
+  }
+  function absPersonBlockHtml(f, role) {
+    var r = ABS_ROLES[role];
+    var key = f[role + 'Key'];
+    if (!key) {
+      return '<label for="' + role + 'AbsBusca">' + r.label + '</label>' +
+        '<input type="search" id="' + role + 'AbsBusca" class="absBusca" data-role="' + role + '" autocomplete="off" placeholder="Digite parte do nome" value="' + esc(f[role + 'Query'] || '') + '">' +
+        '<div id="' + role + 'AbsList" class="scPickList absPickList" role="listbox" aria-label="Analistas ativos">' + absAnalystItemsHtml(role, f[role + 'Query']) + '</div>';
+    }
+    var locked = !!f[role + 'CpfLocked'];
+    var html = '<label>' + r.label + '</label>' +
+      '<div class="scPicked"><span><b>' + esc(f[r.nome]) + '</b> <span class="maSubtle">· ' + esc(f[role + 'Loja'] || 'sem loja') + '</span></span>' +
+      '<button type="button" class="modBtnGhost absTrocarBtn" data-role="' + role + '">Trocar</button></div>' +
+      '<label for="' + role + 'AbsCpf">CPF ' + (role === 'aus' ? 'do analista ausente' : 'do substituto') + (locked ? ' (do cadastro)' : ' (não cadastrado — informe, só números)') + '</label>' +
+      '<input type="text" id="' + role + 'AbsCpf" inputmode="numeric" value="' + esc(f[r.cpf]) + '"' + (locked ? ' readonly class="scReadonly"' : '') + '>';
+    if (role === 'aus') {
+      html += '<label for="absLojaOrigem">Loja de origem' + (f.lojaOrigemLocked ? ' (loja do analista ausente)' : ' (não cadastrada — escolha)') + '</label>' +
+        (f.lojaOrigemLocked
+          ? '<input type="text" id="absLojaOrigem" value="' + esc(f.lojaOrigem) + '" readonly class="scReadonly">'
+          : storeSelectHtml('absLojaOrigem', f.lojaOrigem));
+    }
+    return html;
+  }
+  function absReadFormIntoState() {
+    var f = absState.createForm;
+    if (!f) return f;
+    function val(id) { var el = document.getElementById(id); return el ? el.value : null; }
+    var v;
+    if ((v = val('ausAbsCpf')) !== null) f.cpfAnalistaAusente = v;
+    if ((v = val('subAbsCpf')) !== null) f.cpfAnalistaSubstituto = v;
+    if ((v = val('ausAbsBusca')) !== null) f.ausQuery = v;
+    if ((v = val('subAbsBusca')) !== null) f.subQuery = v;
+    if ((v = val('absLojaOrigem')) !== null) f.lojaOrigem = v.trim().toUpperCase();
+    if ((v = val('absLojaCoberta')) !== null) f.lojaCoberta = v.trim().toUpperCase();
+    if ((v = val('absIni')) !== null) f.dataInicio = v;
+    if ((v = val('absFim')) !== null) f.dataFim = v;
+    if ((v = val('absMotivo')) !== null) f.motivo = v;
+    return f;
+  }
+  function absPickAnalyst(role, key) {
+    var f = absReadFormIntoState();
+    var u = absFindAnalyst(key);
+    if (!f || !u) return;
+    var r = ABS_ROLES[role];
+    f[role + 'Key'] = key;
+    f[role + 'Loja'] = u.loja;
+    f[r.nome] = u.nome;
+    f[r.cpf] = SC_VM.normalizeCpf(u.cpf);
+    f[role + 'CpfLocked'] = !!f[r.cpf];
+    if (role === 'aus') {
+      f.lojaOrigemLocked = !!u.loja && storeOptionsList().indexOf(u.loja) !== -1;
+      f.lojaOrigem = f.lojaOrigemLocked ? u.loja : '';
+    }
+    f.error = null;
+    renderPanel();
+  }
+  function absClearAnalyst(role) {
+    var f = absReadFormIntoState();
+    if (!f) return;
+    var r = ABS_ROLES[role];
+    f[role + 'Key'] = null; f[role + 'Loja'] = ''; f[r.nome] = ''; f[r.cpf] = ''; f[role + 'CpfLocked'] = false;
+    if (role === 'aus') { f.lojaOrigem = ''; f.lojaOrigemLocked = false; }
+    renderPanel();
+    var busca = document.getElementById(role + 'AbsBusca');
+    if (busca) busca.focus();
+  }
+
   function absCreateFormHtml() {
     var f = absState.createForm;
-    if (peopleDir.loading) {
-      return '<div class="gbCard absCreateCard"><h3>Nova ausência</h3>' + peopleDirStatusHtml('lojas') +
+    if (!peopleDir.list) {
+      return '<div class="gbCard absCreateCard"><h3>Nova ausência</h3>' + peopleDirStatusHtml('analistas e lojas') +
         '<div class="adminModalActions"><button type="button" class="modBtnGhost" id="absCancelCreateBtn">Cancelar</button></div></div>';
     }
     var motivoOptions = ABS_VM.MOTIVO_OPTIONS.map(function (m) {
@@ -3162,16 +3246,8 @@
     return '<div class="gbCard absCreateCard">' +
       '<h3>Nova ausência</h3>' +
       '<p class="note absFinanceWarn">⚠️ Ao registrar uma ausência, a comissão do período correspondente é reatribuída do analista ausente para o substituto informado, para as datas indicadas.</p>' +
-      '<label for="absCpfAusente">CPF do analista ausente (opcional)</label>' +
-      '<input type="text" id="absCpfAusente" value="' + esc(f.cpfAnalistaAusente) + '">' +
-      '<label for="absNomeAusente">Nome do analista ausente</label>' +
-      '<input type="text" id="absNomeAusente" value="' + esc(f.nomeAnalistaAusente) + '">' +
-      '<label for="absLojaOrigem">Loja de origem (opcional)</label>' +
-      absStoreFieldHtml('absLojaOrigem', f.lojaOrigem) +
-      '<label for="absCpfSubstituto">CPF do substituto</label>' +
-      '<input type="text" id="absCpfSubstituto" value="' + esc(f.cpfAnalistaSubstituto) + '">' +
-      '<label for="absNomeSubstituto">Nome do substituto</label>' +
-      '<input type="text" id="absNomeSubstituto" value="' + esc(f.nomeAnalistaSubstituto) + '">' +
+      absPersonBlockHtml(f, 'aus') +
+      absPersonBlockHtml(f, 'sub') +
       '<label for="absLojaCoberta">Loja coberta</label>' +
       absStoreFieldHtml('absLojaCoberta', f.lojaCoberta) +
       '<label for="absIni">Data inicial</label>' +
@@ -3297,28 +3373,22 @@
 
   function absSaveCreateHandler() {
     if (inFlight.absAction) return;
-    var f = absState.createForm;
-    var cpfAusente = (document.getElementById('absCpfAusente') || {}).value || '';
-    var nomeAusente = ((document.getElementById('absNomeAusente') || {}).value || '').trim();
-    var lojaOrigem = ((document.getElementById('absLojaOrigem') || {}).value || '').trim();
-    var cpfSubstituto = (document.getElementById('absCpfSubstituto') || {}).value || '';
-    var nomeSubstituto = ((document.getElementById('absNomeSubstituto') || {}).value || '').trim();
-    var lojaCoberta = ((document.getElementById('absLojaCoberta') || {}).value || '').trim();
-    var dataInicio = (document.getElementById('absIni') || {}).value || '';
-    var dataFim = (document.getElementById('absFim') || {}).value || '';
-    var motivo = (document.getElementById('absMotivo') || {}).value || '';
-    f.cpfAnalistaAusente = cpfAusente; f.nomeAnalistaAusente = nomeAusente; f.lojaOrigem = lojaOrigem;
-    f.cpfAnalistaSubstituto = cpfSubstituto; f.nomeAnalistaSubstituto = nomeSubstituto; f.lojaCoberta = lojaCoberta;
-    f.dataInicio = dataInicio; f.dataFim = dataFim; f.motivo = motivo;
-    // Required in practice even though the RPC's own explicit check
-    // only demands nome_analista_ausente/nome_analista_substituto/
-    // datas: cpf_analista_substituto and loja_coberta are NOT NULL
-    // columns the RPC nullifies-on-empty, so an empty submission here
-    // would otherwise surface as a raw Postgres not-null-violation
-    // rather than a friendly message (PM-5F Gate 35 finding).
-    if (!nomeAusente || !cpfSubstituto || !nomeSubstituto || !lojaCoberta) {
-      f.error = 'Informe analista ausente, CPF e nome do substituto e a loja coberta.'; renderPanel(); return;
-    }
+    var f = absReadFormIntoState();
+    if (!f) return;
+    var stores = storeOptionsList();
+    // Ausente e substituto vêm da lista de analistas ativos (como o v1);
+    // os dois CPFs são obrigatórios -- a reatribuição de comissão casa
+    // pelo CPF. loja_coberta/cpf_analista_substituto são NOT NULL no banco.
+    if (!f.ausKey || !absFindAnalyst(f.ausKey)) { f.error = 'Selecione o analista ausente na lista.'; renderPanel(); return; }
+    if (!f.subKey || !absFindAnalyst(f.subKey)) { f.error = 'Selecione o substituto na lista.'; renderPanel(); return; }
+    if (f.ausKey === f.subKey) { f.error = 'O substituto deve ser outro analista.'; renderPanel(); return; }
+    f.cpfAnalistaAusente = SC_VM.normalizeCpf(f.cpfAnalistaAusente);
+    f.cpfAnalistaSubstituto = SC_VM.normalizeCpf(f.cpfAnalistaSubstituto);
+    if (f.cpfAnalistaAusente.length !== 11) { f.error = 'Informe o CPF do analista ausente (11 dígitos).'; renderPanel(); return; }
+    if (f.cpfAnalistaSubstituto.length !== 11) { f.error = 'Informe o CPF do substituto (11 dígitos).'; renderPanel(); return; }
+    if (!f.lojaOrigem || stores.indexOf(f.lojaOrigem) === -1) { f.error = 'Escolha a loja de origem na lista.'; renderPanel(); return; }
+    if (!f.lojaCoberta || stores.indexOf(f.lojaCoberta) === -1) { f.error = 'Escolha a loja coberta na lista.'; renderPanel(); return; }
+    var lojaOrigem = f.lojaOrigem, dataInicio = f.dataInicio, dataFim = f.dataFim;
     if (!dataInicio || !dataFim) { f.error = 'Informe data inicial e final.'; renderPanel(); return; }
     if (dataFim < dataInicio) { f.error = 'Data final não pode ser menor que a inicial.'; renderPanel(); return; }
     f.error = null;
@@ -5442,9 +5512,37 @@
     if (absRetry) absRetry.addEventListener('click', absLoad);
     var absNewBtn = document.getElementById('absNewBtn');
     if (absNewBtn) absNewBtn.addEventListener('click', function () {
-      absState.createForm = { cpfAnalistaAusente: '', nomeAnalistaAusente: '', lojaOrigem: '', cpfAnalistaSubstituto: '', nomeAnalistaSubstituto: '', lojaCoberta: '', dataInicio: '', dataFim: '', motivo: '', error: null, overlapWarning: null };
+      absState.createForm = { cpfAnalistaAusente: '', nomeAnalistaAusente: '', lojaOrigem: '', cpfAnalistaSubstituto: '', nomeAnalistaSubstituto: '', lojaCoberta: '', dataInicio: '', dataFim: '', motivo: '', error: null, overlapWarning: null,
+        ausKey: null, ausLoja: '', ausQuery: '', ausCpfLocked: false, subKey: null, subLoja: '', subQuery: '', subCpfLocked: false, lojaOrigemLocked: false };
       peopleDirEnsure();
       renderPanel();
+    });
+    function absWirePickOptions(root) {
+      if (!root) return;
+      root.querySelectorAll('.absPickOpt').forEach(function (el) {
+        el.addEventListener('click', function () { absPickAnalyst(el.getAttribute('data-role'), el.getAttribute('data-key')); });
+      });
+    }
+    ['aus', 'sub'].forEach(function (role) {
+      var busca = document.getElementById(role + 'AbsBusca');
+      var list = document.getElementById(role + 'AbsList');
+      absWirePickOptions(list);
+      if (!busca || !list) return;
+      // Filtra sem re-renderizar o painel (mantém o foco no campo).
+      busca.addEventListener('input', function () {
+        if (absState.createForm) absState.createForm[role + 'Query'] = busca.value;
+        list.innerHTML = absAnalystItemsHtml(role, busca.value);
+        absWirePickOptions(list);
+      });
+      busca.addEventListener('keydown', function (ev) {
+        if (ev.key !== 'Enter') return;
+        ev.preventDefault();
+        var first = list.querySelector('.absPickOpt');
+        if (first) absPickAnalyst(role, first.getAttribute('data-key'));
+      });
+    });
+    document.querySelectorAll('.absTrocarBtn').forEach(function (el) {
+      el.addEventListener('click', function () { absClearAnalyst(el.getAttribute('data-role')); });
     });
     var absCancelCreateBtn = document.getElementById('absCancelCreateBtn');
     if (absCancelCreateBtn) absCancelCreateBtn.addEventListener('click', function () { absState.createForm = null; renderPanel(); });

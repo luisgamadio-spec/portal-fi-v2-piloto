@@ -34,6 +34,9 @@ html { font-size: calc(100% * var(--fs-scale)); }
   .pUserNameText { max-width: 48px; }
   :root[data-fonte="grande"] .pUserNameText { max-width: 30px; }
 }
+@media (max-width: 400px) {
+  .pUserNameText { display: none; }  /* como já era em 340 px: ficam as iniciais e o perfil */
+}
 @media (max-width: 340px) {
   .pFontToggle { min-width: 26px; padding: 0 4px; }
 }

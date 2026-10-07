@@ -597,6 +597,7 @@
     // 'subsidiadas' -- that mode doesn't exist in its own MODES list).
     var mainGrid = document.getElementById('smMainGrid');
     if (mainGrid) mainGrid.classList.toggle('smGridStacked', currentMode === 'subsidiadas');
+    if (mainGrid) mainGrid.classList.toggle('smGridEqual', currentMode === 'linear');
     var formRegion = document.getElementById('smFormRegion');
     var resultRegion = document.getElementById('smResultRegion');
     formRegion.innerHTML = formHtml(currentMode);
@@ -663,7 +664,7 @@
   function wireResultTermGrid(itemCount) {
     var grid = document.querySelector('#smResultRegion .smTermGrid');
     if (!grid) return;
-    var ro = UI.wireTermResultGrid(grid, 110, itemCount);
+    var ro = UI.wireTermResultGrid(grid, 132, itemCount);
     if (ro) termGridObservers.push(ro);
   }
 
@@ -676,6 +677,7 @@
         if (tradPeriodAuthority.getState() !== 'READY') return authorityGateHtml(tradPeriodAuthority);
         return UI.moneyField('nBem', 'Valor do bem', 'R$ 100.000,00') +
           UI.entryField('nEntrada', 'Entrada', 'R$ 20.000,00', 'nBem') +
+          '<span class="hint smBalaoLimite" id="nBalaoLimite" aria-live="polite" hidden></span>' +
           termGridFieldHtml('nPrazo', 'Prazo', TRAD_TERMS, 48) +
           '<div class="field"><label>Balões</label>' +
           '<div class="smBalloonList" id="nBaloesList"></div>' +
@@ -871,6 +873,7 @@
       });
       wireTermGrid('nPrazo', TRAD_TERMS.length);
       document.getElementById('nCalc').addEventListener('click', function () { calcTradicional(); });
+      ligaBalaoLimite();
     } else if (mode === 'periodico') {
       if (!wireAuthorityGate(tradPeriodAuthority, mode)) return;
       wireTermGrid('nPrazo', PERIOD_TERMS.length);
@@ -976,6 +979,37 @@
   }
 
   /* ---------- calculations (adapter calls only) ---------- */
+  // Limite do balão: a MESMA regra do motor (N.calcularTradicional devolve
+  // `limite` = financiado × max da linha da tabela vigente para o prazo
+  // selecionado e a faixa de entrada). Chamado sem balões, só para ler o limite.
+  function updateBalaoLimite() {
+    var el = document.getElementById('nBalaoLimite');
+    if (!el) return;
+    var bem = UI.moneyVal('nBem'), ent = UI.moneyVal('nEntrada');
+    var prazo = Number(UI.getSegmentedValue('nPrazo'));
+    var tradAuth = tradPeriodAuthority.getAuthority();
+    var r = (bem > 0 && ent > 0 && prazo) ? N.calcularTradicional({ bem: bem, entrada: ent, prazo: prazo, baloes: [], tabelaTradicional: tradAuth ? tradAuth.tradicional : undefined }) : null;
+    if (!r || r.error || r.empty || !(r.limite > 0)) { el.hidden = true; el.innerHTML = ''; return; }
+    var total = balloons.filter(function (b) { return b.mes && b.valor; }).slice(0, MAX_BALOES).reduce(function (s, b) { return s + b.valor; }, 0);
+    el.hidden = false;
+    if (total > r.limite + 1e-6) {
+      el.className = 'hint smBalaoLimite smBalaoLimiteAcima';
+      el.innerHTML = 'Acima do limite de <b>' + UI.esc(UI.brl(r.limite)) + '</b>';
+    } else {
+      el.className = 'hint smBalaoLimite';
+      el.innerHTML = 'Balão máximo: <b>' + UI.esc(UI.brl(r.limite)) + '</b> (' + UI.esc(UI.pct1(r.limite / bem)) + ' do valor do veículo) em ' + prazo + 'x';
+    }
+  }
+  var balaoLimiteLigado = false;
+  function ligaBalaoLimite() {
+    if (!balaoLimiteLigado) {
+      balaoLimiteLigado = true;
+      document.addEventListener('input', function () { updateBalaoLimite(); });
+      document.addEventListener('click', function () { setTimeout(updateBalaoLimite, 0); });
+    }
+    updateBalaoLimite();
+  }
+
   function calcTradicional() {
     // BALAO-LIMIT-1 Phase 6: defensive sanitization at the calculation
     // consumer boundary -- even if `balloons` were ever malformed beyond
@@ -1102,7 +1136,7 @@
         if (row.melhor) pill = '<span class="smPill excellent">Melhor opção</span>';
         else if (r.minVenda > 0) pill = '<span class="smPill ' + (row.viavel ? 'good' : 'bad') + '">' + (row.viavel ? 'Dentro do mínimo' : 'Abaixo do mínimo') + '</span>';
         return '<div class="smSubsidiadaCard' + (row.melhor ? ' best' : '') + '">' +
-          '<div class="smSubsidiadaCardHead"><span class="smSubsidiadaCardPrazo">' + row.prazo + 'x</span><span class="smSubsidiadaCardTaxa">' + UI.pct2(row.taxa) + '</span></div>' +
+          '<div class="smSubsidiadaCardHead"><span class="smSubsidiadaCardPrazo">' + row.prazo + 'x</span><span class="smSubsidiadaCardTaxa">' + UI.rateBadge(row.taxa) + '</span></div>' +
           (pill ? '<div class="smSubsidiadaCardPill">' + pill + '</div>' : '') +
           '<div class="smSubsidiadaCardRow"><span class="kpiLabel">Parcela</span><strong>' + UI.brl(row.parcela) + '</strong></div>' +
           // Gate 1-3 (PORTAL-NEXT-08.4): row.rebate is the engine's own
@@ -1116,7 +1150,7 @@
           '<div class="smSubsidiadaCardRow smSubsidiadaCardRowEmphasis"><span class="kpiLabel">Valor final de venda</span><strong>' + UI.brl(row.valorFinalVenda) + '</strong></div>' +
           '</div>';
       }).join('');
-      return '<div class="smSubsidiadaGroup"><p class="smSubsidiadaGroupHead">Taxa ' + UI.pct2(Number(taxa)) + '</p><div class="smSubsidiadaGrid">' + cards + '</div></div>';
+      return '<div class="smSubsidiadaGroup"><p class="smSubsidiadaGroupHead">' + UI.rateBadge(Number(taxa), true) + '</p><div class="smSubsidiadaGrid">' + cards + '</div></div>';
     }).join('');
     setResult('<div class="smSubsidiadaGroups">' + groupsHtml + '</div>' +
       '<p class="smFootnote">Rebate é o custo comercial da taxa subsidiada — nunca um desconto concedido ao cliente. Valor final de venda já considera o valor líquido para a loja.</p>');
@@ -1125,7 +1159,8 @@
     var tritonAuth = tritonAuthority.getAuthority();
     var r = N.calcularSemestralTriton({ bem: UI.moneyVal('nBem'), modelo: UI.textVal('nModelo'), modelosTriton: tritonAuth ? tritonAuth.modelos : undefined });
     if (r.error) { setResult(UI.errorBlock(errMsg(r.error) || 'Informe o valor de venda para calcular a campanha.')); return; }
-    var html = UI.resultHero('Parcela (4x semestrais)', r.parcela);
+    var html = '<div class="smRateLine"><span class="smRateBadge smRateBadgeZero">' + UI.esc(MODE_DESC.triton.split(' — ')[0]) + '</span></div>' +
+      UI.resultHero('Parcela (4x semestrais)', r.parcela);
     html += UI.secondaryGrid([
       { label: 'Entrada fixa (' + UI.pct1(r.entradaPct != null ? r.entradaPct : 0.6) + ')', value: UI.brl(r.entrada) },
       { label: 'Financiado', value: UI.brl(r.financiado) },

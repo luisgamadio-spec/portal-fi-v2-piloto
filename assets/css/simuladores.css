@@ -324,6 +324,9 @@
 .smEmphasisCardPrimary { border-color: var(--color-accent-primary); background: rgba(238, 75, 87, .07); }
 .smEmphasisValue { font-family: var(--font-mono); font-size: 1.375rem; font-weight: 500; font-variant-numeric: tabular-nums; margin: 4px 0 0; word-break: break-word; }
 .smEmphasisValuePrimary { font-size: 1.625rem; color: #ffecec; }
+/* valor nunca quebra no meio; no nível Grande, abaixo de 1280 px, os dois cards de destaque ficam um embaixo do outro */
+.smEmphasisValue { white-space: nowrap; word-break: normal; }
+@media (max-width: 1279px) { :root[data-fonte="grande"] .smEmphasisPair { grid-template-columns: 1fr; } }
 
 /* ---------- PORTAL-NEXT-08.3 Change 5: Taxas Subsidiadas comparison
    card grid (Gates 16-22), replacing the vertically-stacked rows. ---------- */
@@ -508,3 +511,30 @@
   .smBalloonRow { grid-template-columns: 1fr; }
   .resultHero .resultValue { font-size: 1.875rem; }
 }
+
+/* ---- Limite do balão (texto auxiliar logo abaixo da entrada) ---- */
+.smBalaoLimite { display: block; margin: -6px 0 14px; line-height: 1.45; font-size: 0.6875rem; color: var(--color-text-muted); } /* = .field .hint */
+.smBalaoLimite b { color: var(--color-text-primary); font-weight: 600; white-space: nowrap; }
+.smBalaoLimite.smBalaoLimiteAcima, .smBalaoLimite.smBalaoLimiteAcima b { color: var(--color-critical); }
+
+/* ---- Grade "Parcela por prazo": prazo em destaque, parcela continua principal ---- */
+.smTermGrid { grid-template-columns: repeat(var(--term-grid-cols, 6), minmax(0, 1fr)); }
+.smTermCard .term { font-size: 0.8125rem; font-weight: 600; color: var(--color-text-primary); letter-spacing: .01em; }
+.smTermCard .payment { white-space: nowrap; }
+
+/* ---- Selo da taxa (Coparticipado, Linear Seminovos, Taxas Subsidiadas, Triton) ---- */
+.smRateBadge {
+  display: inline-block; font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 600; white-space: nowrap;
+  color: var(--color-text-primary); background: var(--color-elevated-surface);
+  border: 1px solid var(--color-hairline-strong); border-radius: var(--radius-sm); padding: 2px 6px; line-height: 1.35;
+}
+.smRateBadge.smRateBadgeZero { color: #fff; background: var(--color-brand-red); border-color: var(--color-brand-red); }
+.smTermCard .rate { margin-top: 6px; }
+.smSubsidiadaGroupHead .smRateBadge { text-transform: none; letter-spacing: 0; font-size: 0.75rem; }
+.smSubsidiadaCardTaxa .smRateBadge { font-size: 0.6875rem; }
+.smRateLine { margin: 0 0 var(--space-3); }
+.smRateLine .smRateBadge { font-size: 0.8125rem; padding: 4px 10px; }
+
+/* ---- Plano Linear: formulário e "Parcela por prazo" com o mesmo topo e a mesma altura ---- */
+.smGrid.smGridEqual { align-items: stretch; }
+.smGrid.smGridEqual > .modPanelForm, .smGrid.smGridEqual > .modPanelResult { height: 100%; box-sizing: border-box; }

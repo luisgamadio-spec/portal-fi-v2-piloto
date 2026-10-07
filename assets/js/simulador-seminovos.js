@@ -390,6 +390,8 @@
   function renderModeArea() {
     disconnectTermGridObservers();
     document.getElementById('smModeDesc').textContent = MODE_DESC[currentMode] || '';
+    var mainGrid = document.getElementById('smFormRegion').parentNode;
+    if (mainGrid) mainGrid.classList.toggle('smGridEqual', currentMode === 'ratetable');
     document.getElementById('smFormRegion').innerHTML = formHtml(currentMode);
     document.getElementById('smResultRegion').innerHTML = UI.emptyBlock('Preencha os campos e clique em Calcular.');
     wireForm(currentMode);
@@ -452,7 +454,7 @@
   function wireResultTermGrid(itemCount) {
     var grid = document.querySelector('#smResultRegion .smTermGrid');
     if (!grid) return;
-    var ro = UI.wireTermResultGrid(grid, 110, itemCount);
+    var ro = UI.wireTermResultGrid(grid, 132, itemCount);
     if (ro) termGridObservers.push(ro);
   }
 
@@ -463,6 +465,7 @@
         if (tradAuthority.getState() !== 'READY') return authorityGateHtml(tradAuthority);
         return UI.moneyField('sBem', 'Valor do bem', 'R$ 80.000,00') +
           UI.entryField('sEntrada', 'Entrada', 'R$ 16.000,00', 'sBem') +
+          '<span class="hint smBalaoLimite" id="sBalaoLimite" aria-live="polite" hidden></span>' +
           UI.numberField('sAno', 'Ano do veículo', 2022, { min: 1900, max: 2099, hint: 'Tabelas cadastradas para 2017–2024 e 2025–2099.' }) +
           termGridFieldHtml('sPrazo', 'Prazo', TRAD_TERMS, 24) +
           '<div class="field"><label>Balões</label><div class="smBalloonList" id="sBaloesList"></div>' +
@@ -601,6 +604,7 @@
       });
       wireTermGrid('sPrazo', TRAD_TERMS.length);
       document.getElementById('sCalc').addEventListener('click', calcTradicional);
+      ligaBalaoLimite();
     } else if (mode === 'ratetable') {
       if (!wireAuthorityGate(linearRTAuthority, mode)) return;
       document.getElementById('sCalc').addEventListener('click', calcRateTable);
@@ -652,6 +656,36 @@
     }).join('') + '</div>';
     html += '<p class="smFootnote">Total de parcelas do plano: ' + prazo + '. Os meses com balão substituem o valor da parcela regular naquele mês por um valor especial (parcela + balão) — não são parcelas adicionais.</p>';
     return html;
+  }
+
+  // Limite do balão: a MESMA regra do motor (SN.calcularTradicional devolve
+  // `limite` = financiado × max da linha da tabela vigente para o prazo, a
+  // faixa de entrada e a faixa de ano). Chamado sem balões, só para ler o limite.
+  function updateBalaoLimite() {
+    var el = document.getElementById('sBalaoLimite');
+    if (!el) return;
+    var bem = UI.moneyVal('sBem'), ent = UI.moneyVal('sEntrada');
+    var prazo = Number(UI.getSegmentedValue('sPrazo'));
+    var r = (bem > 0 && ent > 0 && prazo) ? SN.calcularTradicional({ bem: bem, entrada: ent, prazo: prazo, ano: UI.numVal('sAno'), baloes: [], tabelaTradicional: tradAuthority.getAuthority() }) : null;
+    if (!r || r.error || r.empty || !(r.limite > 0)) { el.hidden = true; el.innerHTML = ''; return; }
+    var total = balloons.filter(function (b) { return b.mes && b.valor; }).slice(0, MAX_BALOES).reduce(function (s, b) { return s + b.valor; }, 0);
+    el.hidden = false;
+    if (total > r.limite + 1e-6) {
+      el.className = 'hint smBalaoLimite smBalaoLimiteAcima';
+      el.innerHTML = 'Acima do limite de <b>' + UI.esc(UI.brl(r.limite)) + '</b>';
+    } else {
+      el.className = 'hint smBalaoLimite';
+      el.innerHTML = 'Balão máximo: <b>' + UI.esc(UI.brl(r.limite)) + '</b> (' + UI.esc(UI.pct1(r.limite / bem)) + ' do valor do veículo) em ' + prazo + 'x';
+    }
+  }
+  var balaoLimiteLigado = false;
+  function ligaBalaoLimite() {
+    if (!balaoLimiteLigado) {
+      balaoLimiteLigado = true;
+      document.addEventListener('input', function () { updateBalaoLimite(); });
+      document.addEventListener('click', function () { setTimeout(updateBalaoLimite, 0); });
+    }
+    updateBalaoLimite();
   }
 
   function calcTradicional() {

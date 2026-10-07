@@ -269,11 +269,19 @@
       return '<div><p class="kpiLabel">' + esc(it.label) + '</p><p class="val">' + esc(it.value) + '</p></div>';
     }).join('') + '</div>';
   }
+  // Selo da taxa ("0,19% a.m."). Taxa zero = argumento de venda: selo na cor
+  // de destaque, "Taxa 0% a.m.". Só apresentação: o número é o do motor.
+  function rateBadge(rate, prefixo) {
+    if (rate == null || !isFinite(rate)) return '';
+    var zero = Math.abs(rate) < 1e-9;
+    var texto = zero ? 'Taxa 0% a.m.' : (prefixo ? 'Taxa ' : '') + pct2(rate) + ' a.m.';
+    return '<span class="smRateBadge' + (zero ? ' smRateBadgeZero' : '') + '">' + esc(texto) + '</span>';
+  }
   function termGrid(items) {
     // items: [{prazo, payment (number|null), rate (number|null), best (bool)}]
     return '<div class="smTermGrid">' + items.map(function (it) {
       return '<div class="smTermCard' + (it.best ? ' best' : '') + '"><div class="term">' + it.prazo + 'x</div>' +
-        (it.payment != null ? '<div class="payment">' + esc(brl(it.payment)) + '</div>' + (it.rate != null ? '<div class="rate">' + esc(pct2(it.rate)) + ' a.m.</div>' : '') : '<div class="unavailable">—</div>') +
+        (it.payment != null ? '<div class="payment">' + esc(brl(it.payment)) + '</div>' + (it.rate != null ? '<div class="rate">' + rateBadge(it.rate) + '</div>' : '') : '<div class="unavailable">—</div>') +
         '</div>';
     }).join('') + '</div>';
   }
@@ -356,7 +364,7 @@
     getSegmentedValue: getSegmentedValue, wireSegmented: wireSegmented, wireMoneyMask: wireMoneyMask,
     formatMoneyTyping: formatMoneyTyping, formatPercentTyping: formatPercentTyping,
     moneyVal: moneyVal, numVal: numVal, textVal: textVal,
-    resultHero: resultHero, secondaryGrid: secondaryGrid, termGrid: termGrid,
+    resultHero: resultHero, secondaryGrid: secondaryGrid, termGrid: termGrid, rateBadge: rateBadge,
     errorBlock: errorBlock, emptyBlock: emptyBlock, warningBlock: warningBlock,
     balancedColumns: balancedColumns, balancedColumnsExact: balancedColumnsExact, wireTermResultGrid: wireTermResultGrid
   };

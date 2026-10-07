@@ -57,8 +57,22 @@
     // protection: request disallowed") must never again surface as a
     // generic RPC_ERROR -- classifyError() below detects it by message
     // before falling through to the generic branch.
-    CAPTCHA_FAILED: 'CAPTCHA_FAILED'
+    CAPTCHA_FAILED: 'CAPTCHA_FAILED',
+    // Paridade com o v1 (trocarSenhaObrigatoria): perfil com primeiro_acesso
+    // pendente só entra no Portal depois de definir uma nova senha. O
+    // contexto autorizado fica guardado à parte e só vira o contexto real
+    // (AUTHORIZED) após a troca concluída no servidor.
+    PASSWORD_CHANGE_REQUIRED: 'PASSWORD_CHANGE_REQUIRED'
   };
+  var TROCA_SENHA_KEY = 'nxTrocaSenhaObrigatoria';
+  function trocaPendente(v) {
+    try {
+      if (v === undefined) return window.sessionStorage.getItem(TROCA_SENHA_KEY) === '1';
+      if (v) window.sessionStorage.setItem(TROCA_SENHA_KEY, '1'); else window.sessionStorage.removeItem(TROCA_SENHA_KEY);
+    } catch (e) { /* sem sessionStorage: a troca continua exigida nesta carga da página */ }
+    return !!v;
+  }
+  var pendingContext = null;
 
   var state = STATES.INITIALIZING_SESSION;
   var context = null; // Auth Context, null unless state === AUTHORIZED
@@ -122,15 +136,29 @@
   // Shared by boot() and login() -- once a Supabase session exists,
   // resolving the portal profile and module permissions is identical
   // either way.
-  function resolveAfterSession() {
+  // gate (opcional): função que devolve uma promessa de "precisa trocar a
+  // senha?" -- chamada depois de resolver perfil/permissões e ANTES de
+  // liberar o Portal. Uma falha do gate trata-se como falha do login.
+  function resolveAfterSession(gate) {
     setState(STATES.AUTHENTICATED_RESOLVING_PROFILE);
     return window.NX_AUTH.resolveAuthorizedProfile().then(function (profile) {
       return window.NX_AUTH.resolveAllowedModules().then(function (allowedModuleIds) {
-        context = buildContext(profile, allowedModuleIds);
-        setState(STATES.AUTHORIZED);
+        var ctx = buildContext(profile, allowedModuleIds);
+        return Promise.resolve(gate ? gate() : false).then(function (precisaTrocar) {
+          if (precisaTrocar) {
+            trocaPendente(true);
+            pendingContext = ctx;
+            context = null;
+            setState(STATES.PASSWORD_CHANGE_REQUIRED);
+            return;
+          }
+          context = ctx;
+          setState(STATES.AUTHORIZED);
+        });
       });
     }).catch(function (err) {
       context = null;
+      pendingContext = null;
       setState(classifyError(err), err);
     });
   }
@@ -151,10 +179,12 @@
       }
       return window.NX_AUTH.getSession().then(function (session) {
         if (!session) {
+          trocaPendente(false);
           setState(STATES.SIGNED_OUT);
           return;
         }
-        return resolveAfterSession();
+        // recarga da página no meio de uma troca obrigatória: continua exigindo a troca
+        return resolveAfterSession(function () { return trocaPendente(); });
       }).catch(function (err) {
         setState(classifyError(err), err);
       });
@@ -173,7 +203,15 @@
       aviso = null;
       return window.NX_AUTH.signIn(email, password, captchaToken).then(function () {
         if (guard()) guard().iniciarSessao(); // the 10 h limit counts from this login
-        return resolveAfterSession();
+        // Paridade com o v1: registrar_meu_login (ultimo_login) só após login
+        // interativo, nunca no boot; ele também informa se a troca de senha
+        // é obrigatória. Falhou -> o login falha e a sessão é encerrada (como no v1).
+        return resolveAfterSession(function () {
+          if (typeof window.NX_AUTH.registerLogin !== 'function') return false;
+          return window.NX_AUTH.registerLogin().then(function (r) { return !!(r && r.primeiroAcesso); }, function (err) {
+            return window.NX_AUTH.signOut().catch(function () {}).then(function () { throw err; });
+          });
+        });
       }).catch(function (err) {
         context = null;
         var msg = String((err && err.message) || err || '');
@@ -185,7 +223,29 @@
       });
     },
 
+    // Troca de senha obrigatória: nova senha (mín. 8, confirmada) -> Auth ->
+    // operational_complete_password_change -> só então AUTHORIZED.
+    completePasswordChange: function (novaSenha, confirmacao) {
+      if (state !== STATES.PASSWORD_CHANGE_REQUIRED || !pendingContext) return Promise.reject(new Error('Nenhuma troca de senha pendente.'));
+      if (!novaSenha || String(novaSenha).length < 8) return Promise.reject(new Error('A nova senha precisa ter no mínimo 8 caracteres.'));
+      if (novaSenha !== confirmacao) return Promise.reject(new Error('As senhas não conferem.'));
+      return window.NX_AUTH.updatePassword(novaSenha).then(function () {
+        return window.NX_AUTH.completePasswordChange();
+      }).then(function () {
+        trocaPendente(false);
+        context = pendingContext;
+        pendingContext = null;
+        setState(STATES.AUTHORIZED);
+      });
+    },
+    cancelPasswordChange: function () {
+      pendingContext = null;
+      return window.NX_AUTH_CORE.logout();
+    },
+
     logout: function () {
+      trocaPendente(false);
+      pendingContext = null;
       if (guard()) guard().limparSessao();
       return window.NX_AUTH.signOut().then(function () {
         context = null;

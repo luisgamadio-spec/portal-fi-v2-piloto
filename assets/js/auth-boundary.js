@@ -183,6 +183,35 @@
       });
     },
 
+    // Paridade com o v1 (auditoria de 07/10/2026): registrar_meu_login grava
+    // usuarios.ultimo_login e zera tentativas_login para o próprio usuário
+    // (auth.uid()), logo após um login interativo -- o v1 faz o mesmo em
+    // syncSupabaseUsuario. Da linha devolvida só se lê primeiro_acesso
+    // (troca de senha obrigatória, como no v1); o resto é descartado.
+    registerLogin: function () {
+      return client.rpc('registrar_meu_login').then(function (result) {
+        if (result.error) throw result.error;
+        var row = Array.isArray(result.data) ? result.data[0] : result.data;
+        return { primeiroAcesso: !!(row && row.primeiro_acesso === true) };
+      });
+    },
+
+    // Troca de senha obrigatória no 1º acesso (paridade com o v1,
+    // trocarSenhaObrigatoria): nova senha no Auth do próprio usuário e
+    // depois operational_complete_password_change (primeiro_acesso=false).
+    updatePassword: function (novaSenha) {
+      return client.auth.updateUser({ password: novaSenha }).then(function (result) {
+        if (result.error) throw result.error;
+        return true;
+      });
+    },
+    completePasswordChange: function () {
+      return client.rpc('operational_complete_password_change').then(function (result) {
+        if (result.error) throw result.error;
+        return true;
+      });
+    },
+
     // scope 'local': ends only THIS tab's session (the default 'global' would also end
     // the independent sessions of the user's other tabs).
     signOut: function () {

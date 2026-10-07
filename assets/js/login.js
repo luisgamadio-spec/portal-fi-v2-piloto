@@ -224,6 +224,22 @@
                 '<div id="loginStatus" class="loginStatus" role="status" aria-live="polite" hidden></div>' +
                 '<button type="submit" id="loginSubmit" class="loginSubmit">Entrar</button>' +
               '</form>' +
+              // Troca de senha obrigatória no 1º acesso (paridade com o v1):
+              // só aparece no estado PASSWORD_CHANGE_REQUIRED.
+              '<form id="loginTrocaSenhaForm" novalidate hidden>' +
+                '<p class="loginSubtitle" id="loginTrocaSenhaIntro">Por segurança, defina uma nova senha antes de entrar (mínimo de 8 caracteres).</p>' +
+                '<div class="loginField">' +
+                  '<label for="loginNovaSenha">Nova senha</label>' +
+                  '<input id="loginNovaSenha" name="nova-senha" type="password" autocomplete="new-password" minlength="8" required>' +
+                '</div>' +
+                '<div class="loginField">' +
+                  '<label for="loginNovaSenhaConf">Confirme a nova senha</label>' +
+                  '<input id="loginNovaSenhaConf" name="nova-senha-confirmacao" type="password" autocomplete="new-password" minlength="8" required>' +
+                '</div>' +
+                '<div id="loginTrocaStatus" class="loginStatus" role="status" aria-live="polite" hidden></div>' +
+                '<button type="submit" id="loginTrocaSubmit" class="loginSubmit">Salvar nova senha e entrar</button>' +
+                '<button type="button" id="loginTrocaCancel" class="loginAssistLink">Cancelar e sair</button>' +
+              '</form>' +
               '<div class="loginAssist">' +
                 '<details id="passwordRecoveryDetails">' +
                   '<summary class="loginAssistLink">Esqueci minha senha</summary>' +
@@ -285,8 +301,59 @@
         renderStatus('Não foi possível concluir a verificação de segurança antes de entrar. Tente novamente.', 'error');
       });
     });
+    var trocaForm = document.getElementById('loginTrocaSenhaForm');
+    var trocando = false;
+    function trocaStatus(text, kind) {
+      var el = document.getElementById('loginTrocaStatus');
+      if (!el) return;
+      if (!text) { el.hidden = true; el.textContent = ''; return; }
+      el.hidden = false;
+      el.className = 'loginStatus loginStatus' + (kind === 'error' ? 'Error' : 'Info');
+      el.textContent = text;
+    }
+    trocaForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      if (trocando) return;
+      var nova = document.getElementById('loginNovaSenha').value;
+      var conf = document.getElementById('loginNovaSenhaConf').value;
+      if (!nova || nova.length < 8) { trocaStatus('A nova senha precisa ter no mínimo 8 caracteres.', 'error'); return; }
+      if (nova !== conf) { trocaStatus('As senhas não conferem.', 'error'); return; }
+      trocando = true;
+      var btn = document.getElementById('loginTrocaSubmit');
+      btn.disabled = true; btn.textContent = 'Salvando…';
+      trocaStatus(null);
+      window.NX_AUTH_CORE.completePasswordChange(nova, conf).then(function () {
+        document.getElementById('loginNovaSenha').value = '';
+        document.getElementById('loginNovaSenhaConf').value = '';
+      }, function (err) {
+        trocaStatus('Não foi possível atualizar a senha' + (err && err.message ? ': ' + err.message : '.'), 'error');
+      }).then(function () {
+        trocando = false;
+        btn.disabled = false; btn.textContent = 'Salvar nova senha e entrar';
+      });
+    });
+    document.getElementById('loginTrocaCancel').addEventListener('click', function () {
+      document.getElementById('loginNovaSenha').value = '';
+      document.getElementById('loginNovaSenhaConf').value = '';
+      window.NX_AUTH_CORE.cancelPasswordChange();
+    });
     mounted = true;
     return root;
+  }
+
+  // Alterna o cartão entre o login normal e a troca de senha obrigatória.
+  function showTrocaSenha(on) {
+    var form = document.getElementById('loginForm');
+    var troca = document.getElementById('loginTrocaSenhaForm');
+    if (!form || !troca) return;
+    form.hidden = !!on;
+    troca.hidden = !on;
+    Array.prototype.forEach.call(document.querySelectorAll('#nxLoginRoot .loginAssist'), function (el) { el.hidden = !!on; });
+    var title = document.querySelector('#nxLoginRoot .loginTitle');
+    var sub = document.querySelector('#nxLoginRoot .loginCardHead .loginSubtitle');
+    if (title) title.textContent = on ? 'Troca de senha obrigatória' : 'Acessar o Portal';
+    if (sub) sub.textContent = on ? 'Primeiro acesso: crie a sua senha pessoal.' : 'Entre com sua conta para continuar.';
+    if (on) { var f = document.getElementById('loginNovaSenha'); if (f) f.focus(); }
   }
 
   function setSubmitting(isSubmitting) {
@@ -324,6 +391,9 @@
       var STATES = window.NX_AUTH_CORE.STATES;
       STATE_MESSAGES = messagesFor(STATES);
       var state = window.NX_AUTH_CORE.getState();
+
+      showTrocaSenha(state === STATES.PASSWORD_CHANGE_REQUIRED);
+      if (state === STATES.PASSWORD_CHANGE_REQUIRED) { submitting = false; setSubmitting(false); return; }
 
       if (state === STATES.AUTHENTICATING || state === STATES.AUTHENTICATED_RESOLVING_PROFILE) {
         submitting = true;

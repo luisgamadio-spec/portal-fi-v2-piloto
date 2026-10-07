@@ -609,8 +609,18 @@
       repaintScuOnly();
       return;
     }
-    GOVERNED.loadGovernedUtilization(currentDateStart, currentDateEnd, { signal: controller.signal }).then(
-      function (rows) {
+    // Score out/2026 (opção 1): com dias sem dados de telemetria no período,
+    // busca também as simulações só dos trechos COM dados (mesma RPC
+    // governada, um pedido por trecho). A identidade continua vindo do
+    // período inteiro, exatamente como antes.
+    var CONV_VM = window.NX_SCORE_CONVERSION_VM;
+    var split = CONV_VM && CONV_VM.splitPeriodByGaps ? CONV_VM.splitPeriodByGaps(currentDateStart, currentDateEnd, todayIso()) : { hasGap: false };
+    var dataPartsFetch = split.hasGap
+      ? Promise.all(split.dataParts.map(function (p) { return GOVERNED.loadGovernedUtilization(p.start, p.end, { signal: controller.signal }); }))
+      : Promise.resolve(null);
+    Promise.all([GOVERNED.loadGovernedUtilization(currentDateStart, currentDateEnd, { signal: controller.signal }), dataPartsFetch]).then(
+      function (both) {
+        var rows = both[0];
         if (mySeq !== scuAsyncSeq) return;
         // A RPC governada não retorna telemetry_started_at (contrato
         // mínimo, section 4 da wave de desenho) -- reaproveita a MESMA
@@ -619,7 +629,18 @@
         // MIN(started_at) = 2026-08-17, mesmo dia desta constante).
         var epochIso = INTEL_VM.TELEMETRY_EPOCH_FALLBACK_ISO;
         var coverage = INTEL_VM.resolveComparableWindow(currentDateStart, currentDateEnd, epochIso);
-        scuConversionCache = { periodoKey: pk, governedRows: rows, coverage: coverage, fetchFailed: false };
+        var gapInfo = null;
+        if (split.hasGap) {
+          var simsData = {};
+          (both[1] || []).forEach(function (partRows) {
+            (partRows || []).forEach(function (r) {
+              var k = r.usuario_id + '|' + String(r.department || '').toUpperCase();
+              simsData[k] = (simsData[k] || 0) + (Number(r.simulations) || 0);
+            });
+          });
+          gapInfo = { dataParts: split.dataParts, excluded: split.excluded, simsData: simsData };
+        }
+        scuConversionCache = { periodoKey: pk, governedRows: rows, coverage: coverage, fetchFailed: false, gapInfo: gapInfo };
         repaintScuOnly();
       },
       function (err) {
@@ -701,6 +722,26 @@
       usageByUsuarioId[r.usuario_id + '|' + String(r.department || '').toUpperCase()] = { simulations: Number(r.simulations) || 0 };
     });
 
+    // Score out/2026 (opção 1): vendas/financiamentos só dos dias COM dados,
+    // pela MESMA cadeia oficial (buildRealResult + calcScores congelado)
+    // aplicada ao payload cru já carregado, filtrado por data -- nada recalculado à mão.
+    var gapInfo = scuConversionCache.gapInfo;
+    var dataDaysByRow = null;
+    if (gapInfo && rawScorePayload && window.NX_SCORE_REAL_VIEW_MODEL && window.NX_SCORE_ADAPTER) {
+      var inData = function (x) { return CONV.isInParts(x && x.date, gapInfo.dataParts); };
+      var sub = {};
+      for (var pkey in rawScorePayload) sub[pkey] = rawScorePayload[pkey];
+      sub.sales = (rawScorePayload.sales || []).filter(inData);
+      sub.finance = (rawScorePayload.finance || []).filter(inData);
+      try {
+        var mappedSub = window.NX_SCORE_REAL_VIEW_MODEL.buildRealResult(sub);
+        dataDaysByRow = {};
+        window.NX_SCORE_ADAPTER.compute(mappedSub.sales, mappedSub.fins).forEach(function (o) {
+          dataDaysByRow[rowKey(o)] = { vendas: Number(o.vendas) || 0, fin: Number(o.fin) || 0 };
+        });
+      } catch (e) { dataDaysByRow = null; }
+    }
+
     (rows || []).forEach(function (r) {
       var key = rowKey(r);
 
@@ -727,14 +768,23 @@
       // "não veio nada" aqui significa genuinamente "zero simulações",
       // nunca "sem permissão" (isso já teria sido um erro 42501 tratado
       // acima, em fetchFailed).
-      var u = usageByUsuarioId[idEntry.usuarioId + '|' + String(r.dept || '').toUpperCase()] || null;
+      var usageKey = idEntry.usuarioId + '|' + String(r.dept || '').toUpperCase();
+      var u = usageByUsuarioId[usageKey] || null;
       var S = u ? u.simulations : 0;
       var V = Number(r.vendas) || 0;
       var F = Number(r.fin) || 0;
-      var cls = CONV.classify(S, V, F);
+      var cls;
+      if (gapInfo && dataDaysByRow) {
+        var dd = dataDaysByRow[key] || { vendas: 0, fin: 0 };
+        cls = CONV.classifyExcludingGap(gapInfo.simsData[usageKey] || 0, V, F, dd.vendas, dd.fin);
+        S = cls.S;
+      } else {
+        cls = CONV.classify(S, V, F);
+      }
       lookup[key] = {
         usageStatus: 'VINCULADO',
         convStatus: cls.status, atencao: cls.atencao, S: S, V: V, F: F,
+        gapAdjusted: !!cls.gapAdjusted, Vd: cls.Vd, Fd: cls.Fd, excluded: cls.gapAdjusted ? gapInfo.excluded : null,
         u: { disponivel: true, utilizacaoPontos: cls.pontos, conversaoPontos: cls.conversao, utilizacaoSubPontos: cls.utilizacao, inconsistente: cls.inconsistente },
         total: scConversionTotal(r, VM, cls.pontos)
       };
@@ -913,6 +963,7 @@
       '<div class="scCriterionMeta"><span>Vendas: ' + entry.V + ' · Financiamentos: ' + entry.F + ' · Simulações: ' + entry.S + ' · Penetração F/V: ' + penetracao + '</span></div>' +
       '<div class="scMeter"><span style="width:' + widthPct.toFixed(1) + '%"></span></div>' +
       '<p class="scAmostraNote">Referência de utilização: 2 simulações por venda.</p>' +
+      (entry.gapAdjusted ? '<p class="scAmostraNote">Dias sem dados de utilização excluídos do cálculo (' + esc((entry.excluded || []).map(function (x) { return x.start.split('-').reverse().join('/') + (x.end !== x.start ? ' a ' + x.end.split('-').reverse().join('/') : ''); }).join(', ')) + '): utilização medida com ' + entry.S + ' simulação(ões) e ' + entry.Vd + ' venda(s) dos dias com dados; conversão no período inteiro.</p>' : '') +
       '<p class="scAmostraNote">Status comercial: ' + esc(statusLabel) + (entry.atencao ? ' <span class="sciMuted">(marcação Atenção)</span>' : '') + (u.inconsistente ? ' <span class="sciMuted">— financiamentos acima das vendas: possível inconsistência comercial</span>' : '') + '</p>' +
       '<p class="scAmostraNote">Relação agregada por vendedor, departamento e período — não indica que uma simulação específica originou um financiamento específico.</p>' +
       '</div>';

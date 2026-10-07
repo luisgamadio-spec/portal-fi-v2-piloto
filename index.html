@@ -4,26 +4,26 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Portal F&amp;I</title>
-<link rel="stylesheet" href="assets/css/vendor/fonts.css">
-<link rel="stylesheet" href="assets/css/vendor/design-tokens.css">
-<link rel="stylesheet" href="assets/css/font-scale.css">
+<link rel="stylesheet" href="assets/css/vendor/fonts.css?v=fe06be3b63">
+<link rel="stylesheet" href="assets/css/vendor/design-tokens.css?v=55bfed53ff">
+<link rel="stylesheet" href="assets/css/font-scale.css?v=90e952d1fa">
 <script>try{if(localStorage.getItem('nxFonte')==='grande')document.documentElement.setAttribute('data-fonte','grande');}catch(e){}</script>
-<link rel="stylesheet" href="assets/css/shell.css">
-<link rel="stylesheet" href="assets/css/login.css">
-<link rel="stylesheet" href="assets/css/landing.css">
-<link rel="stylesheet" href="assets/css/module-system.css">
-<link rel="stylesheet" href="assets/css/score.css">
-<link rel="stylesheet" href="assets/css/coparticipado.css">
-<link rel="stylesheet" href="assets/css/gestao.css">
-<link rel="stylesheet" href="assets/css/dashbi.css">
-<link rel="stylesheet" href="assets/css/simuladores.css">
-<link rel="stylesheet" href="assets/css/painel-analista-fi.css">
-<link rel="stylesheet" href="assets/css/central-atendimento-fi.css">
-<link rel="stylesheet" href="assets/css/salarios-comissoes.css">
-<link rel="stylesheet" href="assets/css/intelligence.css">
-<link rel="stylesheet" href="assets/css/bi-chat.css">
-<link rel="stylesheet" href="assets/css/shell-admin.css">
-<link rel="stylesheet" href="assets/css/launch-experience.css">
+<link rel="stylesheet" href="assets/css/shell.css?v=cf05a2d083">
+<link rel="stylesheet" href="assets/css/login.css?v=1fe648ea1d">
+<link rel="stylesheet" href="assets/css/landing.css?v=983dada572">
+<link rel="stylesheet" href="assets/css/module-system.css?v=8ef63e1be4">
+<link rel="stylesheet" href="assets/css/score.css?v=c325a5ddf6">
+<link rel="stylesheet" href="assets/css/coparticipado.css?v=dce63e8779">
+<link rel="stylesheet" href="assets/css/gestao.css?v=3b35f0871c">
+<link rel="stylesheet" href="assets/css/dashbi.css?v=a1f7ff82d1">
+<link rel="stylesheet" href="assets/css/simuladores.css?v=dc449d3157">
+<link rel="stylesheet" href="assets/css/painel-analista-fi.css?v=5147347a51">
+<link rel="stylesheet" href="assets/css/central-atendimento-fi.css?v=b3a1e91ea2">
+<link rel="stylesheet" href="assets/css/salarios-comissoes.css?v=3bd3e1ba12">
+<link rel="stylesheet" href="assets/css/intelligence.css?v=f6b1317154">
+<link rel="stylesheet" href="assets/css/bi-chat.css?v=3436c15061">
+<link rel="stylesheet" href="assets/css/shell-admin.css?v=c205eed624">
+<link rel="stylesheet" href="assets/css/launch-experience.css?v=5a6c079917">
 </head>
 <body>
 
@@ -42,7 +42,7 @@
         <button type="button" class="pNavTrigger" id="pNavTrigger" aria-expanded="false" aria-controls="pGlobalNav" aria-label="Abrir navegação">
           <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M3 6h14"/><path d="M3 10h14"/><path d="M3 14h14"/></svg>
         </button>
-        <img class="pHeaderLogo" src="assets/images/brabus-logo.png" alt="Grupo Brabus Mitsubishi">
+        <img class="pHeaderLogo" src="assets/images/brabus-logo.png?v=3de34064e1" alt="Grupo Brabus Mitsubishi">
         <span class="pBreadcrumb" id="pBreadcrumb"></span>
         <div class="pUserArea" id="pUserArea"></div>
       </div>
@@ -77,17 +77,17 @@
   </aside>
 </div>
 
-<script src="assets/js/vendor/parametric-catalog.js"></script>
-<script src="assets/js/vendor/engine.js"></script>
-<script src="assets/js/environment-guard.js"></script>
-<script src="assets/js/network-guard.js"></script>
+<script src="assets/js/vendor/parametric-catalog.js?v=0c0b135365"></script>
+<script src="assets/js/vendor/engine.js?v=47aee884ab"></script>
+<script src="assets/js/environment-guard.js?v=deb510b925"></script>
+<script src="assets/js/network-guard.js?v=877d3c3ffb"></script>
 <!-- IA-V2-2 -- committed default is mode:'fixture', safe on every host
      (see intelligence-runtime-config.js's own header). The local
      override below only ever loads on localhost/127.0.0.1, mirroring
      the exact same convention the Secure repo already uses for its own
      portal-runtime-config.local.js -- never present unless a developer
      creates it on their own machine from the .example.js file. -->
-<script src="assets/js/intelligence-runtime-config.js"></script>
+<script src="assets/js/intelligence-runtime-config.js?v=5e258b9be2"></script>
 <script>
 // GL-ENV-AUTH-WRITE-BOUNDARY -- exact-match only (no wildcard, no
 // *.github.io), three mutually-exclusive real-credentialed overrides.
@@ -104,7 +104,7 @@ if(location.hostname==='127.0.0.1'||location.hostname==='localhost'){
   // Proven GitHub Pages HOMOLOGATION hostname -- MUST NEVER be treated
   // as production (Human Environment Authority, GL-ENV-AUTH-WRITE-
   // BOUNDARY). Loads only the homolog config (portal-ai-homolog).
-  document.write('<script src="assets/js/intelligence-runtime-config.homolog.js"><\/script>');
+  document.write('<script src="assets/js/intelligence-runtime-config.homolog.js?v=e4d8671092"><\/script>');
 } else if(location.hostname==='brabus.blistiq.com.br'){
   // Human-designated FUTURE V2 production hostname. Currently serves
   // the existing V1/Secure portal's own separate deployment -- this
@@ -115,34 +115,34 @@ if(location.hostname==='127.0.0.1'||location.hostname==='localhost'){
   // (portal-ai, not portal-ai-homolog) so that, once V2 IS deployed
   // there, auth and write-safety already resolve correctly without a
   // further code change.
-  document.write('<script src="assets/js/intelligence-runtime-config.production.js"><\/script>');
+  document.write('<script src="assets/js/intelligence-runtime-config.production.js?v=a2363c6fe1"><\/script>');
 } else if(location.hostname==='v2.brabus.blistiq.com.br'){
   // PILOTO de produção do V2 (repositório portal-fi-v2-piloto): config própria,
   // AUTHORIZED_PRODUCTION só neste host -- o Painel Master grava aqui.
-  document.write('<script src="assets/js/intelligence-runtime-config.piloto.js"><\/script>');
+  document.write('<script src="assets/js/intelligence-runtime-config.piloto.js?v=cd23ab9ed0"><\/script>');
 }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.0" integrity="sha384-De+l/Df7qym5QBDVocD3+gW1S7IjR3epf+6KbRDjB3FCCzM/LqVTwqckT6FhFar8" crossorigin="anonymous"></script>
-<script src="assets/js/session-guard.js"></script>
-<script src="assets/js/auth-boundary.js"></script>
-<script src="assets/js/auth-core.js"></script>
-<script src="assets/js/login.js"></script>
-<script src="assets/js/first-access.js"></script>
-<script src="assets/js/password-recovery.js"></script>
-<script src="assets/js/business-adapter-boundary.js"></script>
+<script src="assets/js/session-guard.js?v=be2f547ab0"></script>
+<script src="assets/js/auth-boundary.js?v=d84887e185"></script>
+<script src="assets/js/auth-core.js?v=340264d354"></script>
+<script src="assets/js/login.js?v=844146008d"></script>
+<script src="assets/js/first-access.js?v=68b5af8bd5"></script>
+<script src="assets/js/password-recovery.js?v=54b3f62a35"></script>
+<script src="assets/js/business-adapter-boundary.js?v=357c47bd28"></script>
 <!-- SIM-REG-01: "Falar com um Analista" shared attendance authority --
      loaded before Landing/Novos/Seminovos (its 3 real consumers) so
      window.NX_FI_ATENDIMENTO is always available when their own click
      handlers wire up. Reuses the same window.NX_AUTH/
      window.NX_INTELLIGENCE_CONFIG boundary business-adapter-boundary.js
      already established -- 0 new Supabase client, 0 new backend. -->
-<script src="assets/js/adapters/fi-atendimento-real-provider.js"></script>
-<script src="assets/js/fi-atendimento.js"></script>
-<script src="assets/js/router.js"></script>
-<script src="assets/js/module-registry.js"></script>
-<script src="assets/js/design-trace.js"></script>
-<script src="assets/js/font-scale.js"></script>
-<script src="assets/js/landing.js"></script>
+<script src="assets/js/adapters/fi-atendimento-real-provider.js?v=64d6be7513"></script>
+<script src="assets/js/fi-atendimento.js?v=0b3d08a717"></script>
+<script src="assets/js/router.js?v=e2f6ceb4b3"></script>
+<script src="assets/js/module-registry.js?v=eeaabf088a"></script>
+<script src="assets/js/design-trace.js?v=52aa14ffc2"></script>
+<script src="assets/js/font-scale.js?v=9ff81549b1"></script>
+<script src="assets/js/landing.js?v=c934a73ad8"></script>
 <!-- FC-2/FC-2.3 (GAP-003/GAP-004): xlsx-js-style is the EXACT library+
      version V1's OWN Coparticipado export (exportarCoparticipados(),
      modules/coparticipado.html -- a real, wired V1 production button,
@@ -154,10 +154,10 @@ if(location.hostname==='127.0.0.1'||location.hostname==='localhost'){
      briefly placed in Score (FC-2/FC-2.2) before Human UAT (FC-2.3)
      corrected its product placement to Coparticipado, its true V1 home. -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js" integrity="sha384-OUW9euuUyxyHcAhTqbhI+Iyb8LMssXt/cpz0yXhs9UWG2/R/uaWdakx/4cfww7Vb" crossorigin="anonymous"></script>
-<script src="assets/js/lib/xlsx-export-helper.js"></script>
-<script src="assets/js/adapters/score.adapter.js"></script>
-<script src="assets/js/adapters/score-real-provider.js"></script>
-<script src="assets/js/adapters/score-real-view-model.js"></script>
+<script src="assets/js/lib/xlsx-export-helper.js?v=ed5c0041ee"></script>
+<script src="assets/js/adapters/score.adapter.js?v=9e95bf8ea0"></script>
+<script src="assets/js/adapters/score-real-provider.js?v=27967828a2"></script>
+<script src="assets/js/adapters/score-real-view-model.js?v=ac0d549e34"></script>
 <!-- SCORE HOMOLOGADO (HUMAN_APPROVED) -- integração final do critério
      "Utilização + Conversão" (RPC governada score_utilization_
      conversion_scope_data, EXECUTE só para authenticated, escopo
@@ -168,84 +168,84 @@ if(location.hostname==='127.0.0.1'||location.hostname==='localhost'){
      removida por decisão de UAT. Os 3 arquivos *-experimental.js abaixo
      dão suporte ao modo de demonstração (fixture) apenas -- nunca usados
      por sessão real autenticada. -->
-<script src="assets/js/adapters/score-intelligence-view-model.js"></script>
-<script src="assets/js/adapters/score-calculation-proof-experimental.js"></script>
-<script src="assets/js/adapters/score-telemetry-integration-experimental.js"></script>
-<script src="assets/js/adapters/score-utilization-scoring-experimental.js"></script>
-<script src="assets/js/adapters/score-utilization-view-model.js"></script>
-<script src="assets/js/adapters/score-utilization-conversion-view-model.js"></script>
-<script src="assets/js/adapters/score-utilization-governed-provider.js"></script>
-<script src="assets/js/score.js"></script>
-<script src="assets/js/adapters/coparticipado.adapter.js"></script>
-<script src="assets/js/adapters/coparticipado-real-provider.js"></script>
-<script src="assets/js/adapters/coparticipado-governed-rates-provider.js"></script>
-<script src="assets/js/adapters/coparticipado-real-view-model.js"></script>
-<script src="assets/js/coparticipado.js"></script>
-<script src="assets/js/lookups/store-display.js"></script>
-<script src="assets/js/adapters/gestao-fixture-provider.js"></script>
-<script src="assets/js/adapters/gestao-real-provider.js"></script>
-<script src="assets/js/adapters/gestao.adapter.js"></script>
-<script src="assets/js/gestao.js"></script>
-<script src="assets/js/adapters/dashbi.adapter.js"></script>
-<script src="assets/js/adapters/dashbi-real-provider.js"></script>
-<script src="assets/js/adapters/dashbi-real-view-model.js"></script>
-<script src="assets/js/dashbi.js"></script>
-<script src="assets/js/adapters/simulador-shared.adapter.js"></script>
-<script src="assets/js/adapters/simulador-rates-provider.js"></script>
-<script src="assets/js/adapters/simulador-novos.adapter.js"></script>
-<script src="assets/js/adapters/simulador-seminovos.adapter.js"></script>
-<script src="assets/js/adapters/financiamento-campanha.adapter.js"></script>
-<script src="assets/js/adapters/cash-conversion.adapter.js"></script>
-<script src="assets/js/simuladores-shared.js"></script>
-<script src="assets/js/simulador-novos.js"></script>
-<script src="assets/js/simulador-seminovos.js"></script>
-<script src="assets/js/simulator-telemetry.js"></script>
-<script src="assets/js/adapters/painel-analista-fi-real-provider.js"></script>
-<script src="assets/js/painel-analista-fi.js"></script>
-<script src="assets/js/adapters/central-atendimento-fi-real-provider.js"></script>
-<script src="assets/js/central-atendimento-fi.js"></script>
+<script src="assets/js/adapters/score-intelligence-view-model.js?v=30ab6ef761"></script>
+<script src="assets/js/adapters/score-calculation-proof-experimental.js?v=41e077206d"></script>
+<script src="assets/js/adapters/score-telemetry-integration-experimental.js?v=5600e641db"></script>
+<script src="assets/js/adapters/score-utilization-scoring-experimental.js?v=81bd92eda3"></script>
+<script src="assets/js/adapters/score-utilization-view-model.js?v=930253063f"></script>
+<script src="assets/js/adapters/score-utilization-conversion-view-model.js?v=64f4573bb3"></script>
+<script src="assets/js/adapters/score-utilization-governed-provider.js?v=f2f402e053"></script>
+<script src="assets/js/score.js?v=3e6fdb8ab5"></script>
+<script src="assets/js/adapters/coparticipado.adapter.js?v=46af70fa83"></script>
+<script src="assets/js/adapters/coparticipado-real-provider.js?v=16a497c331"></script>
+<script src="assets/js/adapters/coparticipado-governed-rates-provider.js?v=ad47d34ce0"></script>
+<script src="assets/js/adapters/coparticipado-real-view-model.js?v=e0b1021f0b"></script>
+<script src="assets/js/coparticipado.js?v=b53689b9f8"></script>
+<script src="assets/js/lookups/store-display.js?v=29bf67f7c6"></script>
+<script src="assets/js/adapters/gestao-fixture-provider.js?v=f9265e5f0e"></script>
+<script src="assets/js/adapters/gestao-real-provider.js?v=13dc53a1f7"></script>
+<script src="assets/js/adapters/gestao.adapter.js?v=62f4abb003"></script>
+<script src="assets/js/gestao.js?v=996f73cfdf"></script>
+<script src="assets/js/adapters/dashbi.adapter.js?v=3d31c1b6d6"></script>
+<script src="assets/js/adapters/dashbi-real-provider.js?v=1e4ffddd83"></script>
+<script src="assets/js/adapters/dashbi-real-view-model.js?v=9c0550b754"></script>
+<script src="assets/js/dashbi.js?v=2d24e28be4"></script>
+<script src="assets/js/adapters/simulador-shared.adapter.js?v=611f3b46ab"></script>
+<script src="assets/js/adapters/simulador-rates-provider.js?v=3b5e3ac3cc"></script>
+<script src="assets/js/adapters/simulador-novos.adapter.js?v=439b960a9c"></script>
+<script src="assets/js/adapters/simulador-seminovos.adapter.js?v=3e1553a559"></script>
+<script src="assets/js/adapters/financiamento-campanha.adapter.js?v=9bcd83a0ca"></script>
+<script src="assets/js/adapters/cash-conversion.adapter.js?v=f2707719ef"></script>
+<script src="assets/js/simuladores-shared.js?v=7e4bc82ec7"></script>
+<script src="assets/js/simulador-novos.js?v=4ca5b76c27"></script>
+<script src="assets/js/simulador-seminovos.js?v=1a3274a621"></script>
+<script src="assets/js/simulator-telemetry.js?v=4431feb7a7"></script>
+<script src="assets/js/adapters/painel-analista-fi-real-provider.js?v=71c082e1db"></script>
+<script src="assets/js/painel-analista-fi.js?v=f0ac81bb1a"></script>
+<script src="assets/js/adapters/central-atendimento-fi-real-provider.js?v=09396051a0"></script>
+<script src="assets/js/central-atendimento-fi.js?v=704b8180ff"></script>
 <!-- RH-4D: Histórico consumes the canonical window.NX_MASTER_COMPETENCE_
      HISTORY_PROVIDER / _VM (loaded further below, Painel Master's own
      script block) via lazy window.* lookups inside salarios-comissoes.js
      -- no separate historical provider script tag needed here anymore. -->
-<script src="assets/js/adapters/salarios-comissoes-real-provider.js"></script>
-<script src="assets/js/salarios-comissoes.js"></script>
+<script src="assets/js/adapters/salarios-comissoes-real-provider.js?v=a5f51edba7"></script>
+<script src="assets/js/salarios-comissoes.js?v=430b8a0ed4"></script>
 <!-- Brabus Intelligence RESET -- shell-level launcher + drawer, visual
      shell only (no adapter, no state machine, no context provider, no
      voice). mounted once by shell.js's boot() calling
      NX_INTELLIGENCE_PANEL.mount(), same as before. -->
-<script src="assets/js/intelligence/bi-voice-orb.js"></script>
-<script src="assets/js/intelligence/intelligence-panel.js"></script>
-<script src="assets/js/adapters/master-users-provider.js"></script>
-<script src="assets/js/adapters/master-users-view-model.js"></script>
-<script src="assets/js/adapters/master-acessos-provider.js"></script>
-<script src="assets/js/adapters/master-acessos-view-model.js"></script>
-<script src="assets/js/adapters/master-audit-provider.js"></script>
-<script src="assets/js/adapters/master-audit-view-model.js"></script>
-<script src="assets/js/adapters/master-pendencias-provider.js"></script>
-<script src="assets/js/master-pendencias-view-model.js"></script>
-<script src="assets/js/adapters/master-gestao-bases-provider.js"></script>
-<script src="assets/js/master-gestao-bases-view-model.js"></script>
-<script src="assets/js/adapters/master-gestao-simuladores-provider.js"></script>
-<script src="assets/js/master-gestao-simuladores-view-model.js"></script>
-<script src="assets/js/adapters/master-config-provider.js"></script>
-<script src="assets/js/master-config-view-model.js"></script>
-<script src="assets/js/adapters/master-periodos-provider.js"></script>
-<script src="assets/js/master-periodos-view-model.js"></script>
-<script src="assets/js/adapters/master-absences-provider.js"></script>
-<script src="assets/js/master-absences-view-model.js"></script>
-<script src="assets/js/adapters/master-store-change-provider.js"></script>
-<script src="assets/js/master-store-change-view-model.js"></script>
-<script src="assets/js/adapters/master-simulator-usage-provider.js"></script>
-<script src="assets/js/master-simulator-usage-view-model.js"></script>
-<script src="assets/js/adapters/master-competence-history-provider.js"></script>
-<script src="assets/js/master-competence-history-view-model.js"></script>
-<script src="assets/js/adapters/master-competence-rhdp-export-engine.js"></script>
-<script src="assets/js/adapters/master-competence-closing-engine.js"></script>
-<script src="assets/js/adapters/master-competence-closing-provider.js"></script>
-<script src="assets/js/master-competence-closing-view-model.js"></script>
-<script src="assets/js/shell-admin.js"></script>
-<script src="assets/js/launch-experience.js"></script>
-<script src="assets/js/shell.js"></script>
+<script src="assets/js/intelligence/bi-voice-orb.js?v=7062cd573e"></script>
+<script src="assets/js/intelligence/intelligence-panel.js?v=3f21d6b260"></script>
+<script src="assets/js/adapters/master-users-provider.js?v=3919393e52"></script>
+<script src="assets/js/adapters/master-users-view-model.js?v=8b40561c31"></script>
+<script src="assets/js/adapters/master-acessos-provider.js?v=c3418e4391"></script>
+<script src="assets/js/adapters/master-acessos-view-model.js?v=7a0ed63dc7"></script>
+<script src="assets/js/adapters/master-audit-provider.js?v=333a0e2d8b"></script>
+<script src="assets/js/adapters/master-audit-view-model.js?v=442eab508d"></script>
+<script src="assets/js/adapters/master-pendencias-provider.js?v=afe6ffd6bb"></script>
+<script src="assets/js/master-pendencias-view-model.js?v=8035e9da5d"></script>
+<script src="assets/js/adapters/master-gestao-bases-provider.js?v=afc1c21de8"></script>
+<script src="assets/js/master-gestao-bases-view-model.js?v=c213277ecf"></script>
+<script src="assets/js/adapters/master-gestao-simuladores-provider.js?v=9d2903d14f"></script>
+<script src="assets/js/master-gestao-simuladores-view-model.js?v=0df30fa5cb"></script>
+<script src="assets/js/adapters/master-config-provider.js?v=8e317ad61c"></script>
+<script src="assets/js/master-config-view-model.js?v=e2acd45688"></script>
+<script src="assets/js/adapters/master-periodos-provider.js?v=bf9395a7ba"></script>
+<script src="assets/js/master-periodos-view-model.js?v=d1b3d4e7ca"></script>
+<script src="assets/js/adapters/master-absences-provider.js?v=496e51df84"></script>
+<script src="assets/js/master-absences-view-model.js?v=b331b09b87"></script>
+<script src="assets/js/adapters/master-store-change-provider.js?v=a6f94d51a4"></script>
+<script src="assets/js/master-store-change-view-model.js?v=df57553183"></script>
+<script src="assets/js/adapters/master-simulator-usage-provider.js?v=93798cc32d"></script>
+<script src="assets/js/master-simulator-usage-view-model.js?v=fc0745a664"></script>
+<script src="assets/js/adapters/master-competence-history-provider.js?v=61c68002a6"></script>
+<script src="assets/js/master-competence-history-view-model.js?v=7437fa3f8a"></script>
+<script src="assets/js/adapters/master-competence-rhdp-export-engine.js?v=9dd4d0510a"></script>
+<script src="assets/js/adapters/master-competence-closing-engine.js?v=751fb7cff6"></script>
+<script src="assets/js/adapters/master-competence-closing-provider.js?v=142dd2a4e3"></script>
+<script src="assets/js/master-competence-closing-view-model.js?v=128cd2adc5"></script>
+<script src="assets/js/shell-admin.js?v=54571bd241"></script>
+<script src="assets/js/launch-experience.js?v=a06f39c20f"></script>
+<script src="assets/js/shell.js?v=c4323ad1ad"></script>
 </body>
 </html>

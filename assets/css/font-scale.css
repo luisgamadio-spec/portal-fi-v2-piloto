@@ -1,0 +1,39 @@
+/* Escala global do texto. Todo font-size do Portal está em rem (N/16), então
+   o tamanho de TODO o texto -- módulos, simuladores, Painel Master e Brabus IA --
+   depende só desta regra no <html>. Nada de ajuste tela a tela.
+   - celular (até 768 px): como antes (1,00)
+   - 769 a 1023 px: +5%
+   - 1024 px ou mais: +11%
+   - nível "Grande" (botão A+ no topo, salvo no navegador): +15% sobre o padrão */
+:root {
+  --fs-base: 1;
+  --fs-user: 1;
+  --fs-scale: calc(var(--fs-base) * var(--fs-user));
+}
+@media (min-width: 769px) { :root { --fs-base: 1.05; } }
+@media (min-width: 1024px) { :root { --fs-base: 1.11; } }
+:root[data-fonte="grande"] { --fs-user: 1.15; }
+html { font-size: calc(100% * var(--fs-scale)); }
+
+/* botão A+ (topo, ao lado do usuário) */
+.pFontToggle {
+  font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: .02em;
+  min-width: 34px; height: 28px; padding: 0 8px; border-radius: var(--radius-sm);
+  border: 1px solid var(--color-hairline-strong); background: transparent; color: var(--color-text-secondary);
+  cursor: pointer; flex-shrink: 0;
+}
+.pFontToggle:hover { color: var(--color-text-primary); border-color: var(--color-text-muted); }
+.pFontToggle[aria-pressed="true"] { color: var(--color-text-primary); border-color: var(--color-accent-primary); }
+.pFontToggle:focus-visible { outline: 2px solid var(--color-accent-primary); outline-offset: 2px; }
+
+/* telas pequenas: o A+ cabe sem empurrar o topo (mesma regra de prioridade do topo:
+   o que é secundário encolhe primeiro -- nome do usuário com reticências mais cedo) */
+@media (max-width: 480px) {
+  .pUserArea { gap: 6px; }
+  .pFontToggle { min-width: 28px; height: 26px; padding: 0 5px; }
+  .pUserNameText { max-width: 48px; }
+  :root[data-fonte="grande"] .pUserNameText { max-width: 30px; }
+}
+@media (max-width: 340px) {
+  .pFontToggle { min-width: 26px; padding: 0 4px; }
+}

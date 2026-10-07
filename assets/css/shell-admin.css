@@ -12,10 +12,10 @@
 .maPage { display: flex; flex-direction: column; gap: var(--mod-space-control-gap); }
 
 .maSectionNav { display: flex; gap: var(--space-2); flex-wrap: wrap; padding-bottom: var(--mod-space-compact); border-bottom: 1px solid var(--mod-border); }
-.maSectionItem { font-family: var(--font-ui); font-size: 12.5px; font-weight: 500; padding: var(--space-1) var(--mod-space-compact); border-radius: var(--radius-sm); color: var(--color-text-secondary); }
+.maSectionItem { font-family: var(--font-ui); font-size: 0.7812rem; font-weight: 500; padding: var(--space-1) var(--mod-space-compact); border-radius: var(--radius-sm); color: var(--color-text-secondary); }
 .maSectionItemActive { color: var(--color-canvas); background: var(--color-text-primary); }
 .maSectionItemDisabled { opacity: .5; }
-.maSectionSoon { font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em; }
+.maSectionSoon { font-size: 0.6562rem; text-transform: uppercase; letter-spacing: .05em; }
 /* Painel Master Phase 3B: section nav items with a live sibling section
    are real <button>s (needed a click handler) -- reset native button
    chrome so they stay visually identical to the inert <span> items. */
@@ -92,7 +92,7 @@
    <td>. */
 .maNameCell { white-space: normal; overflow-wrap: anywhere; max-width: 260px; }
 .maNameCellInner { display: flex; flex-direction: column; gap: 2px; }
-.maSubtle { color: var(--color-text-secondary); font-size: 12px; overflow-wrap: anywhere; }
+.maSubtle { color: var(--color-text-secondary); font-size: 0.75rem; overflow-wrap: anywhere; }
 /* flex-wrap (not relying on inline-block's own text-flow wrapping) so
    the two badges reliably stack onto their own lines as a group when
    the cell is width-constrained -- inline-block wrapping alone left
@@ -114,9 +114,9 @@
 .maMobileCard { display: flex; flex-direction: column; gap: 4px; padding: var(--mod-space-compact); border: 1px solid var(--mod-border); border-radius: var(--radius-sm); margin-bottom: var(--space-2); cursor: pointer; }
 .maMobileCard:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
 .maMobileName { font-weight: 600; }
-.maMobileMeta { color: var(--color-text-secondary); font-size: 12.5px; }
+.maMobileMeta { color: var(--color-text-secondary); font-size: 0.7812rem; }
 
-.maBadge { display: inline-block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; padding: 2px 8px; border-radius: 999px; }
+.maBadge { display: inline-block; font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; padding: 2px 8px; border-radius: 999px; }
 .maBadgeInvited { background: var(--color-warning-soft, #fff3cd); color: var(--color-warning-strong, #8a6d1a); }
 .maBadgePending { background: var(--color-accent-soft, #e6f0ff); color: var(--color-accent-primary, #1a56db); }
 .maBadgeActive { background: var(--color-success-soft, #e3f7e8); color: var(--color-success-strong, #1a7f37); }
@@ -124,9 +124,9 @@
 
 .maDetail, .maConfirm { margin-top: var(--mod-space-control-gap); padding: var(--mod-space-control-gap); border: 1px solid var(--mod-border-strong); border-radius: var(--radius-sm); background: var(--mod-surface-panel-2); display: flex; flex-direction: column; gap: var(--space-2); }
 .maDetailHead { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
-.maDetailHead h2 { margin: 0; font-size: 16px; }
+.maDetailHead h2 { margin: 0; font-size: 1rem; }
 .maDetailField { display: flex; justify-content: space-between; gap: var(--space-2); padding: 4px 0; border-bottom: 1px solid var(--mod-border); }
-.maDetailLabel { color: var(--color-text-secondary); font-size: 12.5px; flex-shrink: 0; }
+.maDetailLabel { color: var(--color-text-secondary); font-size: 0.7812rem; flex-shrink: 0; }
 /* Painel Master Phase PM-4B.4: a flex item's default min-width is
    "auto" (content-based), so an unbroken long value (e.g. an e-mail,
    no spaces to wrap at) forced this row -- and the whole dialog -- wider
@@ -134,10 +134,10 @@
    PM-4B.2, different mechanism: flexbox min-width, not table auto-layout). */
 .maDetailValue { font-weight: 500; min-width: 0; overflow-wrap: anywhere; text-align: right; }
 .maDetailActions { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-top: var(--space-2); }
-.maWarnNote { color: var(--color-warning-strong, #8a6d1a); font-size: 12.5px; }
-.maFieldError { color: var(--mod-critical); font-size: 12.5px; }
+.maWarnNote { color: var(--color-warning-strong, #8a6d1a); font-size: 0.7812rem; }
+.maFieldError { color: var(--mod-critical); font-size: 0.7812rem; }
 
-.maConfirm h3 { margin: 0; font-size: 15px; }
+.maConfirm h3 { margin: 0; font-size: 0.9375rem; }
 
 @media (max-width: 480px) {
   .maDetailActions { flex-direction: column; }
@@ -149,16 +149,16 @@
    never BODY overflow); mobile uses grouped per-module cards, same
    .maDesktopOnly/.maMobileOnly 767px breakpoint as Usuários above, one
    data source (shell-admin.js's acessosState), zero duplicated logic. */
-.mamMasterNotice { padding: var(--mod-space-compact); border: 1px solid var(--mod-border-strong); border-radius: var(--radius-sm); background: var(--mod-surface-panel-2); font-size: 12.5px; }
-.mamDirtyBanner { padding: var(--mod-space-compact); border-radius: var(--radius-sm); background: var(--color-warning-soft, #fff3cd); color: var(--color-warning-strong, #8a6d1a); font-size: 12.5px; }
+.mamMasterNotice { padding: var(--mod-space-compact); border: 1px solid var(--mod-border-strong); border-radius: var(--radius-sm); background: var(--mod-surface-panel-2); font-size: 0.7812rem; }
+.mamDirtyBanner { padding: var(--mod-space-compact); border-radius: var(--radius-sm); background: var(--color-warning-soft, #fff3cd); color: var(--color-warning-strong, #8a6d1a); font-size: 0.7812rem; }
 
 .mamTable th, .mamTable td { text-align: center; vertical-align: middle; }
 .mamRowLabel { text-align: left; font-weight: 500; white-space: nowrap; }
-.mamColSub { font-weight: 400; color: var(--color-text-secondary); font-size: 10.5px; text-transform: uppercase; letter-spacing: .04em; }
+.mamColSub { font-weight: 400; color: var(--color-text-secondary); font-size: 0.6562rem; text-transform: uppercase; letter-spacing: .04em; }
 .mamCellTd input[type="checkbox"] { width: 18px; height: 18px; }
 .mamCellTd input[type="checkbox"]:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
 
-.mamAvailBadge { margin-top: 2px; font-size: 10.5px; font-weight: 500; }
+.mamAvailBadge { margin-top: 2px; font-size: 0.6562rem; font-weight: 500; }
 .mamAvailAVAILABLE { color: var(--color-success-strong, #1a7f37); }
 .mamAvailLEGACY_ONLY { color: var(--color-warning-strong, #8a6d1a); }
 .mamAvailCOMING_SOON { color: var(--color-text-secondary); }
@@ -166,12 +166,12 @@
 .mamMobileCard { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--mod-space-compact); border: 1px solid var(--mod-border); border-radius: var(--radius-sm); margin-bottom: var(--space-2); }
 .mamMobileCardHead { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-2); }
 .mamModuleLabel { font-weight: 600; }
-.mamMobileScopeRow { display: flex; align-items: center; gap: var(--space-2); padding: 4px 0; border-bottom: 1px solid var(--mod-border); font-size: 12.5px; }
+.mamMobileScopeRow { display: flex; align-items: center; gap: var(--space-2); padding: 4px 0; border-bottom: 1px solid var(--mod-border); font-size: 0.7812rem; }
 .mamMobileScopeRow:last-child { border-bottom: none; }
 .mamMobileScopeRow input[type="checkbox"] { width: 18px; height: 18px; flex-shrink: 0; }
 
 .mamConfirmSummary { display: flex; flex-direction: column; gap: var(--space-2); max-height: 240px; overflow-y: auto; }
-.mamConfirmItem { padding: var(--space-1) var(--mod-space-compact); border-radius: var(--radius-sm); font-size: 12.5px; border-left: 3px solid var(--mod-border-strong); }
+.mamConfirmItem { padding: var(--space-1) var(--mod-space-compact); border-radius: var(--radius-sm); font-size: 0.7812rem; border-left: 3px solid var(--mod-border-strong); }
 .mamConfirmGood { border-left-color: var(--color-success-strong, #1a7f37); }
 .mamConfirmBad { border-left-color: var(--mod-critical, #c22); }
 
@@ -180,7 +180,7 @@
    visible affordance). Compact, discreet (.modBtnGhost's own neutral
    underlined-text look) so it never competes with the RESULTADO badge. */
 .maudDetailCol { white-space: nowrap; text-align: right; }
-.maudDetailBtn { font-size: 12.5px; }
+.maudDetailBtn { font-size: 0.7812rem; }
 .maudMobileActions { margin-top: 2px; }
 
 /* Painel Master Phase PM-4B.2 -- Vendedor/Usuário can legitimately
@@ -257,8 +257,8 @@ body.maudModalOpen { overflow: hidden; }
    styled as an authoritative global KPI dashboard. */
 .pcSummaryCards { display: grid; grid-template-columns: repeat(4, minmax(120px, 1fr)); gap: var(--space-2); margin-bottom: var(--mod-space-control-gap); }
 .pcCard { border: 1px solid var(--mod-border); border-radius: var(--radius-sm); padding: var(--space-2); background: var(--mod-surface-panel-2); }
-.pcCardK { font-size: 11px; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: .04em; }
-.pcCardV { font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.pcCardK { font-size: 0.6875rem; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: .04em; }
+.pcCardV { font-size: 1.25rem; font-weight: 600; font-variant-numeric: tabular-nums; }
 .pcSummaryNote { margin-bottom: var(--space-1); }
 
 /* Painel Master Phase PM-4C.2.1 (Human UAT: horizontal scrollbar
@@ -313,8 +313,8 @@ body.maudModalOpen { overflow: hidden; }
 }
 
 .pcNumCell { text-align: right; font-variant-numeric: tabular-nums; }
-.pcModalSubhead { margin: var(--space-2) 0 0; font-size: 13px; }
-.pcCheckLabel { display: flex; align-items: center; gap: var(--space-1); font-size: 13px; }
+.pcModalSubhead { margin: var(--space-2) 0 0; font-size: 0.8125rem; }
+.pcCheckLabel { display: flex; align-items: center; gap: var(--space-1); font-size: 0.8125rem; }
 .pcCheckLabel input { min-width: 0; width: auto; }
 
 /* Gate 34: the field row this Phase's Users deep-link scrolls to and
@@ -346,20 +346,20 @@ body.maudModalOpen { overflow: hidden; }
    Pendências' own table which needed a dedicated PM-4C.2.1 fix. */
 .gbGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--space-3); margin-top: var(--space-3); }
 .gbCard { border: 1px solid var(--mod-border); border-radius: var(--radius-md); padding: var(--mod-space-control-gap); background: var(--mod-surface-panel-2); display: flex; flex-direction: column; gap: 6px; }
-.gbCard h3 { margin: 0 0 4px 0; font-size: 14px; }
-.gbRow { display: flex; justify-content: space-between; gap: var(--space-2); font-size: 12.5px; padding: 2px 0; }
+.gbCard h3 { margin: 0 0 4px 0; font-size: 0.875rem; }
+.gbRow { display: flex; justify-content: space-between; gap: var(--space-2); font-size: 0.7812rem; padding: 2px 0; }
 .gbRow span { color: var(--color-text-secondary); }
 .gbStatusOk { color: var(--color-success-strong, #1a7f37); }
 .gbStatusBad { color: var(--color-critical, #c22); }
 .gbUpdateBtn { margin-top: var(--space-2); align-self: flex-start; }
-.gbPendingNote { font-size: 12px; color: var(--color-warning-strong, #8a6d1a); background: var(--color-warning-soft, #fff3cd); border-radius: var(--radius-sm); padding: 4px 8px; }
+.gbPendingNote { font-size: 0.75rem; color: var(--color-warning-strong, #8a6d1a); background: var(--color-warning-soft, #fff3cd); border-radius: var(--radius-sm); padding: 4px 8px; }
 .gbLegadoNote { margin-top: 4px; }
 .gbHomologBanner { color: var(--color-warning-strong, #8a6d1a); background: var(--color-warning-soft, #fff3cd); border-radius: var(--radius-sm); padding: var(--space-2); }
-.gbWarn { font-size: 12.5px; color: var(--color-warning-strong, #8a6d1a); background: var(--color-warning-soft, #fff3cd); border-radius: var(--radius-sm); padding: var(--space-2); margin-top: var(--space-2); }
+.gbWarn { font-size: 0.7812rem; color: var(--color-warning-strong, #8a6d1a); background: var(--color-warning-soft, #fff3cd); border-radius: var(--radius-sm); padding: var(--space-2); margin-top: var(--space-2); }
 .gbSimNote { color: var(--color-warning-strong, #8a6d1a); }
 .gbErrText { color: var(--color-critical, #c22); }
 .gbMuted { color: var(--color-text-secondary); }
-.gbMissingList { max-height: 160px; overflow-y: auto; border: 1px solid var(--mod-border); border-radius: var(--radius-sm); padding: var(--space-2); font-size: 12.5px; margin-top: var(--space-2); }
+.gbMissingList { max-height: 160px; overflow-y: auto; border: 1px solid var(--mod-border); border-radius: var(--radius-sm); padding: var(--space-2); font-size: 0.7812rem; margin-top: var(--space-2); }
 .gbProgressWrap { height: 8px; border-radius: 999px; background: var(--mod-border); overflow: hidden; margin-top: var(--space-2); }
 .gbProgressBar { height: 100%; width: 0; background: var(--color-accent-primary, #1a56db); transition: width var(--duration-fast, .15s) var(--ease-precise, ease); }
 
@@ -372,10 +372,10 @@ body.maudModalOpen { overflow: hidden; }
    (same real backend pattern: upload -> dry-run diff -> confirm) --
    only the pieces genuinely unique to this surface (group headings,
    badges, the diff-detail table) get their own rules. */
-.gsGroupTitle { margin: var(--space-4) 0 var(--space-1) 0; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--color-text-secondary); }
+.gsGroupTitle { margin: var(--space-4) 0 var(--space-1) 0; font-size: 0.8125rem; text-transform: uppercase; letter-spacing: .04em; color: var(--color-text-secondary); }
 .gsGroupTitle:first-child { margin-top: 0; }
 .gsSharedBadge, .gsBootstrapBadge, .gsPartialBadge {
-  display: inline-block; font-size: 9.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .03em;
+  display: inline-block; font-size: 0.5938rem; font-weight: 600; text-transform: uppercase; letter-spacing: .03em;
   padding: 2px 6px; border-radius: 999px; vertical-align: middle; margin-left: 4px;
 }
 .gsSharedBadge { background: var(--color-accent-soft, #e6f0ff); color: var(--color-accent-primary, #1a56db); }
@@ -383,40 +383,40 @@ body.maudModalOpen { overflow: hidden; }
 .gsPartialBadge { background: var(--color-warning-soft, #fff3cd); color: var(--color-warning-strong, #8a6d1a); }
 .gsNotaExtra { margin-top: 8px; }
 .gsPartialNote { margin-top: 8px; }
-.gsDetailTitle { margin: 14px 0 4px; font-size: 13px; }
+.gsDetailTitle { margin: 14px 0 4px; font-size: 0.8125rem; }
 /* Wide diff-detail table: its own horizontal scroll container, never
    the page body (Gate 46) -- column count varies per config family
    (some have 3 fields, Coparticipado's model matrix has 7). */
 .gsTableWrap { overflow-x: auto; max-width: 100%; border: 1px solid var(--mod-border); border-radius: var(--radius-sm); }
-.gsTable { border-collapse: collapse; width: 100%; font-size: 12px; font-variant-numeric: tabular-nums; }
+.gsTable { border-collapse: collapse; width: 100%; font-size: 0.75rem; font-variant-numeric: tabular-nums; }
 .gsTable th, .gsTable td { padding: 4px 8px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--mod-border); }
 .gsTable th:first-child, .gsTable td:first-child { text-align: left; }
-.gsTable thead th { color: var(--color-text-secondary); font-weight: 500; text-transform: uppercase; font-size: 10.5px; letter-spacing: .03em; }
+.gsTable thead th { color: var(--color-text-secondary); font-weight: 500; text-transform: uppercase; font-size: 0.6562rem; letter-spacing: .03em; }
 
 /* ==================== Configurações (Painel Master Phase PM-5E) ====================
    Reuses .gbGrid/.gbCard/.gbRow/.gbWarn verbatim -- only the read/edit-
    mode toggle pieces are new. */
 .cfgGrid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
-.cfgCard h3 { font-size: 13.5px; }
+.cfgCard h3 { font-size: 0.8438rem; }
 .cfgEditRow { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-2); }
 .cfgEditRow input[type="text"] { flex: 1; min-width: 0; padding: 6px 8px; border: 1px solid var(--mod-border-strong); border-radius: var(--radius-sm); background: var(--color-canvas); color: var(--color-text-primary); font-variant-numeric: tabular-nums; }
 .cfgEditRow input[type="text"]:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
-.cfgUnit { color: var(--color-text-secondary); font-size: 12.5px; flex-shrink: 0; }
+.cfgUnit { color: var(--color-text-secondary); font-size: 0.7812rem; flex-shrink: 0; }
 .cfgEditActions { margin-top: var(--space-2); justify-content: flex-start; }
 .cfgEditBtn { margin-top: var(--space-2); align-self: flex-start; }
 
 /* ==================== Períodos de Comissão (Painel Master Phase PM-5E) ==================== */
 .prCreateCard { max-width: 480px; margin-bottom: var(--space-3); display: flex; flex-direction: column; gap: 6px; }
-.prCreateCard label { font-size: 12px; color: var(--color-text-secondary); margin-top: 4px; }
+.prCreateCard label { font-size: 0.75rem; color: var(--color-text-secondary); margin-top: 4px; }
 .prCreateCard input[type="text"], .prCreateCard input[type="date"] { padding: 6px 8px; border: 1px solid var(--mod-border-strong); border-radius: var(--radius-sm); background: var(--color-canvas); color: var(--color-text-primary); }
-.prCurrentLabel { display: flex; align-items: center; gap: 6px; font-size: 12.5px; }
+.prCurrentLabel { display: flex; align-items: center; gap: 6px; font-size: 0.7812rem; }
 .prTable th, .prTable td { text-align: left; vertical-align: top; }
 .prActions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
 .prMobileCard .prActions { margin-top: var(--space-2); }
 
 /* ==================== Férias/Ausências (Painel Master Phase PM-5F) ==================== */
 .absCreateCard { max-width: 480px; margin-bottom: var(--space-3); display: flex; flex-direction: column; gap: 6px; }
-.absCreateCard label { font-size: 12px; color: var(--color-text-secondary); margin-top: 4px; }
+.absCreateCard label { font-size: 0.75rem; color: var(--color-text-secondary); margin-top: 4px; }
 .absCreateCard input[type="text"], .absCreateCard input[type="date"], .absCreateCard select { padding: 6px 8px; border: 1px solid var(--mod-border-strong); border-radius: var(--radius-sm); background: var(--color-canvas); color: var(--color-text-primary); }
 .absFinanceWarn { border-left: 3px solid var(--color-accent-primary, #1a56db); padding-left: 8px; }
 /* PM-5F-H1 (Human UAT defect fix): the shared .modTable default
@@ -517,14 +517,14 @@ col.absColStatus { width: 86px; }    /* badge content ~62px + cell padding, view
   .absColSubstituto { width: 42%; }
 }
 .absMobileCard .absActions { margin-top: var(--space-2); }
-.absStateBadge { display: inline-block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; padding: 2px 8px; border-radius: 999px; }
+.absStateBadge { display: inline-block; font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; padding: 2px 8px; border-radius: 999px; }
 .absStatePASSADA { background: var(--mod-surface-muted, #eee); color: var(--color-text-secondary); }
 .absStateEM_CURSO { background: var(--color-accent-soft, #e6f0ff); color: var(--color-accent-primary, #1a56db); }
 .absStateFUTURA { background: #fff4e0; color: #8a5a00; }
 
 /* ==================== Mudança de Loja - Vendedores (Painel Master Phase PM-5F) ==================== */
 .scCreateCard { max-width: 520px; margin-bottom: var(--space-3); display: flex; flex-direction: column; gap: 6px; }
-.scCreateCard label { font-size: 12px; color: var(--color-text-secondary); margin-top: 4px; }
+.scCreateCard label { font-size: 0.75rem; color: var(--color-text-secondary); margin-top: 4px; }
 .scCreateCard input[type="text"], .scCreateCard input[type="date"], .scCreateCard select { padding: 6px 8px; border: 1px solid var(--mod-border-strong); border-radius: var(--radius-sm); background: var(--color-canvas); color: var(--color-text-primary); }
 .scChainCard, .scRetroWarn { border-left: 3px solid var(--color-accent-primary, #1a56db); padding-left: 8px; }
 
@@ -657,15 +657,15 @@ col.absColStatus { width: 86px; }    /* badge content ~62px + cell padding, view
 .suPresetGroup { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: var(--space-2) 0; }
 .udsCompareGrid { display: grid; grid-template-columns: repeat(2, minmax(220px, 1fr)); gap: 14px; margin: var(--space-3) 0 var(--space-4); }
 .udsCompareCard { background: var(--mod-surface-muted, #151515); border: 1px solid var(--mod-border-strong); border-radius: var(--radius-md); padding: var(--space-3); }
-.udsCompareTitle { font-weight: 700; margin-bottom: 10px; text-transform: uppercase; font-size: 13px; letter-spacing: .04em; }
-.udsCompareRow { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--color-hairline); font-size: 13px; color: var(--color-text-secondary); }
+.udsCompareTitle { font-weight: 700; margin-bottom: 10px; text-transform: uppercase; font-size: 0.8125rem; letter-spacing: .04em; }
+.udsCompareRow { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--color-hairline); font-size: 0.8125rem; color: var(--color-text-secondary); }
 .udsCompareRow:last-child { border-bottom: 0; }
 @media (max-width: 700px) { .udsCompareGrid { grid-template-columns: 1fr; } }
 .udsList { display: grid; gap: 8px; margin-top: var(--space-3); }
 .udsRow { display: grid; grid-template-columns: 1.6fr .9fr .9fr .7fr .7fr .8fr .9fr 1fr auto; gap: 12px; align-items: center; background: var(--mod-surface-muted, #151515); border: 1px solid var(--mod-border-strong); border-radius: var(--radius-md); padding: 12px 16px; }
-.udsRowHead { background: transparent; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--color-text-secondary); font-weight: 700; padding: 10px 16px; }
-.udsRow .udsName { font-weight: 700; font-size: 14px; }
-.udsRow .udsMetaMobile { display: none; font-size: 12px; color: var(--color-text-secondary); margin-top: 2px; }
+.udsRowHead { background: transparent; font-size: 0.6875rem; text-transform: uppercase; letter-spacing: .04em; color: var(--color-text-secondary); font-weight: 700; padding: 10px 16px; }
+.udsRow .udsName { font-weight: 700; font-size: 0.875rem; }
+.udsRow .udsMetaMobile { display: none; font-size: 0.75rem; color: var(--color-text-secondary); margin-top: 2px; }
 .udsRow .udsColNum { text-align: right; font-weight: 700; }
 .udsRow .udsColAcao { text-align: right; }
 @media (max-width: 900px) {
@@ -677,7 +677,7 @@ col.absColStatus { width: 86px; }    /* badge content ~62px + cell padding, view
   .udsRow { grid-template-columns: 1fr; gap: 6px; }
   .udsRowHead { display: none; }
   .udsRow:not(.udsRowHead) .udsCol:not(.udsColLoja):not(.udsColDep) { display: flex; justify-content: space-between; text-align: left; }
-  .udsRow:not(.udsRowHead) .udsCol:not(.udsColLoja):not(.udsColDep)::before { content: attr(data-label); color: var(--color-text-secondary); font-weight: 700; text-transform: uppercase; font-size: 11px; }
+  .udsRow:not(.udsRowHead) .udsCol:not(.udsColLoja):not(.udsColDep)::before { content: attr(data-label); color: var(--color-text-secondary); font-weight: 700; text-transform: uppercase; font-size: 0.6875rem; }
   .udsRow .udsColAcao { text-align: left; }
   .udsRow .udsColAcao button { width: 100%; }
 }

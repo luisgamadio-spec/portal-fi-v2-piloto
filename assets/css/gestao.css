@@ -27,22 +27,22 @@
 .geHeader h1 {
   font-family: var(--font-ui);
   font-weight: 300;
-  font-size: clamp(22px, 2.6vw, 30px);
+  font-size: clamp(1.375rem, calc(2.6vw * var(--fs-scale)), 1.875rem);
   letter-spacing: -.01em;
   margin: 0;
 }
-.geHeader p { color: var(--color-text-secondary); margin: var(--space-1) 0 0; font-size: 13px; }
+.geHeader p { color: var(--color-text-secondary); margin: var(--space-1) 0 0; font-size: 0.8125rem; }
 
 .geFixtureBar {
   display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap;
   padding: var(--space-2) var(--space-3); margin-bottom: var(--space-4);
   border: 1px dashed var(--color-hairline-strong); border-radius: var(--radius-sm);
-  font-family: var(--font-mono); font-size: 10.5px; color: var(--color-text-muted);
+  font-family: var(--font-mono); font-size: 0.6562rem; color: var(--color-text-muted);
 }
 .geFixtureBar .geFixtureLabel { text-transform: uppercase; letter-spacing: .06em; color: var(--color-warning); }
 .geFixtureBar select {
   background: var(--color-surface-2); border: 1px solid var(--color-hairline-strong);
-  color: var(--color-text-primary); font-family: var(--font-mono); font-size: 11px;
+  color: var(--color-text-primary); font-family: var(--font-mono); font-size: 0.6875rem;
   padding: 3px var(--space-2); border-radius: var(--radius-sm);
 }
 .geFixtureBar select:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
@@ -56,10 +56,10 @@
   border-bottom: 1px solid var(--color-hairline);
 }
 .geField { display: flex; flex-direction: column; gap: var(--space-1); min-width: 160px; }
-.geField label { color: var(--color-text-muted); font-size: 10.5px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; }
+.geField label { color: var(--color-text-muted); font-size: 0.6562rem; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; }
 .geField select, .geField input[type="date"] {
   background: var(--color-surface-2); border: 1px solid var(--color-hairline-strong);
-  color: var(--color-text-primary); font-family: var(--font-ui); font-size: 13px;
+  color: var(--color-text-primary); font-family: var(--font-ui); font-size: 0.8125rem;
   padding: var(--space-2); border-radius: var(--radius-sm);
 }
 .geField select:focus-visible, .geField input:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
@@ -67,7 +67,7 @@
 .gePresetGroup { display: flex; gap: var(--space-1); flex-wrap: wrap; }
 .gePresetBtn {
   background: none; border: 1px solid var(--color-hairline-strong); color: var(--color-text-secondary);
-  font-family: var(--font-ui); font-size: 12px; padding: var(--space-1) var(--space-2);
+  font-family: var(--font-ui); font-size: 0.75rem; padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-sm); cursor: pointer;
 }
 .gePresetBtn:hover:not(.gePresetActive) { color: var(--color-text-primary); }
@@ -77,7 +77,7 @@
 .geVehicleGroup { display: flex; gap: var(--space-1); }
 .geVehicleBtn {
   background: none; border: 1px solid var(--color-hairline-strong); color: var(--color-text-secondary);
-  font-family: var(--font-ui); font-size: 13px; font-weight: 500; padding: var(--space-2) var(--space-3);
+  font-family: var(--font-ui); font-size: 0.8125rem; font-weight: 500; padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-sm); cursor: pointer;
 }
 .geVehicleBtn:hover:not(.geVehicleActive) { color: var(--color-text-primary); }
@@ -93,13 +93,13 @@
    grid is) and would reintroduce an unwanted top margin. Classified as
    MODULE-SPECIFIC COMPOSITION (already consistent, zero risk). */
 .gePage h2 {
-  font-family: var(--font-ui); font-weight: 400; font-size: 17px;
+  font-family: var(--font-ui); font-weight: 400; font-size: 1.0625rem;
   margin: var(--space-6) 0 var(--space-3);
 }
 .gePage h2:first-of-type { margin-top: 0; }
 
 /* Wave 3B — superseded by shared .modMuted, 0 remaining reference. */
-.geMuted { color: var(--color-text-muted); font-size: 12px; margin: 0 0 var(--space-3); }
+.geMuted { color: var(--color-text-muted); font-size: 0.75rem; margin: 0 0 var(--space-3); }
 
 /* Wave 3B — KPI grids/cards migrated to the shared .modKpiGrid/
    .modKpiCard(+Exec/+Secondary tiers), preserving the same materiality
@@ -121,8 +121,8 @@
   border: 1px solid var(--color-hairline); border-radius: var(--radius-md);
   padding: var(--space-4);
 }
-.geKpiCardPrimary .geK { color: var(--color-text-muted); font-size: 10.5px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; }
-.geKpiCardPrimary .geV { font-family: var(--font-mono); font-size: 26px; font-weight: 500; margin-top: var(--space-1); font-variant-numeric: tabular-nums; }
+.geKpiCardPrimary .geK { color: var(--color-text-muted); font-size: 0.6562rem; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; }
+.geKpiCardPrimary .geV { font-family: var(--font-mono); font-size: 1.625rem; font-weight: 500; margin-top: var(--space-1); font-variant-numeric: tabular-nums; }
 
 .geKpiGridExec {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -132,9 +132,9 @@
   border: 1px solid var(--color-hairline); border-radius: var(--radius-md);
   padding: var(--space-4); border-left: 2px solid var(--color-accent-primary);
 }
-.geKpiCardExec .geK { color: var(--color-text-muted); font-size: 10.5px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; }
-.geKpiCardExec .geV { font-family: var(--font-mono); font-size: 22px; font-weight: 500; margin-top: var(--space-1); font-variant-numeric: tabular-nums; }
-.geKpiCardExec .geHint { color: var(--color-text-muted); font-size: 11px; margin-top: 2px; }
+.geKpiCardExec .geK { color: var(--color-text-muted); font-size: 0.6562rem; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; }
+.geKpiCardExec .geV { font-family: var(--font-mono); font-size: 1.375rem; font-weight: 500; margin-top: var(--space-1); font-variant-numeric: tabular-nums; }
+.geKpiCardExec .geHint { color: var(--color-text-muted); font-size: 0.6875rem; margin-top: 2px; }
 
 .geKpiGridSecondary {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
@@ -143,12 +143,12 @@
 .geKpiCardSecondary {
   border: 1px solid var(--color-hairline); border-radius: var(--radius-sm); padding: var(--space-3);
 }
-.geKpiCardSecondary .geK { color: var(--color-text-muted); font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: .05em; }
-.geKpiCardSecondary .geV { font-size: 15px; font-weight: 500; margin-top: 3px; }
-.geKpiCardSecondary .geHint { color: var(--color-text-muted); font-size: 10.5px; margin-top: 2px; }
+.geKpiCardSecondary .geK { color: var(--color-text-muted); font-size: 0.625rem; font-weight: 500; text-transform: uppercase; letter-spacing: .05em; }
+.geKpiCardSecondary .geV { font-size: 0.9375rem; font-weight: 500; margin-top: 3px; }
+.geKpiCardSecondary .geHint { color: var(--color-text-muted); font-size: 0.6562rem; margin-top: 2px; }
 
 /* ACTIVE -- .geSplit's new scope under the shared .modKpiCard */
-.modKpiCard .geSplit { display: flex; gap: var(--space-4); margin-top: var(--space-2); font-size: 11.5px; color: var(--color-text-secondary); }
+.modKpiCard .geSplit { display: flex; gap: var(--space-4); margin-top: var(--space-2); font-size: 0.7188rem; color: var(--color-text-secondary); }
 .modKpiCard .geSplit b { color: var(--color-text-primary); font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 
 /* Plan classification cards -- distinct plan identity via left-border
@@ -161,9 +161,9 @@
    avoid any risk to a business-critical section. */
 .gePlanGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--space-2); margin-bottom: var(--space-2); }
 .gePlanCard { border: 1px solid var(--color-hairline); border-radius: var(--radius-sm); padding: var(--space-3); border-left: 3px solid var(--color-hairline-strong); }
-.gePlanCard .geK { font-size: 11px; font-weight: 600; letter-spacing: .03em; }
-.gePlanCard .geV { font-family: var(--font-mono); font-size: 20px; margin-top: 2px; font-variant-numeric: tabular-nums; }
-.gePlanCard .geHint { color: var(--color-text-muted); font-size: 11px; margin-top: 2px; font-family: var(--font-mono); }
+.gePlanCard .geK { font-size: 0.6875rem; font-weight: 600; letter-spacing: .03em; }
+.gePlanCard .geV { font-family: var(--font-mono); font-size: 1.25rem; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.gePlanCard .geHint { color: var(--color-text-muted); font-size: 0.6875rem; margin-top: 2px; font-family: var(--font-mono); }
 .gePlanCard.planSubsidiado { border-left-color: var(--color-success); }
 .gePlanCard.planReversao { border-left-color: var(--color-warning); }
 .gePlanCard.planCoparticipado { border-left-color: var(--color-accent-primary); }
@@ -229,9 +229,9 @@
 }
 
 .geTableWrap { overflow-x: auto; border: 1px solid var(--color-hairline); border-radius: var(--radius-md); margin-bottom: var(--space-4); }
-.geTable { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 12.5px; }
+.geTable { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 0.7812rem; }
 .geTable thead th {
-  text-align: left; font-family: var(--font-mono); font-size: 10px; text-transform: uppercase;
+  text-align: left; font-family: var(--font-mono); font-size: 0.625rem; text-transform: uppercase;
   letter-spacing: .05em; color: var(--color-text-muted); font-weight: 500;
   padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--color-hairline-strong);
   white-space: normal; overflow-wrap: break-word;
@@ -256,7 +256,7 @@
   .modTable tbody tr { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); padding: var(--space-3); border-bottom: 1px solid var(--color-hairline); }
   .modTable tbody tr:last-child { border-bottom: none; }
   .modTable td { display: block; padding: 0; border: none; position: static; background: none; flex: 1 1 120px; min-width: 120px; }
-  .modTable td[data-th]::before { content: attr(data-th); display: block; color: var(--color-text-muted); font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; }
+  .modTable td[data-th]::before { content: attr(data-th); display: block; color: var(--color-text-muted); font-family: var(--font-mono); font-size: 0.5625rem; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; }
   .modTable td:first-child { flex-basis: 100%; font-weight: 600; }
   .modTable .modNumCol { text-align: left; }
 }

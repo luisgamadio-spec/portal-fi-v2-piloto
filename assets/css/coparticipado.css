@@ -28,14 +28,14 @@
 .cpHeader h1 {
   font-family: var(--font-ui);
   font-weight: 300;
-  font-size: clamp(22px, 2.6vw, 30px);
+  font-size: clamp(1.375rem, calc(2.6vw * var(--fs-scale)), 1.875rem);
   letter-spacing: -.01em;
   margin: 0;
 }
 .cpHeader p {
   color: var(--color-text-secondary);
   margin: var(--space-1) 0 0;
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 
 /* ---------- dev fixture context (same convention as score.css) ---------- */
@@ -49,7 +49,7 @@
   border: 1px dashed var(--color-hairline-strong);
   border-radius: var(--radius-sm);
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 0.6562rem;
   color: var(--color-text-muted);
 }
 .cpFixtureBar .cpFixtureLabel {
@@ -62,7 +62,7 @@
   border: 1px solid var(--color-hairline-strong);
   color: var(--color-text-primary);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 0.6875rem;
   padding: 3px var(--space-2);
   border-radius: var(--radius-sm);
 }
@@ -81,7 +81,7 @@
 .cpField { display: flex; flex-direction: column; gap: var(--space-1); min-width: 160px; }
 .cpField label {
   color: var(--color-text-muted);
-  font-size: 10.5px;
+  font-size: 0.6562rem;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: .06em;
@@ -92,7 +92,7 @@
   border: 1px solid var(--color-hairline-strong);
   color: var(--color-text-primary);
   font-family: var(--font-ui);
-  font-size: 13px;
+  font-size: 0.8125rem;
   padding: var(--space-2) var(--space-2);
   border-radius: var(--radius-sm);
 }
@@ -115,7 +115,7 @@
   border: 1px solid var(--color-hairline-strong);
   color: var(--color-text-secondary);
   font-family: var(--font-ui);
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 500;
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-sm);
@@ -139,14 +139,14 @@
 .cpPanel h2 {
   font-family: var(--font-ui);
   font-weight: 400;
-  font-size: 18px;
+  font-size: 1.125rem;
   margin: 0 0 var(--space-1);
 }
 
 /* Wave 3C — superseded by shared .modMuted, 0 remaining reference.
    The nested "b" rule is NOT superseded (module-system.css's .modMuted
    has no such rule) — re-declared below, scoped to this module. */
-.cpMuted { color: var(--color-text-muted); font-size: 12.5px; margin: 0 0 var(--space-4); }
+.cpMuted { color: var(--color-text-muted); font-size: 0.7812rem; margin: 0 0 var(--space-4); }
 .cpMuted b { color: var(--color-text-secondary); }
 /* ACTIVE — scoped so it only affects this module's own captions */
 .cpPage .modMuted b { color: var(--color-text-secondary); }
@@ -173,14 +173,14 @@
 }
 .cpK {
   color: var(--color-text-muted);
-  font-size: 10.5px;
+  font-size: 0.6562rem;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: .06em;
 }
 .cpV {
   font-family: var(--font-mono);
-  font-size: 22px;
+  font-size: 1.375rem;
   font-weight: 500;
   margin-top: var(--space-1);
   font-variant-numeric: tabular-nums;
@@ -212,11 +212,11 @@
 .cpPage .modTable .cpAtomic { white-space: nowrap; }
 
 .cpTableWrap { overflow-x: auto; border: 1px solid var(--color-hairline); border-radius: var(--radius-md); }
-.cpTable { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 12.5px; }
+.cpTable { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 0.7812rem; }
 .cpTable thead th {
   text-align: left;
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 0.6562rem;
   text-transform: uppercase;
   letter-spacing: .06em;
   color: var(--color-text-muted);
@@ -295,11 +295,11 @@
   }
   .modTable tbody tr:last-child { border-bottom: none; }
   .modTable td { display: block; padding: 0; border: none; position: static; background: none; flex: 1 1 45%; min-width: 130px; }
-  .modTable td[data-th]::before { content: attr(data-th); display: block; color: var(--color-text-muted); font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; }
+  .modTable td[data-th]::before { content: attr(data-th); display: block; color: var(--color-text-muted); font-family: var(--font-mono); font-size: 0.5625rem; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; }
   .modTable .modNumCol { text-align: left; }
 
   /* Cliente — primary identity, full width, no redundant label */
-  .modTable td[data-group="primary"] { flex-basis: 100%; font-weight: 600; font-size: 14.5px; }
+  .modTable td[data-group="primary"] { flex-basis: 100%; font-weight: 600; font-size: 0.9062rem; }
   .modTable td[data-group="primary"][data-th]::before { display: none; }
 
   /* Situação — small neutral badge, own line (module-system.css
@@ -308,7 +308,7 @@
 
   /* Data/Chassi — quiet reference footer */
   .modTable td[data-group="reference"] { color: var(--color-text-muted); }
-  .modTable td[data-group="reference"].cpAtomic { font-family: var(--font-mono); font-size: 11.5px; }
+  .modTable td[data-group="reference"].cpAtomic { font-family: var(--font-mono); font-size: 0.7188rem; }
 
   /* Coparticipação — the single financial figure this table exists to
      compute (Gate 17: "most decision-relevant... easier to scan"
@@ -316,7 +316,7 @@
      desktop table typography stays exactly as before). Subsidiados has
      no equivalent single headline figure, so none was invented there
      (Gate 5 — do not unify the two modules' structure). */
-  .modTable .cpHeadlineFin { font-weight: 600; font-size: 13.5px; }
+  .modTable .cpHeadlineFin { font-weight: 600; font-size: 0.8438rem; }
 
   /* group-start dividers — column counts differ between the two
      tables (13 vs 11), so positions are addressed per table variant

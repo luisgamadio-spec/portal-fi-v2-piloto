@@ -33,7 +33,7 @@
     if (!box) {
       box = document.createElement('div');
       box.id = 'statusAnalistaFI';
-      box.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:99999;background:rgba(10,14,25,.96);color:#fff;padding:14px 18px;border-radius:14px;font-family:Arial,sans-serif;font-size:14px;font-weight:700;box-shadow:0 12px 30px rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.16);';
+      box.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:99999;background:rgba(10,14,25,.96);color:#fff;padding:14px 18px;border-radius:14px;font-family:Arial,sans-serif;font-size:0.875rem;font-weight:700;box-shadow:0 12px 30px rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.16);';
       document.body.appendChild(box);
     }
     box.textContent = mensagem;

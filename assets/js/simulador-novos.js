@@ -602,6 +602,7 @@
     formRegion.innerHTML = formHtml(currentMode);
     resultRegion.innerHTML = UI.emptyBlock('Preencha os campos e clique em Calcular.');
     wireForm(currentMode);
+    UI.syncEntries(formRegion);
   }
 
   /* ---------- PORTAL-NEXT-08.2 Change 2: balanced term grid, replacing
@@ -674,7 +675,7 @@
         // -- fail-closed, same pattern as 'campanha' below.
         if (tradPeriodAuthority.getState() !== 'READY') return authorityGateHtml(tradPeriodAuthority);
         return UI.moneyField('nBem', 'Valor do bem', 'R$ 100.000,00') +
-          UI.moneyField('nEntrada', 'Entrada', 'R$ 20.000,00') +
+          UI.entryField('nEntrada', 'Entrada', 'R$ 20.000,00', 'nBem') +
           termGridFieldHtml('nPrazo', 'Prazo', TRAD_TERMS, 48) +
           '<div class="field"><label>Balões</label>' +
           '<div class="smBalloonList" id="nBaloesList"></div>' +
@@ -686,7 +687,7 @@
         // mirroring V1's own carregarBaseBalaoZeroKm()).
         if (tradPeriodAuthority.getState() !== 'READY') return authorityGateHtml(tradPeriodAuthority);
         return UI.moneyField('nBem', 'Valor do bem', 'R$ 100.000,00') +
-          UI.moneyField('nEntrada', 'Entrada', 'R$ 20.000,00') +
+          UI.entryField('nEntrada', 'Entrada', 'R$ 20.000,00', 'nBem') +
           termGridFieldHtml('nPrazo', 'Prazo', PERIOD_TERMS, 48) +
           UI.segmentedField('nTipo', 'Periodicidade', [{ value: 'semestral', label: 'Semestral' }, { value: 'anual', label: 'Anual' }], 'semestral') +
           '<button type="button" class="btn btn-primary" id="nCalc" style="width:100%;margin-top:6px">Calcular</button>';
@@ -695,13 +696,13 @@
         // ("ACTIVE base has no coefficient column for that block"),
         // permanently hardcoded even in V1. Untouched.
         return UI.moneyField('nBem', 'Valor do bem', 'R$ 100.000,00') +
-          UI.moneyField('nEntrada', 'Entrada', 'R$ 50.000,00') +
+          UI.entryField('nEntrada', 'Entrada', 'R$ 50.000,00', 'nBem') +
           '<button type="button" class="btn btn-primary" id="nCalc" style="width:100%;margin-top:6px">Calcular</button>';
       case 'linear':
         // SIMLIVE1: gated on linearAuthority (simulador_get_linear_zerokm).
         if (linearAuthority.getState() !== 'READY') return authorityGateHtml(linearAuthority);
         return UI.moneyField('nBem', 'Valor do bem', 'R$ 100.000,00') +
-          UI.moneyField('nEntrada', 'Entrada', 'R$ 20.000,00', 'Recalcula automaticamente, sem botão Calcular (comportamento original).');
+          UI.entryField('nEntrada', 'Entrada', 'R$ 20.000,00', 'nBem', 'Recalcula automaticamente, sem botão Calcular (comportamento original).');
       case 'campanha':
         // Governed-authority gated: no form/Calcular exists unless
         // campState === 'READY' -- see the module-level comment above
@@ -716,7 +717,7 @@
         }
         return UI.selectField('nModelo', 'Modelo', campAuthority.modelNames.map(function (name) { return { value: name, label: name }; }), campAuthority.modelNames[0]) +
           UI.moneyField('nSale', 'Valor de venda', 'R$ 200.000,00') +
-          UI.moneyField('nEntry', 'Entrada', 'R$ 120.000,00') +
+          UI.entryField('nEntry', 'Entrada', 'R$ 120.000,00', 'nSale') +
           '<button type="button" class="btn btn-primary" id="nCalc" style="width:100%;margin-top:6px">Calcular</button>';
       case 'subsidiadas':
         // SIMLIVE1: gated on subsidiadasAuthority (simulador_get_taxas_subsidiadas).
@@ -725,7 +726,7 @@
         // this screen's own Calcular; see bankRateWidgetHtml().
         if (subsidiadasAuthority.getState() !== 'READY') return authorityGateHtml(subsidiadasAuthority);
         return UI.moneyField('nBem', 'Valor do bem', 'R$ 100.000,00') +
-          UI.moneyField('nEntrada', 'Entrada', 'R$ 50.000,00') +
+          UI.entryField('nEntrada', 'Entrada', 'R$ 50.000,00', 'nBem') +
           UI.moneyField('nMinVenda', 'Valor mínimo de venda (opcional)', '') +
           '<button type="button" class="btn btn-primary" id="nCalc" style="width:100%;margin-top:6px">Calcular</button>' +
           '<div id="nBankRateWidgetRegion">' + bankRateWidgetHtml() + '</div>';

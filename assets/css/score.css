@@ -25,14 +25,14 @@
 .scHeader h1 {
   font-family: var(--font-ui);
   font-weight: 300;
-  font-size: clamp(22px, 2.6vw, 30px);
+  font-size: clamp(1.375rem, calc(2.6vw * var(--fs-scale)), 1.875rem);
   letter-spacing: -.01em;
   margin: 0;
 }
 .scHeader p {
   color: var(--color-text-secondary);
   margin: var(--space-1) 0 0;
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 
 /* ---------- dev fixture context (Gate 30/51 — clearly dev-only) ---------- */
@@ -46,7 +46,7 @@
   border: 1px dashed var(--color-hairline-strong);
   border-radius: var(--radius-sm);
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 0.6562rem;
   color: var(--color-text-muted);
 }
 .scFixtureBar .scFixtureLabel {
@@ -59,7 +59,7 @@
   border: 1px solid var(--color-hairline-strong);
   color: var(--color-text-primary);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 0.6875rem;
   padding: 3px var(--space-2);
   border-radius: var(--radius-sm);
 }
@@ -84,11 +84,11 @@
 .scPage .modTable thead th:first-child, .scPage .modTable td:first-child { position: static; background: none; }
 
 .scTableWrap { overflow-x: auto; border: 1px solid var(--color-hairline); border-radius: var(--radius-md); }
-.scTable { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 13px; }
+.scTable { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 0.8125rem; }
 .scTable thead th {
   text-align: left;
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 0.6562rem;
   text-transform: uppercase;
   letter-spacing: .06em;
   color: var(--color-text-muted);
@@ -153,7 +153,7 @@
    new color — the same "position/weight, not just hue" principle
    already used for Dashbi's Share/Receita Total emphasis (PORTAL-
    NEXT-07.5). No red/orange/yellow/green/gold rainbow was assumed. */
-.scBand { font-family: var(--font-mono); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+.scBand { font-family: var(--font-mono); font-size: 0.625rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
 .scBandCritico { color: var(--color-critical); }
 .scBandDesenvolvimento { color: var(--color-warning); }
 .scBandPerformance { color: var(--color-text-secondary); }
@@ -194,40 +194,40 @@
   margin-bottom: var(--space-4);
   flex-wrap: wrap;
 }
-.scDetailHead h2 { font-family: var(--font-ui); font-weight: 400; font-size: 18px; margin: 0; }
-.scDetailTotal { font-family: var(--font-mono); font-size: 13px; color: var(--color-text-secondary); font-variant-numeric: tabular-nums; }
+.scDetailHead h2 { font-family: var(--font-ui); font-weight: 400; font-size: 1.125rem; margin: 0; }
+.scDetailTotal { font-family: var(--font-mono); font-size: 0.8125rem; color: var(--color-text-secondary); font-variant-numeric: tabular-nums; }
 .scCriterion { padding: var(--space-3) 0; border-bottom: 1px solid var(--color-hairline); }
 .scCriterion:last-child { border-bottom: none; }
-.scCriterionTop { display: flex; justify-content: space-between; gap: var(--space-3); font-size: 13px; }
+.scCriterionTop { display: flex; justify-content: space-between; gap: var(--space-3); font-size: 0.8125rem; }
 .scCriterionName { color: var(--color-text-primary); }
 .scCriterionPoints { font-family: var(--font-mono); color: var(--color-text-secondary); font-variant-numeric: tabular-nums; }
-.scCriterionMeta { display: flex; justify-content: space-between; gap: var(--space-3); margin-top: 2px; font-size: 11.5px; color: var(--color-text-muted); }
+.scCriterionMeta { display: flex; justify-content: space-between; gap: var(--space-3); margin-top: 2px; font-size: 0.7188rem; color: var(--color-text-muted); }
 .scMeter { height: 3px; background: var(--color-hairline-strong); border-radius: 2px; margin-top: var(--space-2); overflow: hidden; }
 .scMeter span { display: block; height: 100%; background: var(--color-accent-primary); }
-.scAmostraNote { margin-top: 4px; font-size: 11px; color: var(--color-text-muted); font-style: italic; }
+.scAmostraNote { margin-top: 4px; font-size: 0.6875rem; color: var(--color-text-muted); font-style: italic; }
 
 /* ---------- close/back affordance ---------- */
 .scCloseDetail {
   background: none; border: 1px solid var(--color-hairline-strong);
   color: var(--color-text-secondary); font-family: var(--font-mono);
-  font-size: 11px; padding: 4px var(--space-2); border-radius: var(--radius-sm); cursor: pointer;
+  font-size: 0.6875rem; padding: 4px var(--space-2); border-radius: var(--radius-sm); cursor: pointer;
 }
 .scCloseDetail:focus-visible, .scCloseDetail:hover { outline: var(--focus-ring); outline-offset: 2px; color: var(--color-accent-primary); }
 
 /* RESTAURAÇÃO DE FILTROS -- item 2 (nota de ajuste de escopo). */
-.scFilterAdjustedNote { display: inline-block; font-size: 11px; color: var(--color-warning); margin-top: 2px; }
+.scFilterAdjustedNote { display: inline-block; font-size: 0.6875rem; color: var(--color-warning); margin-top: 2px; }
 
 /* ---------- item 4: "Ver vendas detalhadas" ---------- */
 .scSalesDetailToggle {
   background: none; border: 1px solid var(--color-hairline-strong);
   color: var(--color-accent-primary); font-family: var(--font-mono);
-  font-size: 11px; padding: 4px var(--space-2); border-radius: var(--radius-sm); cursor: pointer;
+  font-size: 0.6875rem; padding: 4px var(--space-2); border-radius: var(--radius-sm); cursor: pointer;
 }
 .scSalesDetailToggle:hover, .scSalesDetailToggle:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
 .scSalesDetail { margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px dashed var(--color-hairline-strong); }
 .scSalesDetailHead { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-3); flex-wrap: wrap; }
-.scSalesDetailHead h3 { font-family: var(--font-ui); font-weight: 400; font-size: 14px; margin: 0; }
-.scSalesDetailCount { font-family: var(--font-mono); font-size: 11px; color: var(--color-text-muted); }
+.scSalesDetailHead h3 { font-family: var(--font-ui); font-weight: 400; font-size: 0.875rem; margin: 0; }
+.scSalesDetailCount { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--color-text-muted); }
 .scSalesList { display: flex; flex-direction: column; gap: var(--space-2); }
 /* REFINAMENTO VISUAL -- item 2: o cabeçalho (.scSalesListHead) reaproveita
    a MESMA .scSalesOpToggle (mesmo grid), então esta é a ÚNICA definição
@@ -241,7 +241,7 @@
      puras garantem a MESMA largura em todo grid independente, sempre. */
   display: grid; grid-template-columns: 2fr 1fr 1fr; gap: var(--space-4); align-items: center;
   width: 100%; text-align: left; background: var(--color-surface-2); border: none;
-  padding: var(--space-2) var(--space-3); font-family: var(--font-mono); font-size: 12px;
+  padding: var(--space-2) var(--space-3); font-family: var(--font-mono); font-size: 0.75rem;
   color: var(--color-text-primary); cursor: pointer; box-sizing: border-box;
 }
 /* Grid items have an implicit min-width:auto (= their min-content) by
@@ -255,7 +255,7 @@
 .scSalesOpToggle > * { min-width: 0; }
 .scSalesListHead {
   background: none; cursor: default; color: var(--color-text-muted);
-  font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em;
+  font-size: 0.6562rem; text-transform: uppercase; letter-spacing: .06em;
   padding: 2px var(--space-3) 4px; margin-bottom: 2px;
   /* item 2: mesma borda (1px) das linhas de dados, só transparente --
      sem isso o header ficaria 2px mais largo que .scSalesOpRow (que
@@ -276,16 +276,16 @@
    badge/valor é colorido, nunca a linha (.scSalesOpRow) inteira. */
 .scSalesOpFin { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; text-align: right; font-variant-numeric: tabular-nums; }
 .scSalesOpFinBadge {
-  font-size: 9.5px; text-transform: uppercase; letter-spacing: .05em;
+  font-size: 0.5938rem; text-transform: uppercase; letter-spacing: .05em;
   padding: 1px 6px; border-radius: var(--radius-sm); font-family: var(--font-ui); font-weight: 600;
 }
 .scSalesOpFinYes .scSalesOpFinBadge { color: var(--color-success); background: var(--color-success-soft); }
 .scSalesOpFinYes .scSalesOpFinValue { color: var(--color-text-primary); font-weight: 600; }
 .scSalesOpFinNo .scSalesOpFinBadge { color: var(--color-text-muted); background: var(--color-surface-1); border: 1px solid var(--color-hairline-strong); }
-.scSalesOpFinNo .scSalesOpFinValue { color: var(--color-text-muted); font-size: 11px; }
+.scSalesOpFinNo .scSalesOpFinValue { color: var(--color-text-muted); font-size: 0.6875rem; }
 .scSalesOpExpanded {
   padding: var(--space-3); border-top: 1px solid var(--color-hairline);
-  display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2) var(--space-4); font-size: 12px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2) var(--space-4); font-size: 0.75rem;
 }
 .scSalesOpExpanded > div { display: flex; justify-content: space-between; gap: var(--space-2); }
 .scSalesOpExpanded > div span:first-child { color: var(--color-text-muted); }
@@ -315,7 +315,7 @@
   .scSalesOpDateModel, .scSalesOpFin { align-items: flex-start; text-align: left; }
   .scSalesOpValue { text-align: left; }
   .scSalesOpMobileLabel {
-    display: block; font-size: 9.5px; text-transform: uppercase; letter-spacing: .05em;
+    display: block; font-size: 0.5938rem; text-transform: uppercase; letter-spacing: .05em;
     color: var(--color-text-muted); font-family: var(--font-ui);
   }
   .scSalesOpFinLabel { margin-top: 4px; }
@@ -361,13 +361,13 @@
 .scMobileCard:hover,
 .scMobileCard:focus-visible { background: rgba(255,255,255,.028); }
 .scMobileCard:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
-.scMobileRank { font-family: var(--font-mono); font-size: 11px; color: var(--color-text-muted); }
-.scMobileName { font-size: 16px; font-weight: 600; color: var(--color-text-primary); margin-top: 2px; overflow-wrap: break-word; }
-.scMobileSub { font-size: 12.5px; color: var(--color-text-secondary); margin-top: 2px; overflow-wrap: break-word; }
-.scMobileLabel { font-family: var(--font-mono); font-size: 9.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--color-text-muted); }
+.scMobileRank { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--color-text-muted); }
+.scMobileName { font-size: 1rem; font-weight: 600; color: var(--color-text-primary); margin-top: 2px; overflow-wrap: break-word; }
+.scMobileSub { font-size: 0.7812rem; color: var(--color-text-secondary); margin-top: 2px; overflow-wrap: break-word; }
+.scMobileLabel { font-family: var(--font-mono); font-size: 0.5938rem; text-transform: uppercase; letter-spacing: .05em; color: var(--color-text-muted); }
 .scMobileScoreBlock { margin-top: var(--space-3); padding: var(--space-3); border: 1px solid var(--color-hairline-strong); border-radius: var(--radius-sm); }
 .scMobileScoreRow { display: flex; align-items: center; gap: var(--space-3); margin-top: 4px; }
-.scMobileScoreValue { font-family: var(--font-mono); font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.scMobileScoreValue { font-family: var(--font-mono); font-size: 1.375rem; font-weight: 600; font-variant-numeric: tabular-nums; }
 /* PORTAL-NEXT-07.7B — mobile hierarchy matches the approved executive
    order (Gate 6): number, then band, then bar. .scBand's own base
    rule handles color/weight; only position/spacing added here. */
@@ -381,7 +381,7 @@
 .scMobileScoreBlock .scMeterTrack { width: 100%; flex: 1 1 0; min-width: 0; }
 .scMobileScoreValue { flex-shrink: 0; }
 .scMobileField { margin-top: var(--space-3); }
-.scMobileValue { font-family: var(--font-mono); font-size: 15px; font-variant-numeric: tabular-nums; margin-top: 2px; }
+.scMobileValue { font-family: var(--font-mono); font-size: 0.9375rem; font-variant-numeric: tabular-nums; margin-top: 2px; }
 
 /* ---------- SCORE-SIM-03 -- Inteligência de Utilização ----------
    Observational-only section, additive below the existing ranking/
@@ -398,13 +398,13 @@
 .sciSectionTitle {
   font-family: var(--font-ui);
   font-weight: 300;
-  font-size: clamp(18px, 2.2vw, 22px);
+  font-size: clamp(1.125rem, calc(2.2vw * var(--fs-scale)), 1.375rem);
   letter-spacing: -.01em;
   margin: 0 0 var(--space-1);
 }
 .sciSectionSubtitle {
   color: var(--color-text-secondary);
-  font-size: 12.5px;
+  font-size: 0.7812rem;
   margin: 0 0 var(--space-5);
   max-width: 62ch;
 }
@@ -412,7 +412,7 @@
 .sciBlock:last-child { margin-bottom: 0; }
 .sciBlockTitle {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 0.6875rem;
   text-transform: uppercase;
   letter-spacing: .06em;
   color: var(--color-text-muted);
@@ -420,12 +420,12 @@
   margin: 0 0 var(--space-2);
 }
 .sciBlockNote {
-  font-size: 11.5px;
+  font-size: 0.7188rem;
   color: var(--color-text-muted);
   font-style: italic;
   margin: 0 0 var(--space-3);
 }
-.sciMuted { color: var(--color-text-muted); font-size: 11.5px; }
+.sciMuted { color: var(--color-text-muted); font-size: 0.7188rem; }
 
 /* SCORE-SIM-04 -- coverage info (section 12): always visible body text,
    never a tooltip/title attribute. .sciCoverageWarning reuses the same
@@ -438,9 +438,9 @@
   border-radius: var(--radius-sm);
   background: var(--color-surface-2);
 }
-.sciCoverageLine { margin: 0 0 4px; font-size: 12px; color: var(--color-text-secondary); }
+.sciCoverageLine { margin: 0 0 4px; font-size: 0.75rem; color: var(--color-text-secondary); }
 .sciCoverageLine:last-child { margin-bottom: 0; }
-.sciCoverageWarning { margin: var(--space-2) 0 0; font-size: 12px; color: var(--color-warning); }
+.sciCoverageWarning { margin: var(--space-2) 0 0; font-size: 0.75rem; color: var(--color-warning); }
 
 /* SCORE-SIM-17 -- "Utilização dos Simuladores" criterion, UNIFIED into
    the same table/detail as the commercial criteria (human rejected a
@@ -450,10 +450,10 @@
    above. */
 .scExpCol { white-space: nowrap; }
 .scExpHeaderBadge {
-  display: block; font-size: 9px; font-weight: 700; letter-spacing: .06em;
+  display: block; font-size: 0.5625rem; font-weight: 700; letter-spacing: .06em;
   color: var(--color-warning); text-transform: uppercase; margin-top: 2px;
 }
-.scExpPending { color: var(--color-text-muted); font-style: italic; font-size: 12px; }
+.scExpPending { color: var(--color-text-muted); font-style: italic; font-size: 0.75rem; }
 /* SCORE-SIM-22 -- LOCAL_REAL_MODE loading/error sub-states, additive to
    the existing .scExpPending token/style, no new color invented
    (--color-warning already used above for .scExpHeaderBadge). */
@@ -462,19 +462,19 @@
   .scExpLoading { animation: scExpLoadingPulse 1.4s ease-in-out infinite; }
   @keyframes scExpLoadingPulse { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
 }
-.scExpSub { font-size: 11px; color: var(--color-text-muted); margin-left: 2px; }
+.scExpSub { font-size: 0.6875rem; color: var(--color-text-muted); margin-left: 2px; }
 .scExpCriterion { border-top: 1px dashed var(--color-hairline-strong); padding-top: var(--space-3); margin-top: var(--space-2); }
 .scExpComposition {
   margin-top: var(--space-4); padding: var(--space-3); border: 1px solid var(--color-hairline);
   border-radius: var(--radius-sm); background: var(--color-surface-2);
 }
 .scExpCompositionTitle {
-  font-size: 11px; text-transform: uppercase; letter-spacing: .06em;
+  font-size: 0.6875rem; text-transform: uppercase; letter-spacing: .06em;
   color: var(--color-warning); font-weight: 700; margin: 0 0 var(--space-2);
 }
 .scExpCompositionRow {
   display: flex; justify-content: space-between; gap: var(--space-3);
-  font-size: 12.5px; color: var(--color-text-secondary); padding: 3px 0;
+  font-size: 0.7812rem; color: var(--color-text-secondary); padding: 3px 0;
   font-family: var(--font-mono); font-variant-numeric: tabular-nums;
 }
 .scExpCompositionTotal { border-top: 1px solid var(--color-hairline); margin-top: 4px; padding-top: 6px; font-weight: 700; color: var(--color-text-primary); }

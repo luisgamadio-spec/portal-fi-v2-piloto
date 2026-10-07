@@ -9,14 +9,14 @@
 .paBody { margin-top: var(--space-4); }
 
 .paHero { margin-bottom: var(--space-4); }
-.paHeroNote { font-size: 12.5px; color: var(--color-text-muted); margin: var(--space-2) 0 0; max-width: 60ch; }
+.paHeroNote { font-size: 0.7812rem; color: var(--color-text-muted); margin: var(--space-2) 0 0; max-width: 60ch; }
 
 .paStatusPill {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
   font-family: var(--font-mono);
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 600;
   padding: 8px 16px;
   border-radius: var(--radius-sm);
@@ -52,7 +52,7 @@
   background: var(--color-surface-2);
   color: var(--color-text-secondary);
   font-family: var(--font-ui);
-  font-size: 13.5px;
+  font-size: 0.8438rem;
   font-weight: 500;
   cursor: pointer;
 }
@@ -60,7 +60,7 @@
 .paStatusBtn.active { background: rgba(238, 75, 87, .14); border-color: var(--color-accent-primary); color: #ffecec; }
 .paStatusBtn:disabled { opacity: .55; cursor: default; }
 .paStatusBtn:focus-visible { outline: 2px solid var(--color-accent-primary); outline-offset: 2px; }
-.paStatusIcon { font-size: 16px; }
+.paStatusIcon { font-size: 1rem; }
 
 /* ---------- summary cards: stacks to 1 column on narrow viewports via
    the same auto-fit pattern, no fixed 3-up grid forcing overflow. ---------- */
@@ -76,9 +76,9 @@
   border-radius: var(--radius-sm);
   padding: 14px 16px;
 }
-.paCardValue { font-family: var(--font-mono); font-size: 17px; font-variant-numeric: tabular-nums; margin: 6px 0 0; }
+.paCardValue { font-family: var(--font-mono); font-size: 1.0625rem; font-variant-numeric: tabular-nums; margin: 6px 0 0; }
 
-.paMsg { margin-top: var(--space-3); font-size: 13px; min-height: 1em; }
+.paMsg { margin-top: var(--space-3); font-size: 0.8125rem; min-height: 1em; }
 .paMsg.ok { color: #a5d6a7; }
 .paMsg.err { color: #ef9a9a; }
 

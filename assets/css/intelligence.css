@@ -26,7 +26,7 @@
 .baiMessageUser{align-items:flex-end}
 .baiMessageAssistant{align-items:flex-start}
 
-.baiRoleLabel{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--mod-muted)}
+.baiRoleLabel{font-family:var(--font-mono);font-size:0.625rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mod-muted)}
 
 .baiBubble{border-radius:var(--radius-md);padding:10px 14px;font-size:var(--mod-body-size);line-height:1.5;max-width:640px;white-space:pre-wrap;overflow-wrap:break-word}
 .baiMessageUser .baiBubble{background:var(--mod-surface-active);border:1px solid rgba(238,75,87,.28)}
@@ -70,7 +70,7 @@
    justify-items:start made no difference). Explicit margin:0 base,
    with only the top gap between label and value re-added on purpose. */
 .baiMetricItem .modKpiLabel{color:var(--mod-muted);font-size:var(--mod-kpi-label-size);font-weight:500;text-transform:uppercase;letter-spacing:.06em;margin:0}
-.baiMetricItem .modKpiValue{font-family:var(--font-mono);font-size:18px;font-weight:500;margin:var(--mod-space-micro) 0 0;font-variant-numeric:tabular-nums}
+.baiMetricItem .modKpiValue{font-family:var(--font-mono);font-size:1.125rem;font-weight:500;margin:var(--mod-space-micro) 0 0;font-variant-numeric:tabular-nums}
 
 .baiComparisonGrid{display:grid;grid-template-columns:1fr 1fr;gap:var(--mod-space-card-gap)}
 @media(max-width:600px){.baiComparisonGrid{grid-template-columns:1fr}}
@@ -88,11 +88,11 @@
 .baiOperationCard:last-child{margin-bottom:0}
 .baiOperationCard .baiOperationRow:last-child{border-bottom:none}
 .baiOpCardHeader{display:flex;gap:var(--mod-space-compact);align-items:baseline;font-weight:500}
-.baiOpRef{font-family:var(--font-mono);font-size:12.5px}
+.baiOpRef{font-family:var(--font-mono);font-size:0.7812rem}
 
 /* ---------- Composer ---------- */
 .baiComposer{display:flex;gap:var(--mod-space-compact);align-items:flex-end;border-top:1px solid var(--mod-border);padding-top:var(--mod-space-control-gap)}
-.baiComposerInput{flex:1;resize:none;min-height:44px;max-height:160px;background:var(--mod-surface-panel-2);border:1px solid var(--mod-border-strong);color:var(--color-text-primary);font-family:var(--font-ui);font-size:13px;padding:10px 12px;border-radius:var(--radius-sm);line-height:1.4}
+.baiComposerInput{flex:1;resize:none;min-height:44px;max-height:160px;background:var(--mod-surface-panel-2);border:1px solid var(--mod-border-strong);color:var(--color-text-primary);font-family:var(--font-ui);font-size:0.8125rem;padding:10px 12px;border-radius:var(--radius-sm);line-height:1.4}
 .baiComposerInput:focus-visible{outline:var(--focus-ring);outline-offset:2px}
 .baiComposerActions{display:flex;gap:var(--mod-space-compact);flex-shrink:0}
 
@@ -280,7 +280,7 @@
 
 .baiLauncherLabel{
   max-width:0;opacity:0;overflow:hidden;white-space:nowrap;
-  font-size:13px;letter-spacing:.01em;color:var(--color-text-primary);margin-left:0
+  font-size:0.8125rem;letter-spacing:.01em;color:var(--color-text-primary);margin-left:0
 }
 @media(prefers-reduced-motion:no-preference){
   .baiLauncherLabel{transition:max-width var(--duration-context) var(--ease-precise),
@@ -332,9 +332,9 @@
   display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-3);
   padding:var(--space-4);border-bottom:1px solid var(--mod-border);flex-shrink:0
 }
-.baiPanelTitle{font-family:var(--font-ui);font-weight:300;font-size:18px;margin:2px 0 0}
+.baiPanelTitle{font-family:var(--font-ui);font-weight:300;font-size:1.125rem;margin:2px 0 0}
 .baiPanelContextChip{
-  margin:var(--space-2) 0 0;font-family:var(--font-mono);font-size:11px;
+  margin:var(--space-2) 0 0;font-family:var(--font-mono);font-size:0.6875rem;
   color:var(--mod-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:260px
 }
 /* Reserved flex slot for a future Voice control (mic/connection state/
@@ -343,7 +343,7 @@
    the only thing "reserved" — adding a button later needs no redesign. */
 .baiPanelHeaderActions{display:flex;gap:var(--space-2);align-items:center;flex-shrink:0}
 .baiPanelCloseBtn{
-  background:none;border:none;color:var(--mod-muted);font-size:20px;line-height:1;
+  background:none;border:none;color:var(--mod-muted);font-size:1.25rem;line-height:1;
   cursor:pointer;padding:4px 6px;border-radius:var(--radius-sm)
 }
 .baiPanelCloseBtn:hover{color:var(--color-text-primary)}
@@ -356,7 +356,7 @@
 
 .baiPanelComposer{padding:var(--space-3) var(--space-4);flex-shrink:0}
 .baiPanelStatusLine{
-  margin:0;padding:var(--space-2) var(--space-4);font-size:12px;
+  margin:0;padding:var(--space-2) var(--space-4);font-size:0.75rem;
   color:var(--color-critical);border-top:1px solid var(--mod-border);flex-shrink:0
 }
 
@@ -406,10 +406,10 @@
 
 /* ---------- Header / context: same rail, one identity line ---------- */
 .baiPanelHeader{padding:var(--space-3) var(--bai-rail)}
-.baiPanelTitle{font-size:16px;font-weight:400;margin:0}
+.baiPanelTitle{font-size:1rem;font-weight:400;margin:0}
 .baiPanelContextChip{
   display:flex;align-items:center;gap:6px;margin:4px 0 0;
-  font-family:var(--font-ui);font-size:11.5px;color:var(--mod-muted);
+  font-family:var(--font-ui);font-size:0.7188rem;color:var(--mod-muted);
   max-width:260px;
 }
 .baiPanelContextDot{width:5px;height:5px;border-radius:50%;background:var(--color-accent-primary);flex-shrink:0}
@@ -474,10 +474,10 @@
    fixture/backend title text itself — out of scope here, carried as
    an open item (§36). */
 .baiPanelBody .baiAnswerMetrics .baiBlockTitle{
-  display:inline;margin:0;font-family:var(--font-ui);font-size:10.5px;
+  display:inline;margin:0;font-family:var(--font-ui);font-size:0.6562rem;
   font-weight:500;text-transform:uppercase;letter-spacing:.04em;color:var(--mod-muted);
 }
-.baiPanelBody .baiAnswerMetrics .baiBlockPeriod{display:inline;margin:0;font-size:10.5px;color:var(--mod-muted)}
+.baiPanelBody .baiAnswerMetrics .baiBlockPeriod{display:inline;margin:0;font-size:0.6562rem;color:var(--mod-muted)}
 .baiPanelBody .baiAnswerMetrics .baiBlockPeriod::before{content:" · "}
 
 /* Still used by score_breakdown's own summary .baiMetricsGrid (IA-3E.4
@@ -486,8 +486,8 @@
    .baiCompactMetrics below), so this rule no longer applies to the
    Human's own fixture, only to score_breakdown's identity/summary grid. */
 .baiPanelBody .baiMetricsGrid{margin-top:8px;grid-template-columns:1fr 1fr;gap:12px 16px}
-.baiPanelBody .baiMetricItem .modKpiLabel{font-size:9.5px}
-.baiPanelBody .baiMetricItem .modKpiValue{font-size:15px;margin-top:2px}
+.baiPanelBody .baiMetricItem .modKpiLabel{font-size:0.5938rem}
+.baiPanelBody .baiMetricItem .modKpiValue{font-size:0.9375rem;margin-top:2px}
 
 /* Other structured-block types (ranking/operations/score_*) get the
    same border-reduction treatment generically (Section 40) — the
@@ -557,7 +557,7 @@
 
 .baiCompactMetrics{display:flex;flex-direction:column;gap:10px}
 
-.baiMetricStrip{display:flex;flex-wrap:wrap;align-items:baseline;row-gap:6px;font-size:12.5px;color:var(--color-text-secondary)}
+.baiMetricStrip{display:flex;flex-wrap:wrap;align-items:baseline;row-gap:6px;font-size:0.7812rem;color:var(--color-text-secondary)}
 /* BUGFIX found live testing a pathologically long label (IA-3E.4):
    `white-space:nowrap` here kept a value+label pair unbreakable, but
    for a genuinely long label that meant the whole chip could exceed
@@ -581,10 +581,10 @@
 
 .baiMetricFacts{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px}
 .baiMetricFact{display:flex;flex-direction:column;gap:2px;min-width:0}
-.baiMetricFactLabel{margin:0;font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--mod-muted)}
+.baiMetricFactLabel{margin:0;font-size:0.5938rem;text-transform:uppercase;letter-spacing:.04em;color:var(--mod-muted)}
 /* Normal UI typography, not --font-mono (Section 10) -- tabular-nums
    keeps digits aligned without a monospace/terminal aesthetic. */
-.baiMetricFactValue{margin:0;font-family:var(--font-ui);font-weight:500;font-size:14px;font-variant-numeric:tabular-nums;color:var(--color-text-primary);overflow-wrap:break-word}
+.baiMetricFactValue{margin:0;font-family:var(--font-ui);font-weight:500;font-size:0.875rem;font-variant-numeric:tabular-nums;color:var(--color-text-primary);overflow-wrap:break-word}
 
 @media(max-width:380px){
   .baiMetricFacts{grid-template-columns:1fr}
@@ -615,18 +615,18 @@
 .baiPlanCardSecondary{opacity:.9}
 .baiPlanCardHeader{display:flex;flex-direction:column;gap:2px;margin-bottom:10px}
 .baiPlanCardBadge{
-  margin:0 0 2px;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+  margin:0 0 2px;font-size:0.5938rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
   color:var(--color-brand-red)
 }
-.baiPlanCardKind{margin:0;font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--color-text-secondary)}
-.baiPlanCardHero{margin:0;font-family:var(--font-ui);font-weight:600;font-size:20px;font-variant-numeric:tabular-nums;color:var(--color-text-primary);overflow-wrap:break-word}
-.baiPlanCardHeroUnit{font-size:12px;font-weight:400;color:var(--color-text-secondary)}
+.baiPlanCardKind{margin:0;font-size:0.7188rem;text-transform:uppercase;letter-spacing:.03em;color:var(--color-text-secondary)}
+.baiPlanCardHero{margin:0;font-family:var(--font-ui);font-weight:600;font-size:1.25rem;font-variant-numeric:tabular-nums;color:var(--color-text-primary);overflow-wrap:break-word}
+.baiPlanCardHeroUnit{font-size:0.75rem;font-weight:400;color:var(--color-text-secondary)}
 .baiPlanCardFacts{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;margin-top:8px}
 .baiPlanFact{display:flex;flex-direction:column;gap:2px;min-width:0}
-.baiPlanFactLabel{margin:0;font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--mod-muted)}
-.baiPlanFactValue{margin:0;font-family:var(--font-ui);font-weight:500;font-size:13px;font-variant-numeric:tabular-nums;color:var(--color-text-primary);overflow-wrap:break-word}
+.baiPlanFactLabel{margin:0;font-size:0.5938rem;text-transform:uppercase;letter-spacing:.04em;color:var(--mod-muted)}
+.baiPlanFactValue{margin:0;font-family:var(--font-ui);font-weight:500;font-size:0.8125rem;font-variant-numeric:tabular-nums;color:var(--color-text-primary);overflow-wrap:break-word}
 .baiPlanCardBalloons{padding-top:8px;border-top:1px solid var(--mod-border)}
-.baiPlanCardTarget{margin:10px 0 0;padding-top:8px;border-top:1px solid var(--mod-border);font-size:11.5px;color:var(--color-text-secondary)}
+.baiPlanCardTarget{margin:10px 0 0;padding-top:8px;border-top:1px solid var(--mod-border);font-size:0.7188rem;color:var(--color-text-secondary)}
 @media(max-width:380px){
   .baiPlanCardFacts{grid-template-columns:1fr}
 }
@@ -642,7 +642,7 @@
    expanding never looks like a different feature bolted on. ---------- */
 .baiAllSimulationsDisclosure{margin-top:10px}
 .baiAllSimulationsSummary{
-  cursor:pointer;list-style:none;font-size:12px;font-weight:500;color:var(--color-text-secondary);
+  cursor:pointer;list-style:none;font-size:0.75rem;font-weight:500;color:var(--color-text-secondary);
   padding:6px 0;user-select:none;
 }
 .baiAllSimulationsSummary::-webkit-details-marker{display:none}
@@ -667,13 +667,13 @@
    inventing a new color. ---------- */
 .baiCommercialAltCard{border-style:dashed}
 .baiCommercialAltBadge{
-  margin:0 0 2px;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+  margin:0 0 2px;font-size:0.5938rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
   color:var(--color-info)
 }
-.baiCommercialAltTitle{margin:2px 0 0;font-size:11.5px;color:var(--color-text-secondary)}
-.baiCommercialAltIneligible{margin:10px 0 0;padding-top:8px;border-top:1px solid var(--mod-border);font-size:11.5px;color:var(--mod-muted)}
+.baiCommercialAltTitle{margin:2px 0 0;font-size:0.7188rem;color:var(--color-text-secondary)}
+.baiCommercialAltIneligible{margin:10px 0 0;padding-top:8px;border-top:1px solid var(--mod-border);font-size:0.7188rem;color:var(--mod-muted)}
 .baiCommercialAltTradeInWarning{
-  margin:10px 0 0;padding:8px 10px;border-radius:8px;font-size:11.5px;line-height:1.4;
+  margin:10px 0 0;padding:8px 10px;border-radius:8px;font-size:0.7188rem;line-height:1.4;
   background:var(--color-warning-soft);border:1px solid color-mix(in srgb,var(--color-warning) 45%,transparent);color:var(--color-warning)
 }
 
@@ -687,7 +687,7 @@
    picks the rate, never the Intelligence. ---------- */
 .baiCommercialAltOption{padding-top:10px;margin-top:10px;border-top:1px dashed var(--mod-border)}
 .baiCommercialAltOption:first-child{padding-top:0;margin-top:0;border-top:none}
-.baiCommercialAltOptionLabel{margin:0 0 4px;font-family:var(--font-ui);font-weight:600;font-size:12.5px;color:var(--color-text-primary)}
+.baiCommercialAltOptionLabel{margin:0 0 4px;font-family:var(--font-ui);font-weight:600;font-size:0.7812rem;color:var(--color-text-primary)}
 
 /* ---------- Compact ranking cards (IA-3H.1C.3) — the `ranking` block
    type's OWN drawer presentation, built by intelligence-panel.js's
@@ -701,16 +701,16 @@
 .baiRankList{display:flex;flex-direction:column;gap:8px;min-width:0}
 .baiRankCard{border:1px solid var(--mod-border);border-radius:8px;padding:10px 12px;min-width:0}
 .baiRankCardHeader{display:flex;align-items:baseline;gap:8px;margin-bottom:8px;flex-wrap:wrap}
-.baiRankPos{font-family:var(--font-mono);font-size:11px;color:var(--mod-muted);flex-shrink:0}
-.baiRankName{font-weight:500;font-size:13px;overflow-wrap:break-word;min-width:0}
+.baiRankPos{font-family:var(--font-mono);font-size:0.6875rem;color:var(--mod-muted);flex-shrink:0}
+.baiRankName{font-weight:500;font-size:0.8125rem;overflow-wrap:break-word;min-width:0}
 .baiRankMetrics{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;min-width:0}
 .baiRankMetric{display:flex;flex-direction:column;gap:2px;min-width:0}
-.baiRankMetricLabel{margin:0;font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--mod-muted)}
-.baiRankMetricValue{margin:0;font-family:var(--font-ui);font-weight:500;font-size:13px;font-variant-numeric:tabular-nums;color:var(--color-text-primary);overflow-wrap:break-word}
+.baiRankMetricLabel{margin:0;font-size:0.5938rem;text-transform:uppercase;letter-spacing:.04em;color:var(--mod-muted)}
+.baiRankMetricValue{margin:0;font-family:var(--font-ui);font-weight:500;font-size:0.8125rem;font-variant-numeric:tabular-nums;color:var(--color-text-primary);overflow-wrap:break-word}
 /* The block's own declared primary metric (Section 13's "primary
    metric emphasized") -- larger, accent-colored, and always the first
    card in reading order (rankingItemKeys already sorts it first). */
-.baiRankMetricPrimary .baiRankMetricValue{font-size:15px;color:var(--color-accent-primary)}
+.baiRankMetricPrimary .baiRankMetricValue{font-size:0.9375rem;color:var(--color-accent-primary)}
 @media(max-width:380px){
   .baiRankMetrics{grid-template-columns:1fr}
 }
@@ -729,8 +729,8 @@
 /* Same V2 red (Section 22 explicitly keeps it — no desaturation), but
    sized/shaped to match --bai-content-radius so it reads as part of
    the same composed control instead of a separate loud rectangle. */
-.baiPanelComposer #baiPanelSendBtn{padding:0 16px;height:40px;border-radius:var(--bai-content-radius);font-size:13px}
-.baiPanelComposer .baiVoiceBtn{border-radius:var(--bai-content-radius);font-size:13px}
+.baiPanelComposer #baiPanelSendBtn{padding:0 16px;height:40px;border-radius:var(--bai-content-radius);font-size:0.8125rem}
+.baiPanelComposer .baiVoiceBtn{border-radius:var(--bai-content-radius);font-size:0.8125rem}
 
 /* Drawer WIDTH is now owned by .baiWorkspaceShell (IA-3I, section
    below) -- the old fixed min(420px,100vw) right-docked sizing is
@@ -838,11 +838,11 @@
    hidden attribute. */
 .baiPanelEmptyState[hidden]{display:none}
 .baiEmptyMark{color:var(--color-brand-red);opacity:.9;margin-bottom:var(--space-2)}
-.baiEmptyTitle{font-family:var(--font-ui);font-weight:300;font-size:22px;margin:0;color:var(--color-text-primary)}
-.baiEmptySubtitle{font-size:13px;color:var(--color-text-secondary);margin:0;max-width:420px}
+.baiEmptyTitle{font-family:var(--font-ui);font-weight:300;font-size:1.375rem;margin:0;color:var(--color-text-primary)}
+.baiEmptySubtitle{font-size:0.8125rem;color:var(--color-text-secondary);margin:0;max-width:420px}
 .baiSuggestions{display:flex;flex-wrap:wrap;gap:var(--space-2);justify-content:center;margin-top:var(--space-4);max-width:560px}
 .baiSuggestionChip{
-  font-family:var(--font-ui);font-size:12.5px;color:var(--color-text-secondary);
+  font-family:var(--font-ui);font-size:0.7812rem;color:var(--color-text-secondary);
   background:var(--color-surface-1);border:1px solid var(--color-hairline-strong);
   border-radius:999px;padding:7px 14px;cursor:pointer;
 }
@@ -980,7 +980,7 @@
 .baiVoiceDiagToggle{
   position:fixed;right:var(--space-2);top:var(--space-2);z-index:300;pointer-events:auto;
   background:none;border:none;color:var(--color-text-muted);
-  font-family:var(--font-mono);font-size:9px;letter-spacing:.03em;
+  font-family:var(--font-mono);font-size:0.5625rem;letter-spacing:.03em;
   text-decoration:underline;cursor:pointer;opacity:.5;padding:3px 5px;
 }
 .baiVoiceDiagToggle:hover,.baiVoiceDiagToggle:focus-visible{opacity:1;color:var(--color-accent-primary)}
@@ -991,12 +991,12 @@
   overflow:auto;background:var(--color-elevated-surface);
   border:1px solid var(--color-hairline-strong);border-radius:var(--radius-md);
   box-shadow:var(--shadow-elevated);padding:var(--space-4);
-  font-family:var(--font-mono);font-size:10.5px;color:var(--color-text-secondary);
+  font-family:var(--font-mono);font-size:0.6562rem;color:var(--color-text-secondary);
 }
 .baiVoiceDiagPanel[hidden]{display:none}
 .baiVoiceDiagHeader{display:flex;align-items:center;justify-content:space-between;gap:var(--space-2);margin-bottom:var(--space-2)}
-.baiVoiceDiagHeader h2{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--color-text-muted);margin:0}
-.baiVoiceDiagHeader button{background:none;border:1px solid var(--color-hairline-strong);border-radius:var(--radius-sm);color:var(--color-text-secondary);font-family:var(--font-mono);font-size:9px;cursor:pointer;padding:2px 6px}
+.baiVoiceDiagHeader h2{font-family:var(--font-mono);font-size:0.625rem;text-transform:uppercase;letter-spacing:.06em;color:var(--color-text-muted);margin:0}
+.baiVoiceDiagHeader button{background:none;border:1px solid var(--color-hairline-strong);border-radius:var(--radius-sm);color:var(--color-text-secondary);font-family:var(--font-mono);font-size:0.5625rem;cursor:pointer;padding:2px 6px}
 #baiVoiceDiagBody{white-space:pre-wrap;word-break:break-word;margin:0;max-width:100%}
 /* IA-3I: the old bottom-anchored 480px override (IA-3H.1A) is retired
    along with the bottom anchor itself above -- the top anchor already
@@ -1056,9 +1056,9 @@
 }
 
 .baiVoiceFocusHeader{display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-.baiVoiceFocusTitle{font-family:var(--font-ui);font-weight:400;font-size:15px;color:var(--color-text-secondary)}
+.baiVoiceFocusTitle{font-family:var(--font-ui);font-weight:400;font-size:0.9375rem;color:var(--color-text-secondary)}
 .baiVoiceFocusCloseBtn{
-  background:none;border:none;color:var(--color-text-muted);font-size:22px;line-height:1;
+  background:none;border:none;color:var(--color-text-muted);font-size:1.375rem;line-height:1;
   cursor:pointer;padding:2px 6px;border-radius:var(--radius-sm)
 }
 .baiVoiceFocusCloseBtn:hover{color:var(--color-text-primary)}
@@ -1087,7 +1087,7 @@
 /* Status text is the state's PRIMARY, non-optional signal (Section 27
    -- comprehension must never depend on animation alone). */
 .baiVoiceFocusStatus{
-  margin:0;font-family:var(--font-ui);font-size:14px;font-weight:500;
+  margin:0;font-family:var(--font-ui);font-size:0.875rem;font-weight:500;
   color:var(--color-text-secondary);text-align:center;
 }
 .baiVoiceFocusStateERROR ~ .baiVoiceFocusStatus,
@@ -1099,16 +1099,16 @@
 .baiVoiceFocusTranscript{
   flex-shrink:0;min-height:36px;max-height:88px;overflow-y:auto;
   padding:var(--space-2) var(--space-3);border-top:1px solid var(--mod-border);
-  font-size:12.5px;line-height:1.5;color:var(--color-text-secondary);
+  font-size:0.7812rem;line-height:1.5;color:var(--color-text-secondary);
 }
 .baiVoiceFocusTranscript:empty{border-top-color:transparent}
-.baiVoiceFocusTranscriptRole{display:block;font-family:var(--font-mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--mod-muted);margin-bottom:2px}
+.baiVoiceFocusTranscriptRole{display:block;font-family:var(--font-mono);font-size:0.5938rem;text-transform:uppercase;letter-spacing:.05em;color:var(--mod-muted);margin-bottom:2px}
 .baiVoiceFocusTranscriptText{display:block;overflow-wrap:break-word;color:var(--color-text-primary)}
 
 /* ---------- Bottom controls ---------- */
 .baiVoiceFocusControls{display:flex;gap:var(--space-3);flex-shrink:0}
 .baiVoiceFocusTextBtn,.baiVoiceFocusEndBtn{
-  flex:1;min-height:44px;border-radius:var(--radius-md);font-family:var(--font-ui);font-size:13px;font-weight:500;
+  flex:1;min-height:44px;border-radius:var(--radius-md);font-family:var(--font-ui);font-size:0.8125rem;font-weight:500;
   cursor:pointer;border:1px solid var(--color-hairline-strong);
 }
 .baiVoiceFocusTextBtn{background:none;color:var(--color-text-secondary)}

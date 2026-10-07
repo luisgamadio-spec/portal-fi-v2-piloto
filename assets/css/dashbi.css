@@ -22,22 +22,22 @@
    rename deferred to a future Wave; JS event-handler toggles still
    target these exact names). */
 .dbHeader { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; margin-bottom: var(--space-5); }
-.dbHeader h1 { font-family: var(--font-ui); font-weight: 300; font-size: clamp(22px, 2.6vw, 30px); letter-spacing: -.01em; margin: 0; }
-.dbHeader p { color: var(--color-text-secondary); margin: var(--space-1) 0 0; font-size: 13px; }
+.dbHeader h1 { font-family: var(--font-ui); font-weight: 300; font-size: clamp(1.375rem, calc(2.6vw * var(--fs-scale)), 1.875rem); letter-spacing: -.01em; margin: 0; }
+.dbHeader p { color: var(--color-text-secondary); margin: var(--space-1) 0 0; font-size: 0.8125rem; }
 
-.dbFixtureBar { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; padding: var(--space-2) var(--space-3); margin-bottom: var(--space-4); border: 1px dashed var(--color-hairline-strong); border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 10.5px; color: var(--color-text-muted); }
+.dbFixtureBar { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; padding: var(--space-2) var(--space-3); margin-bottom: var(--space-4); border: 1px dashed var(--color-hairline-strong); border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 0.6562rem; color: var(--color-text-muted); }
 .dbFixtureBar .dbFixtureLabel { text-transform: uppercase; letter-spacing: .06em; color: var(--color-warning); }
-.dbFixtureBar select { background: var(--color-surface-2); border: 1px solid var(--color-hairline-strong); color: var(--color-text-primary); font-family: var(--font-mono); font-size: 11px; padding: 3px var(--space-2); border-radius: var(--radius-sm); }
+.dbFixtureBar select { background: var(--color-surface-2); border: 1px solid var(--color-hairline-strong); color: var(--color-text-primary); font-family: var(--font-mono); font-size: 0.6875rem; padding: 3px var(--space-2); border-radius: var(--radius-sm); }
 .dbFixtureBar select:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
 
 .dbFilters { display: flex; align-items: flex-end; gap: var(--space-4); flex-wrap: wrap; margin-bottom: var(--space-4); padding-bottom: var(--space-4); border-bottom: 1px solid var(--color-hairline); }
 .dbField { display: flex; flex-direction: column; gap: var(--space-1); min-width: 160px; }
-.dbField label { color: var(--color-text-muted); font-size: 10.5px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; }
-.dbField select, .dbField input[type="date"] { background: var(--color-surface-2); border: 1px solid var(--color-hairline-strong); color: var(--color-text-primary); font-family: var(--font-ui); font-size: 13px; padding: var(--space-2); border-radius: var(--radius-sm); }
+.dbField label { color: var(--color-text-muted); font-size: 0.6562rem; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; }
+.dbField select, .dbField input[type="date"] { background: var(--color-surface-2); border: 1px solid var(--color-hairline-strong); color: var(--color-text-primary); font-family: var(--font-ui); font-size: 0.8125rem; padding: var(--space-2); border-radius: var(--radius-sm); }
 .dbField select:focus-visible, .dbField input:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
 
 .dbPresetGroup, .dbViewGroup { display: flex; gap: var(--space-1); flex-wrap: wrap; }
-.dbBtn { background: none; border: 1px solid var(--color-hairline-strong); color: var(--color-text-secondary); font-family: var(--font-ui); font-size: 12.5px; font-weight: 500; padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); cursor: pointer; }
+.dbBtn { background: none; border: 1px solid var(--color-hairline-strong); color: var(--color-text-secondary); font-family: var(--font-ui); font-size: 0.7812rem; font-weight: 500; padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); cursor: pointer; }
 .dbBtn:hover:not(.dbBtnActive) { color: var(--color-text-primary); }
 .dbBtn:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
 .dbBtnActive { color: var(--color-canvas); background: var(--color-text-primary); border-color: var(--color-text-primary); }
@@ -65,14 +65,14 @@
 .dbModeBtn.dbBtnActive::after { content: ""; position: absolute; left: var(--space-2); right: var(--space-2); bottom: -7px; height: 2px; background: var(--color-accent-primary); }
 .dbModeHint { padding: var(--space-4) 0; }
 .dbFechamentoBar .dbMuted { margin: 0; }
-.dbFechamento { display: inline-block; font-family: var(--font-mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em; color: var(--color-success); border: 1px solid var(--color-success); border-radius: var(--radius-sm); padding: 2px 7px; flex-shrink: 0; }
+.dbFechamento { display: inline-block; font-family: var(--font-mono); font-size: 0.6562rem; text-transform: uppercase; letter-spacing: .07em; color: var(--color-success); border: 1px solid var(--color-success); border-radius: var(--radius-sm); padding: 2px 7px; flex-shrink: 0; }
 
-.dbBlockedNotice { border: 1px solid var(--color-critical); border-radius: var(--radius-md); padding: var(--space-4); color: var(--color-critical); font-size: 13px; margin-bottom: var(--space-4); }
+.dbBlockedNotice { border: 1px solid var(--color-critical); border-radius: var(--radius-md); padding: var(--space-4); color: var(--color-critical); font-size: 0.8125rem; margin-bottom: var(--space-4); }
 .dbBlockedNotice b { color: var(--color-text-primary); }
 
-.dbPage h2 { font-family: var(--font-ui); font-weight: 400; font-size: 17px; margin: var(--space-6) 0 var(--space-3); }
+.dbPage h2 { font-family: var(--font-ui); font-weight: 400; font-size: 1.0625rem; margin: var(--space-6) 0 var(--space-3); }
 .dbPage h2:first-of-type { margin-top: 0; }
-.dbMuted { color: var(--color-text-muted); font-size: 12px; margin: 0 0 var(--space-3); }
+.dbMuted { color: var(--color-text-muted); font-size: 0.75rem; margin: 0 0 var(--space-3); }
 /* FC-2 (GAP-004): discoverable-but-not-dominant export action, reusing the
    existing .dbBtn segmented-control look rather than a new visual language. */
 .dbExportBar { display: flex; align-items: center; gap: var(--space-3); margin: 0 0 var(--space-3); flex-wrap: wrap; }
@@ -89,9 +89,9 @@
    dashbi.js, kept as documented reference, not deleted). */
 .dbKpiGridPrimary { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--space-3); margin-bottom: var(--space-3); }
 .dbKpiCardPrimary { border: 1px solid var(--color-hairline); border-radius: var(--radius-md); padding: var(--space-4); }
-.dbKpiCardPrimary .dbK { color: var(--color-text-muted); font-size: 10.5px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; }
-.dbKpiCardPrimary .dbV { font-family: var(--font-mono); font-size: 24px; font-weight: 500; margin-top: var(--space-1); font-variant-numeric: tabular-nums; }
-.dbKpiCardPrimary .dbHint { color: var(--color-text-muted); font-size: 11px; margin-top: 2px; }
+.dbKpiCardPrimary .dbK { color: var(--color-text-muted); font-size: 0.6562rem; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; }
+.dbKpiCardPrimary .dbV { font-family: var(--font-mono); font-size: 1.5rem; font-weight: 500; margin-top: var(--space-1); font-variant-numeric: tabular-nums; }
+.dbKpiCardPrimary .dbHint { color: var(--color-text-muted); font-size: 0.6875rem; margin-top: 2px; }
 
 /* PORTAL-NEXT-07.5 — Share and Receita Total get distinct attention
    treatment (Gate 13/14), each identifiable WITHOUT relying on color
@@ -130,8 +130,8 @@
    the "Anterior:" label are gone by design (Gate 3) -- visually. Gate 29:
    assistive tech still gets the equivalent context via .srOnly, never
    shown visually. */
-.dbPrevValue { display: inline-flex; align-items: baseline; gap: 4px; margin-left: 5px; font-family: var(--font-mono); font-size: 11px; font-variant-numeric: tabular-nums; color: var(--color-text-muted); }
-.dbPrevValueShort { font-size: 10px; }
+.dbPrevValue { display: inline-flex; align-items: baseline; gap: 4px; margin-left: 5px; font-family: var(--font-mono); font-size: 0.6875rem; font-variant-numeric: tabular-nums; color: var(--color-text-muted); }
+.dbPrevValueShort { font-size: 0.625rem; }
 .dbPrevValueNA { font-weight: 600; }
 .dbPrevArrow { font-weight: 700; }
 .dbPrevArrowUp { color: var(--color-success); }
@@ -161,8 +161,8 @@
    (nothing is ever placed in it there), never affecting column 1's edge. */
 .dbNumCompare { display: inline-grid; grid-template-columns: max-content max-content; column-gap: 4px; justify-content: end; }
 .dbNumCurrent { grid-column: 1; justify-self: end; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.dbPrevNum { grid-column: 1; justify-self: end; font-family: var(--font-mono); font-size: 11px; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--color-text-muted); }
-.dbNumCompare .dbPrevValueNA { grid-column: 1; justify-self: end; font-family: var(--font-mono); font-size: 11px; color: var(--color-text-muted); font-weight: 600; }
+.dbPrevNum { grid-column: 1; justify-self: end; font-family: var(--font-mono); font-size: 0.6875rem; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--color-text-muted); }
+.dbNumCompare .dbPrevValueNA { grid-column: 1; justify-self: end; font-family: var(--font-mono); font-size: 0.6875rem; color: var(--color-text-muted); font-weight: 600; }
 .dbNumCompare .dbPrevArrow { grid-column: 2; justify-self: start; }
 /* Gate 20/25 (responsive): the previous row occupies its own compact
    secondary line, not inline with the current value, so it never forces
@@ -170,12 +170,12 @@
    construction (dbNumCurrent + dbPrevNum/dbPrevArrow), this just confirms
    the containing cell doesn't force it back onto one line. */
 .dbTable .dbNumCol .dbNumCompare, .dbMobileValue .dbNumCompare { display: inline-grid; }
-.dbFamilyMetricBox .dbV .dbPrevValue { display: flex; margin-top: 2px; margin-left: 0; font-size: 10px; }
+.dbFamilyMetricBox .dbV .dbPrevValue { display: flex; margin-top: 2px; margin-left: 0; font-size: 0.625rem; }
 
 .dbPlanGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: var(--space-2); margin-bottom: var(--space-2); }
 .dbPlanCard { border: 1px solid var(--color-hairline); border-radius: var(--radius-sm); padding: var(--space-3); border-left: 3px solid var(--color-hairline-strong); }
-.dbPlanCard .dbK { font-size: 11px; font-weight: 600; letter-spacing: .03em; }
-.dbPlanCard .dbV { font-family: var(--font-mono); font-size: 18px; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.dbPlanCard .dbK { font-size: 0.6875rem; font-weight: 600; letter-spacing: .03em; }
+.dbPlanCard .dbV { font-family: var(--font-mono); font-size: 1.125rem; margin-top: 2px; font-variant-numeric: tabular-nums; }
 .dbPlanCard.planSubsidiado { border-left-color: var(--color-success); }
 .dbPlanCard.planReversao { border-left-color: var(--color-warning); }
 .dbPlanCard.planCoparticipado { border-left-color: var(--color-accent-primary); }
@@ -183,8 +183,8 @@
 .dbPlanCard.planLinear { border-left-color: var(--color-text-muted); }
 
 .dbTableWrap { overflow-x: auto; border: 1px solid var(--color-hairline); border-radius: var(--radius-md); margin-bottom: var(--space-4); }
-.dbTable { width: 100%; border-collapse: collapse; font-size: 12.5px; }
-.dbTable thead th { text-align: left; font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--color-text-muted); font-weight: 500; padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--color-hairline-strong); white-space: nowrap; }
+.dbTable { width: 100%; border-collapse: collapse; font-size: 0.7812rem; }
+.dbTable thead th { text-align: left; font-family: var(--font-mono); font-size: 0.625rem; text-transform: uppercase; letter-spacing: .05em; color: var(--color-text-muted); font-weight: 500; padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--color-hairline-strong); white-space: nowrap; }
 .dbTable td { padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--color-hairline); white-space: nowrap; }
 .dbTable tbody tr:last-child td { border-bottom: none; }
 .dbTable tbody tr:hover td { background: rgba(255,255,255,.028); }
@@ -308,15 +308,15 @@
 .dbTableModelos { min-width: 942px; }
 
 .dbDetailToggleCell { white-space: normal; }
-.dbDetailToggle { box-sizing: border-box; max-width: 100%; background: none; border: 1px solid var(--color-hairline-strong); color: var(--color-text-secondary); font-family: var(--font-mono); font-size: 10.5px; padding: 3px 4px; border-radius: var(--radius-sm); cursor: pointer; white-space: normal; }
+.dbDetailToggle { box-sizing: border-box; max-width: 100%; background: none; border: 1px solid var(--color-hairline-strong); color: var(--color-text-secondary); font-family: var(--font-mono); font-size: 0.6562rem; padding: 3px 4px; border-radius: var(--radius-sm); cursor: pointer; white-space: normal; }
 .dbDetailToggle:hover { color: var(--color-text-primary); border-color: var(--color-text-secondary); }
 .dbDetailToggle:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
 .dbDetailToggle[aria-expanded="true"] { color: var(--color-canvas); background: var(--color-text-primary); border-color: var(--color-text-primary); font-weight: 700; }
 .dbTable tr.dbDetailRow td { background: var(--color-surface-2); padding: var(--space-3); border-bottom: 1px solid var(--color-hairline); white-space: normal; }
 .dbDetailPanel { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 160px)); gap: var(--space-4); }
-.dbDetailGroupLabel { color: var(--color-text-muted); font-size: 9.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; margin-bottom: var(--space-2); padding-bottom: 3px; border-bottom: 1px solid var(--color-hairline); }
+.dbDetailGroupLabel { color: var(--color-text-muted); font-size: 0.5938rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; margin-bottom: var(--space-2); padding-bottom: 3px; border-bottom: 1px solid var(--color-hairline); }
 .dbDetailGroupItems { display: flex; flex-direction: column; gap: 5px; }
-.dbDetailItem { display: flex; justify-content: space-between; gap: var(--space-3); font-size: 12.5px; }
+.dbDetailItem { display: flex; justify-content: space-between; gap: var(--space-3); font-size: 0.7812rem; }
 .dbDetailK { color: var(--color-text-muted); }
 .dbDetailV { font-family: var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; }
 
@@ -355,28 +355,28 @@
 }
 .dbMobileCard:last-child { margin-bottom: 0; }
 .dbMobileCardTotal { border-color: var(--color-hairline-strong); font-weight: 600; }
-.dbMobileIdentity { font-size: 15px; font-weight: 600; color: var(--color-text-primary); overflow-wrap: break-word; }
-.dbMobileSub { font-size: 11px; color: var(--color-text-muted); margin-top: 1px; }
+.dbMobileIdentity { font-size: 0.9375rem; font-weight: 600; color: var(--color-text-primary); overflow-wrap: break-word; }
+.dbMobileSub { font-size: 0.6875rem; color: var(--color-text-muted); margin-top: 1px; }
 .dbMobileFieldGrid { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); margin-top: var(--space-3); }
 .dbMobileField { flex-basis: 100%; }
 .dbMobileFieldPair { flex-basis: calc(50% - var(--space-2)); }
 .dbMobileFieldEmph { padding: var(--space-2); border: 1px solid var(--color-hairline-strong); border-radius: var(--radius-sm); }
-.dbMobileLabel { font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; letter-spacing: .05em; color: var(--color-text-muted); margin-bottom: 2px; }
-.dbMobileValue { font-family: var(--font-mono); font-size: 14px; font-variant-numeric: tabular-nums; overflow-wrap: break-word; }
+.dbMobileLabel { font-family: var(--font-mono); font-size: 0.5625rem; text-transform: uppercase; letter-spacing: .05em; color: var(--color-text-muted); margin-bottom: 2px; }
+.dbMobileValue { font-family: var(--font-mono); font-size: 0.875rem; font-variant-numeric: tabular-nums; overflow-wrap: break-word; }
 .dbMobileCard > .dbDetailToggle { display: block; width: 100%; margin-top: var(--space-3); }
 .dbMobileCard > .dbDetailPanel { margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--color-hairline); }
 
 .dbFamilyMetricGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--space-2); margin: var(--space-3) 0 var(--space-4); }
 .dbFamilyMetricBox { border: 1px solid var(--color-hairline); border-radius: var(--radius-sm); padding: var(--space-2) var(--space-3); }
-.dbFamilyMetricBox .dbK { color: var(--color-text-muted); font-size: 9.5px; font-weight: 500; text-transform: uppercase; letter-spacing: .05em; }
-.dbFamilyMetricBox .dbV { font-family: var(--font-mono); font-size: 15px; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.dbFamilyMetricBox .dbK { color: var(--color-text-muted); font-size: 0.5938rem; font-weight: 500; text-transform: uppercase; letter-spacing: .05em; }
+.dbFamilyMetricBox .dbV { font-family: var(--font-mono); font-size: 0.9375rem; margin-top: 2px; font-variant-numeric: tabular-nums; }
 
 /* Model Analysis — HIGH density, its own visual region (Gate 81-82) */
 .dbModelSection { border: 1px solid var(--color-hairline-strong); border-radius: var(--radius-md); padding: var(--space-4); margin-bottom: var(--space-5); }
 .dbEntradaGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--space-2); margin: var(--space-3) 0; }
 .dbEntradaCard { border: 1px solid var(--color-hairline); border-radius: var(--radius-sm); padding: var(--space-3); border-left: 2px solid var(--color-accent-primary); }
-.dbEntradaCard .dbK { color: var(--color-text-muted); font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: .05em; }
-.dbEntradaCard .dbV { font-family: var(--font-mono); font-size: 17px; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.dbEntradaCard .dbK { color: var(--color-text-muted); font-size: 0.625rem; font-weight: 500; text-transform: uppercase; letter-spacing: .05em; }
+.dbEntradaCard .dbV { font-family: var(--font-mono); font-size: 1.0625rem; margin-top: 2px; font-variant-numeric: tabular-nums; }
 
 .dbPenetracaoBaixa { color: var(--color-critical); }
 .dbPenetracaoOk { color: var(--color-success); }
@@ -393,13 +393,13 @@
 .dbVehicleCardActive { border-color: var(--color-accent-primary); border-width: 2px; padding: calc(var(--space-2) - 1px); }
 .dbVehicleImgWrap { width: 100%; height: 60px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
 .dbVehicleImgWrap img { max-width: 100%; max-height: 100%; object-fit: contain; }
-.dbVehicleName { font-size: 11.5px; font-weight: 500; letter-spacing: .02em; text-align: center; color: var(--color-text-secondary); }
+.dbVehicleName { font-size: 0.7188rem; font-weight: 500; letter-spacing: .02em; text-align: center; color: var(--color-text-secondary); }
 .dbVehicleCardActive .dbVehicleName { color: var(--color-text-primary); font-weight: 700; }
 .dbVehicleCheck { color: var(--color-accent-primary); }
 
-.dbSubHeading { font-family: var(--font-ui); font-weight: 500; font-size: 13px; margin: var(--space-4) 0 var(--space-2); color: var(--color-text-secondary); }
+.dbSubHeading { font-family: var(--font-ui); font-weight: 500; font-size: 0.8125rem; margin: var(--space-4) 0 var(--space-2); color: var(--color-text-secondary); }
 .dbRankingSection h3:first-of-type, .dbNovosLojaSection h3:first-of-type { margin-top: var(--space-2); }
-.dbTableSub { font-size: 11px; color: var(--color-text-muted); margin-top: 1px; }
+.dbTableSub { font-size: 0.6875rem; color: var(--color-text-muted); margin-top: 1px; }
 .dbTable tbody tr.dbTotalRow td { font-weight: 700; border-top: 1px solid var(--color-hairline-strong); }
 
 @media (max-width: 480px) {

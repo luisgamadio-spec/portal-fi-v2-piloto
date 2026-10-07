@@ -393,6 +393,7 @@
     document.getElementById('smFormRegion').innerHTML = formHtml(currentMode);
     document.getElementById('smResultRegion').innerHTML = UI.emptyBlock('Preencha os campos e clique em Calcular.');
     wireForm(currentMode);
+    UI.syncEntries(document.getElementById('smFormRegion'));
   }
 
   /* ---------- Balanced term grid, mirroring Novos' 08.2 pattern
@@ -461,7 +462,7 @@
         // SIMLIVE1: gated on tradAuthority (simulador_get_balao_seminovos).
         if (tradAuthority.getState() !== 'READY') return authorityGateHtml(tradAuthority);
         return UI.moneyField('sBem', 'Valor do bem', 'R$ 80.000,00') +
-          UI.moneyField('sEntrada', 'Entrada', 'R$ 16.000,00') +
+          UI.entryField('sEntrada', 'Entrada', 'R$ 16.000,00', 'sBem') +
           UI.numberField('sAno', 'Ano do veículo', 2022, { min: 1900, max: 2099, hint: 'Tabelas cadastradas para 2017–2024 e 2025–2099.' }) +
           termGridFieldHtml('sPrazo', 'Prazo', TRAD_TERMS, 24) +
           '<div class="field"><label>Balões</label><div class="smBalloonList" id="sBaloesList"></div>' +
@@ -473,7 +474,7 @@
         if (linearRTAuthority.getState() !== 'READY') return authorityGateHtml(linearRTAuthority);
         return UI.numberField('sAnoRT', 'Ano do veículo', 2020, { min: 2007, max: 2099, hint: 'Tabela cadastrada para 2007–2099.' }) +
           UI.moneyField('sValorRT', 'Valor do veículo', 'R$ 80.000,00') +
-          UI.moneyField('sEntradaRT', 'Entrada', 'R$ 0,00', 'Entrada permitida a partir de 0%.') +
+          UI.entryField('sEntradaRT', 'Entrada', 'R$ 0,00', 'sValorRT', 'Entrada permitida a partir de 0%.') +
           '<button type="button" class="btn btn-primary" id="sCalc" style="width:100%;margin-top:6px">Calcular</button>';
       case 'descobridor':
         return UI.moneyField('sFinanciado', 'Valor financiado', 'R$ 70.000,00') +

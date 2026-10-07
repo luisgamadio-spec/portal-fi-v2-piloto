@@ -68,6 +68,72 @@
       '<input class="input mono" id="' + id + '" type="text" inputmode="decimal" autocomplete="off" data-percent value="' + esc(value || '') + '">' +
       (hint ? '<span class="hint">' + esc(hint) + '</span>' : '') + '</div>';
   }
+  /* Entrada em R$ e em %, ligadas pelo valor do bem (como no Portal antigo).
+     O motor continua lendo SÓ o campo R$ (mesmo id de sempre); o % é apenas
+     uma forma de preencher o R$. Regras do antigo: digitar R$ (ou mudar o bem)
+     recalcula o %; digitar % grava R$ = bem × % arredondado a centavos e
+     dispara o 'input' do campo R$ (os cálculos automáticos rodam igual).
+     % aceita vírgula e até 2 casas. */
+  function entryField(id, label, value, bemId, hint) {
+    var cleanValue = String(value || '').replace(/^R\$\s*/, '');
+    return '<div class="field"><label for="' + id + '">' + esc(label) + '</label>' +
+      '<div class="smEntryPair">' +
+      '<div class="inputAffix"><span class="prefix">R$</span>' +
+      '<input class="input mono" id="' + id + '" inputmode="decimal" autocomplete="off" data-money data-entry-money data-entry-bem="' + esc(bemId) + '" value="' + esc(cleanValue) + '"></div>' +
+      '<div class="inputAffix inputAffixSuffix"><input class="input mono" id="' + id + 'Pct" inputmode="decimal" autocomplete="off" data-percent data-entry-pct data-entry-of="' + esc(id) + '" aria-label="' + esc(label) + ' em percentual" value="">' +
+      '<span class="suffix">%</span></div>' +
+      '</div>' +
+      (hint ? '<span class="hint">' + esc(hint) + '</span>' : '') + '</div>';
+  }
+  function fmtEntryPct(r) {
+    if (r == null || !isFinite(r) || r < 0) return '';
+    return (r * 100).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  }
+  function parsePctBR(s) {
+    var t = String(s == null ? '' : s).replace(/%/g, '').trim().replace(',', '.');
+    if (t === '' || !/^\d*\.?\d*$/.test(t)) return NaN;
+    var n = Number(t);
+    return isFinite(n) ? n / 100 : NaN;
+  }
+  function entryPctFromMoney(moneyEl) {
+    var pctEl = document.getElementById(moneyEl.id + 'Pct');
+    if (!pctEl || document.activeElement === pctEl) return;
+    var bemEl = document.getElementById(moneyEl.getAttribute('data-entry-bem'));
+    var bem = bemEl ? S.parseBRL(bemEl.value) : 0;
+    var ent = S.parseBRL(moneyEl.value);
+    pctEl.value = (bem > 0 && moneyEl.value.trim() !== '') ? fmtEntryPct(ent / bem) : '';
+  }
+  function entryMoneyFromPct(pctEl) {
+    var moneyEl = document.getElementById(pctEl.getAttribute('data-entry-of'));
+    if (!moneyEl) return;
+    var bemEl = document.getElementById(moneyEl.getAttribute('data-entry-bem'));
+    var bem = bemEl ? S.parseBRL(bemEl.value) : 0;
+    var p = parsePctBR(pctEl.value);
+    if (!(bem > 0) || !(p >= 0)) return; // % vazio/inválido ou sem bem: não mexe no R$
+    moneyEl.value = brlDigits(Math.round(bem * p * 100) / 100);
+    moneyEl.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+  function syncEntries(root) {
+    (root || document).querySelectorAll('input[data-entry-money]').forEach(entryPctFromMoney);
+  }
+  if (!window.__nxSimEntrada) {
+    window.__nxSimEntrada = true;
+    document.addEventListener('input', function (ev) {
+      var t = ev.target;
+      if (!t || t.tagName !== 'INPUT') return;
+      if (t.hasAttribute('data-entry-pct')) { entryMoneyFromPct(t); return; }
+      if (t.hasAttribute('data-entry-money')) { entryPctFromMoney(t); return; }
+      if (t.id) document.querySelectorAll('input[data-entry-money][data-entry-bem="' + t.id + '"]').forEach(entryPctFromMoney);
+    });
+    // a máscara de R$ reformata no blur; o % acompanha o valor final
+    document.addEventListener('blur', function (ev) {
+      var t = ev.target;
+      if (!t || t.tagName !== 'INPUT') return;
+      if (t.hasAttribute('data-entry-money')) entryPctFromMoney(t);
+      else if (t.id) document.querySelectorAll('input[data-entry-money][data-entry-bem="' + t.id + '"]').forEach(entryPctFromMoney);
+    }, true);
+  }
+
   function dateField(id, label, value) {
     return '<div class="field"><label for="' + id + '">' + esc(label) + '</label>' +
       '<input class="input" id="' + id + '" type="date" value="' + esc(value || '') + '"></div>';
@@ -152,13 +218,20 @@
     var depois = fmt(antes);
     if (depois === antes) return;
     var focado = document.activeElement === el;
-    var n = focado ? contaSignif(antes, el.selectionStart || 0, fmt === formatPercentTyping) : 0;
+    var n = focado ? contaSignif(antes, el.selectionStart || 0, fmt === formatPercentTyping || fmt === formatEntryPercentTyping) : 0;
     el.value = depois;
     if (focado) { var p = posDoSignif(depois, n); try { el.setSelectionRange(p, p); } catch (e) { /* type sem seleção */ } }
+  }
+  // % da entrada: mesma máscara, limitada a 2 casas decimais
+  function formatEntryPercentTyping(raw) {
+    var s = formatPercentTyping(raw);
+    var virg = s.indexOf(',');
+    return virg === -1 ? s : s.slice(0, virg + 3);
   }
   function alvoMascara(t) {
     if (!t || t.tagName !== 'INPUT') return null;
     if (t.hasAttribute('data-money')) return formatMoneyTyping;
+    if (t.hasAttribute('data-entry-pct')) return formatEntryPercentTyping;
     if (t.hasAttribute('data-percent')) return formatPercentTyping;
     return null;
   }
@@ -278,6 +351,7 @@
   window.NX_SIM_UI = {
     esc: esc, brl: brl, brlDigits: brlDigits, pct1: pct1, pct2: pct2,
     moneyField: moneyField, numberField: numberField, percentField: percentField, dateField: dateField,
+    entryField: entryField, syncEntries: syncEntries, parsePctBR: parsePctBR, fmtEntryPct: fmtEntryPct,
     segmentedField: segmentedField, selectField: selectField,
     getSegmentedValue: getSegmentedValue, wireSegmented: wireSegmented, wireMoneyMask: wireMoneyMask,
     formatMoneyTyping: formatMoneyTyping, formatPercentTyping: formatPercentTyping,

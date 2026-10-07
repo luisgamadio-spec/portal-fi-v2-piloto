@@ -245,6 +245,7 @@
       var u = currentUserDisplay();
       var showLogout = window.NX_AUTH_CORE && window.NX_AUTH_CORE.getState() === window.NX_AUTH_CORE.STATES.AUTHORIZED;
       userArea.innerHTML =
+        (window.NX_FONTE ? window.NX_FONTE.botaoHtml() : '') +
         '<div class="pUserChip">' +
           '<span class="pUserAvatar" aria-hidden="true">' + esc(userInitials(u.name)) + '</span>' +
           '<span class="pUserInfo">' +

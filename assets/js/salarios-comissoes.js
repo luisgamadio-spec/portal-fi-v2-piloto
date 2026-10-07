@@ -1089,13 +1089,13 @@
       '<div class="salRangesBody">' +
       '<p class="modMuted">Comissão = (Retorno + ' + pct(c.spf_liquido_percentual) + ' do SPF Extra) × Faixa de comissão.</p>' +
       '<div class="salRangesGrid">' +
-      '<div><h3 class="modSectionTitle" style="margin-top:0;font-size:13px">Vendedor — Novos</h3><ul>' + sellerLines(c.limite_retorno_novos) + '</ul></div>' +
-      '<div><h3 class="modSectionTitle" style="margin-top:0;font-size:13px">Vendedor — Seminovos</h3><ul>' + sellerLines(c.limite_retorno_seminovos) + '</ul></div>' +
-      '<div><h3 class="modSectionTitle" style="margin-top:0;font-size:13px">Gerente</h3><ul>' +
+      '<div><h3 class="modSectionTitle" style="margin-top:0;font-size:0.8125rem">Vendedor — Novos</h3><ul>' + sellerLines(c.limite_retorno_novos) + '</ul></div>' +
+      '<div><h3 class="modSectionTitle" style="margin-top:0;font-size:0.8125rem">Vendedor — Seminovos</h3><ul>' + sellerLines(c.limite_retorno_seminovos) + '</ul></div>' +
+      '<div><h3 class="modSectionTitle" style="margin-top:0;font-size:0.8125rem">Gerente</h3><ul>' +
       '<li>Share abaixo de ' + pct(c.share_minimo) + ': <b>' + pct(c.gerente_faixa_share_baixo) + '</b></li>' +
       '<li>Share ≥ ' + pct(c.share_minimo) + ': <b>' + pct(c.gerente_faixa_share_alto) + '</b></li>' +
       '</ul></div>' +
-      '<div><h3 class="modSectionTitle" style="margin-top:0;font-size:13px">Analista</h3><ul>' +
+      '<div><h3 class="modSectionTitle" style="margin-top:0;font-size:0.8125rem">Analista</h3><ul>' +
       '<li>Share abaixo de ' + pct(c.share_minimo) + ': <b>' + pct(c.analista_faixa_share_baixo) + '</b></li>' +
       '<li>Share ≥ ' + pct(c.share_minimo) + ': <b>' + pct(c.analista_faixa_share_alto) + '</b></li>' +
       '<li>Bônus SPF: <b>' + moneyInt(c.bonus_spf_analista) + '</b> por unidade</li>' +

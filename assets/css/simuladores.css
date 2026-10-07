@@ -30,14 +30,14 @@
 .smHeader h1 {
   font-family: var(--font-ui);
   font-weight: 300;
-  font-size: clamp(22px, 2.6vw, 30px);
+  font-size: clamp(1.375rem, calc(2.6vw * var(--fs-scale)), 1.875rem);
   letter-spacing: -.01em;
   margin: 0;
 }
 .smHeader p {
   color: var(--color-text-secondary);
   margin: var(--space-1) 0 0;
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 /* Gate 6 — product identity: Novos vs Seminovos must always be legible,
    not only inferable from the URL/breadcrumb. */
@@ -46,7 +46,7 @@
   align-items: center;
   gap: var(--space-2);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 0.6875rem;
   letter-spacing: .06em;
   text-transform: uppercase;
   color: var(--color-accent-primary);
@@ -68,12 +68,12 @@
   max-width: 480px;
 }
 .smModeBar label {
-  font-size: 11px;
+  font-size: 0.6875rem;
   color: var(--color-text-secondary);
   font-weight: 500;
 }
 .smModeDesc {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--color-text-muted);
   margin: var(--space-1) 0 0;
 }
@@ -138,7 +138,7 @@
   display: flex;
   align-items: baseline;
   gap: var(--space-2);
-  font-size: 11px;
+  font-size: 0.6875rem;
   letter-spacing: .06em;
   text-transform: uppercase;
   color: inherit;
@@ -147,7 +147,7 @@
 .smModeGroupLabel::before {
   content: counter(smModeGroup, decimal-leading-zero);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 0.625rem;
   letter-spacing: .04em;
   color: var(--color-text-muted);
   opacity: .7;
@@ -159,7 +159,7 @@
    not an invented red; font-weight:700 matches the codebase's one
    other established "must stand out" precedent
    (.modKpiCardInfo .modKpiValue, module-system.css). */
-.smModeHint { font-size: 11.5px; color: var(--color-accent-primary); font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.smModeHint { font-size: 0.7188rem; color: var(--color-accent-primary); font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .smModeDisclosure { flex: 0 0 auto; color: var(--color-text-muted); transform: rotate(0deg); transition: transform var(--duration-standard) var(--ease-precise), color var(--duration-standard) var(--ease-precise); }
 .smModeGroup.open .smModeDisclosure { transform: rotate(90deg); color: var(--p-red-1); }
 .smModeGroupHeader:hover .smModeDisclosure { color: var(--color-text-primary); }
@@ -181,7 +181,7 @@
   padding: 0 var(--space-4) 0 20px;
   color: var(--color-text-secondary);
   font-family: var(--font-ui);
-  font-size: 12.5px;
+  font-size: 0.7812rem;
   cursor: pointer;
   text-align: left;
   transition: background var(--duration-standard) var(--ease-precise), color var(--duration-standard) var(--ease-precise);
@@ -230,7 +230,7 @@
    foreground values copied verbatim from that already-approved,
    already-Human-tested button family, not a new invented treatment.
    ~5.4:1 contrast (#1a0506 on #ee4b57, computed) clears WCAG AA. ---------- */
-.smAnalystCta { display: inline-flex; align-items: center; gap: 9px; min-height: 44px; flex-shrink: 0; background: var(--color-accent-primary); border: 1px solid var(--color-accent-primary); border-radius: var(--radius-sm); padding: 0 18px; font-family: var(--font-ui); font-size: 12.5px; font-weight: 500; color: #1a0506; cursor: pointer; white-space: nowrap; }
+.smAnalystCta { display: inline-flex; align-items: center; gap: 9px; min-height: 44px; flex-shrink: 0; background: var(--color-accent-primary); border: 1px solid var(--color-accent-primary); border-radius: var(--radius-sm); padding: 0 18px; font-family: var(--font-ui); font-size: 0.7812rem; font-weight: 500; color: #1a0506; cursor: pointer; white-space: nowrap; }
 .smAnalystCtaIcon { color: inherit; flex-shrink: 0; }
 @media (prefers-reduced-motion: no-preference) { .smAnalystCta { transition: background var(--duration-fast) var(--ease-precise), filter var(--duration-fast) var(--ease-precise); } }
 .smAnalystCta:hover { background: #f16571; border-color: #f16571; }
@@ -255,7 +255,7 @@
   background: var(--color-surface-2);
   border: 0;
   color: var(--color-text-secondary);
-  font-size: 12px;
+  font-size: 0.75rem;
   padding: 9px 4px;
   cursor: pointer;
   font-family: var(--font-ui);
@@ -267,9 +267,9 @@
 
 /* ---------- PORTAL-NEXT-08.2 Change 4: balloon payment-structure
    story (Simulador Novos, Tradicional mode only). ---------- */
-.smPlanRegular { margin: 0; font-size: 15px; color: var(--color-text-secondary); }
+.smPlanRegular { margin: 0; font-size: 0.9375rem; color: var(--color-text-secondary); }
 .smPlanRegularCount { font-family: var(--font-mono); font-weight: 500; color: var(--color-text-primary); }
-.smPlanRegularValue { display: inline; font-size: clamp(26px, 4.2vw, 38px) !important; }
+.smPlanRegularValue { display: inline; font-size: clamp(1.625rem, calc(4.2vw * var(--fs-scale)), 2.375rem) !important; }
 .smPlanSpecials { display: flex; flex-direction: column; gap: var(--space-2); margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--color-hairline); }
 .smPlanSpecialRow {
   display: flex;
@@ -281,8 +281,8 @@
   border: 1px solid rgba(238, 75, 87, .3);
   border-radius: var(--radius-sm);
 }
-.smPlanSpecialValue { font-family: var(--font-mono); font-size: 18px; font-weight: 500; font-variant-numeric: tabular-nums; }
-.smPlanSpecialBreakdown { font-size: 11px; color: var(--color-text-muted); flex-basis: 100%; }
+.smPlanSpecialValue { font-family: var(--font-mono); font-size: 1.125rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+.smPlanSpecialBreakdown { font-size: 0.6875rem; color: var(--color-text-muted); flex-basis: 100%; }
 
 .smGrid { display: grid; grid-template-columns: 360px 1fr; gap: 28px; align-items: start; }
 @media (max-width: 900px) { .smGrid { grid-template-columns: 1fr; } }
@@ -301,16 +301,16 @@
 .smSchedule { margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--color-hairline); }
 .smScheduleRow { display: flex; flex-wrap: wrap; gap: var(--space-5); margin: var(--space-2) 0 var(--space-3); }
 .smScheduleItem { display: flex; flex-direction: column; gap: 4px; }
-.smScheduleItem strong { font-family: var(--font-mono); font-size: 15px; font-variant-numeric: tabular-nums; }
-.smScheduleLabel { font-size: 11px; color: var(--color-text-secondary); }
-.smScheduleMarkersLabel { font-size: 11px; color: var(--color-text-muted); margin: 0 0 var(--space-2); }
+.smScheduleItem strong { font-family: var(--font-mono); font-size: 0.9375rem; font-variant-numeric: tabular-nums; }
+.smScheduleLabel { font-size: 0.6875rem; color: var(--color-text-secondary); }
+.smScheduleMarkersLabel { font-size: 0.6875rem; color: var(--color-text-muted); margin: 0 0 var(--space-2); }
 .smScheduleMarkers { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .smScheduleMarker {
   display: inline-flex; align-items: center; justify-content: center;
   min-width: 34px; height: 34px; padding: 0 8px;
   border: 1px solid var(--color-hairline-strong); border-radius: var(--radius-sm);
   background: var(--color-surface-2); color: var(--color-text-secondary);
-  font-family: var(--font-mono); font-size: 12.5px; font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono); font-size: 0.7812rem; font-variant-numeric: tabular-nums;
 }
 
 /* ---------- PORTAL-NEXT-08.3 Change 4: Coparticipado emphasis pair
@@ -322,13 +322,13 @@
   border-radius: var(--radius-md); padding: var(--space-4);
 }
 .smEmphasisCardPrimary { border-color: var(--color-accent-primary); background: rgba(238, 75, 87, .07); }
-.smEmphasisValue { font-family: var(--font-mono); font-size: 22px; font-weight: 500; font-variant-numeric: tabular-nums; margin: 4px 0 0; word-break: break-word; }
-.smEmphasisValuePrimary { font-size: 26px; color: #ffecec; }
+.smEmphasisValue { font-family: var(--font-mono); font-size: 1.375rem; font-weight: 500; font-variant-numeric: tabular-nums; margin: 4px 0 0; word-break: break-word; }
+.smEmphasisValuePrimary { font-size: 1.625rem; color: #ffecec; }
 
 /* ---------- PORTAL-NEXT-08.3 Change 5: Taxas Subsidiadas comparison
    card grid (Gates 16-22), replacing the vertically-stacked rows. ---------- */
 .smSubsidiadaGroups { display: flex; flex-direction: column; gap: var(--space-5); }
-.smSubsidiadaGroupHead { font-family: var(--font-mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--color-text-muted); margin: 0 0 var(--space-2); }
+.smSubsidiadaGroupHead { font-family: var(--font-mono); font-size: 0.6875rem; letter-spacing: .06em; text-transform: uppercase; color: var(--color-text-muted); margin: 0 0 var(--space-2); }
 .smSubsidiadaGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: var(--space-3); }
 .smSubsidiadaCard {
   display: flex; flex-direction: column; gap: 8px;
@@ -337,14 +337,14 @@
 }
 .smSubsidiadaCard.best { border-color: var(--color-accent-primary); background: rgba(238, 75, 87, .06); }
 .smSubsidiadaCardHead { display: flex; justify-content: space-between; align-items: baseline; }
-.smSubsidiadaCardPrazo { font-family: var(--font-mono); font-size: 20px; font-weight: 500; font-variant-numeric: tabular-nums; }
-.smSubsidiadaCardTaxa { font-family: var(--font-mono); font-size: 11.5px; color: var(--color-text-muted); }
+.smSubsidiadaCardPrazo { font-family: var(--font-mono); font-size: 1.25rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+.smSubsidiadaCardTaxa { font-family: var(--font-mono); font-size: 0.7188rem; color: var(--color-text-muted); }
 .smSubsidiadaCardPill { margin: -2px 0 2px; }
-.smSubsidiadaCardRow { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-2); font-size: 13px; padding-top: 4px; border-top: 1px solid var(--color-hairline); }
+.smSubsidiadaCardRow { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-2); font-size: 0.8125rem; padding-top: 4px; border-top: 1px solid var(--color-hairline); }
 .smSubsidiadaCardRow strong { font-family: var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; }
-.smSubsidiadaCardRow.smSubsidiadaCardRowEmphasis strong { font-size: 14.5px; color: var(--color-text-primary); }
+.smSubsidiadaCardRow.smSubsidiadaCardRowEmphasis strong { font-size: 0.9062rem; color: var(--color-text-primary); }
 .smSubsidiadaCardValueStack { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; }
-.smSubsidiadaCardRebatePct { font-family: var(--font-mono); font-size: 10.5px; font-weight: 400; color: var(--color-text-muted); font-variant-numeric: tabular-nums; }
+.smSubsidiadaCardRebatePct { font-family: var(--font-mono); font-size: 0.6562rem; font-weight: 400; color: var(--color-text-muted); font-variant-numeric: tabular-nums; }
 
 /* Wave 3E migrated Novos' result region to .modPanelResult and its
    form region to .modPanelForm + .smFormCard (kept alongside, not
@@ -367,13 +367,13 @@
 }
 
 .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
-.field label { font-size: 11.5px; color: var(--color-text-secondary); font-weight: 500; }
-.field .hint { font-size: 11px; color: var(--color-text-muted); }
+.field label { font-size: 0.7188rem; color: var(--color-text-secondary); font-weight: 500; }
+.field .hint { font-size: 0.6875rem; color: var(--color-text-muted); }
 .field .hint.warn { color: var(--color-warning); }
 
 .input, .select {
   font-family: var(--font-ui);
-  font-size: 13.5px;
+  font-size: 0.8438rem;
   padding: 9px 11px;
   border-radius: var(--radius-sm);
   width: 100%;
@@ -388,15 +388,23 @@
 .inputAffix { position: relative; }
 .inputAffix .prefix {
   position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
-  font-family: var(--font-mono); font-size: 12.5px; color: var(--color-text-muted);
+  font-family: var(--font-mono); font-size: 0.7812rem; color: var(--color-text-muted);
   pointer-events: none;
 }
 .inputAffix .input { padding-left: 30px; }
+/* Entrada em R$ + Entrada em % lado a lado (o % fica estreito, à direita) */
+.smEntryPair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(84px, 34%); gap: 8px; }
+.inputAffixSuffix .input { padding-left: 11px; padding-right: 26px; text-align: right; }
+.inputAffix .suffix {
+  position: absolute; right: 11px; top: 50%; transform: translateY(-50%);
+  font-family: var(--font-mono); font-size: 0.7812rem; color: var(--color-text-muted);
+  pointer-events: none;
+}
 
 .segmented { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--color-hairline-strong); border-radius: var(--radius-sm); overflow: hidden; }
 .segmented button {
   background: var(--color-surface-2); border: 0; border-right: 1px solid var(--color-hairline-strong);
-  color: var(--color-text-secondary); font-size: 12px; padding: 7px 13px; cursor: pointer;
+  color: var(--color-text-secondary); font-size: 0.75rem; padding: 7px 13px; cursor: pointer;
   font-family: var(--font-ui);
 }
 .segmented button:last-child { border-right: 0; }
@@ -404,7 +412,7 @@
 .segmented button:focus-visible { outline: 2px solid var(--color-accent-primary); outline-offset: -2px; }
 
 .btn {
-  font-family: var(--font-ui); font-size: 13px; font-weight: 500; padding: 9px 16px;
+  font-family: var(--font-ui); font-size: 0.8125rem; font-weight: 500; padding: 9px 16px;
   border-radius: var(--radius-sm); cursor: pointer; display: inline-flex; align-items: center;
   gap: 8px; border: 1px solid transparent; line-height: 1.2;
 }
@@ -412,7 +420,7 @@
 .btn-primary:hover:not(:disabled) { background: #f16571; }
 .btn-secondary { background: var(--color-surface-2); border-color: var(--color-hairline-strong); color: var(--color-text-primary); }
 .btn-tertiary { background: none; border-color: transparent; color: var(--color-text-secondary); text-decoration: underline; padding: 4px 2px; }
-.btn-sm { padding: 6px 12px; font-size: 12px; }
+.btn-sm { padding: 6px 12px; font-size: 0.75rem; }
 .btn:disabled { opacity: .42; cursor: not-allowed; }
 .btn:focus-visible { outline: 2px solid var(--color-accent-primary); outline-offset: 2px; }
 
@@ -426,31 +434,31 @@
 .smBalloonRow .btn { white-space: nowrap; }
 
 .kpiLabel {
-  font-family: var(--font-mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase;
+  font-family: var(--font-mono); font-size: 0.625rem; letter-spacing: .08em; text-transform: uppercase;
   color: var(--color-text-muted); margin: 0 0 6px;
 }
 .emptyState, .errorState {
-  text-align: center; padding: 40px 20px; color: var(--color-text-secondary); font-size: 12.5px;
+  text-align: center; padding: 40px 20px; color: var(--color-text-secondary); font-size: 0.7812rem;
   border: 1px dashed var(--color-hairline-strong); border-radius: var(--radius-md);
 }
-.emptyState .t, .errorState .t { color: var(--color-text-primary); font-size: 13.5px; font-weight: 500; margin-bottom: 6px; }
+.emptyState .t, .errorState .t { color: var(--color-text-primary); font-size: 0.8438rem; font-weight: 500; margin-bottom: 6px; }
 .errorState { border-color: rgba(226, 84, 58, .4); color: #f3c7ba; }
 
 .smWarning {
   display: flex; gap: 10px; background: var(--color-warning-soft); border: 1px solid rgba(219, 166, 72, .35);
-  border-radius: var(--radius-sm); padding: 12px 14px; font-size: 12.5px; color: #e8c992; margin: 0 0 var(--space-4);
+  border-radius: var(--radius-sm); padding: 12px 14px; font-size: 0.7812rem; color: #e8c992; margin: 0 0 var(--space-4);
 }
 
 .resultHero .kpiLabel { margin-bottom: 8px; }
 .resultHero .resultValue {
-  font-size: clamp(30px, 5vw, 44px); font-weight: 300; letter-spacing: -.01em; font-family: var(--font-mono);
+  font-size: clamp(1.875rem, calc(5vw * var(--fs-scale)), 2.75rem); font-weight: 300; letter-spacing: -.01em; font-family: var(--font-mono);
   font-variant-numeric: tabular-nums; word-break: break-word;
 }
 .resultSecondaryGrid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 16px;
   padding: 16px 0; border-top: 1px solid var(--color-hairline); margin-top: 16px;
 }
-.resultSecondaryGrid .val { font-size: 16px; font-family: var(--font-mono); font-variant-numeric: tabular-nums; word-break: break-word; }
+.resultSecondaryGrid .val { font-size: 1rem; font-family: var(--font-mono); font-variant-numeric: tabular-nums; word-break: break-word; }
 
 /* ---------- term grid (Linear/RATE_TABLE/Campanha: N terms at once) ---------- */
 /* V2_SIMULATOR_INSTALLMENT_GRID_VISUAL_FIX: auto-fill left incomplete
@@ -463,20 +471,20 @@
 .smTermGrid { display: grid; grid-template-columns: repeat(var(--term-grid-cols, 6), 1fr); gap: 1px; background: var(--color-hairline); border: 1px solid var(--color-hairline); border-radius: var(--radius-sm); overflow: hidden; margin-top: var(--space-4); }
 .smTermCard { background: var(--color-surface-2); padding: 12px 8px; text-align: center; }
 .smTermCard.best { background: rgba(238, 75, 87, .1); }
-.smTermCard .term { font-family: var(--font-mono); font-size: 11px; color: var(--color-text-muted); margin-bottom: 6px; }
-.smTermCard .payment { font-family: var(--font-mono); font-size: 15px; font-variant-numeric: tabular-nums; }
-.smTermCard .rate { font-size: 10.5px; color: var(--color-text-muted); margin-top: 4px; }
-.smTermCard .unavailable { color: var(--color-text-muted); font-size: 11px; }
+.smTermCard .term { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--color-text-muted); margin-bottom: 6px; }
+.smTermCard .payment { font-family: var(--font-mono); font-size: 0.9375rem; font-variant-numeric: tabular-nums; }
+.smTermCard .rate { font-size: 0.6562rem; color: var(--color-text-muted); margin-top: 4px; }
+.smTermCard .unavailable { color: var(--color-text-muted); font-size: 0.6875rem; }
 
 /* ---------- Subsidiadas comparison groups ---------- */
 .smCompareGroups { display: flex; flex-direction: column; gap: var(--space-4); margin-top: var(--space-4); }
 .smCompareGroup { border: 1px solid var(--color-hairline); border-radius: var(--radius-md); overflow: hidden; }
-.smCompareGroupHead { display: flex; justify-content: space-between; padding: 10px 14px; background: var(--color-surface-2); font-size: 12.5px; font-weight: 500; }
-.smCompareRow { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)) auto; gap: var(--space-3); align-items: center; padding: 10px 14px; border-top: 1px solid var(--color-hairline); font-size: 12.5px; }
+.smCompareGroupHead { display: flex; justify-content: space-between; padding: 10px 14px; background: var(--color-surface-2); font-size: 0.7812rem; font-weight: 500; }
+.smCompareRow { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)) auto; gap: var(--space-3); align-items: center; padding: 10px 14px; border-top: 1px solid var(--color-hairline); font-size: 0.7812rem; }
 .smCompareRow.best { background: var(--color-success-soft); }
-.smCompareRow .lbl { display: block; font-size: 10px; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: .05em; }
+.smCompareRow .lbl { display: block; font-size: 0.625rem; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: .05em; }
 .smCompareRow .v { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
-.smPill { font-size: 10.5px; padding: 3px 9px; border-radius: 999px; font-family: var(--font-mono); white-space: nowrap; }
+.smPill { font-size: 0.6562rem; padding: 3px 9px; border-radius: 999px; font-family: var(--font-mono); white-space: nowrap; }
 .smPill.excellent { background: var(--color-success-soft); color: var(--color-success); }
 .smPill.good { background: var(--color-success-soft); color: var(--color-success); }
 .smPill.bad { background: var(--color-critical-soft); color: var(--color-critical); }
@@ -484,19 +492,19 @@
 
 /* ---------- Antecipação / Cash Conversion detail tables ---------- */
 .smTableWrap { overflow-x: auto; margin-top: var(--space-4); }
-.smTable { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.smTable { width: 100%; border-collapse: collapse; font-size: 0.7812rem; }
 .smTable th, .smTable td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--color-hairline); }
-.smTable th { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--color-text-muted); font-weight: 500; }
+.smTable th { font-family: var(--font-mono); font-size: 0.625rem; text-transform: uppercase; letter-spacing: .05em; color: var(--color-text-muted); font-weight: 500; }
 .smTable td.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 
-.smClassBadge { display: inline-block; padding: 4px 10px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 500; font-family: var(--font-mono); }
+.smClassBadge { display: inline-block; padding: 4px 10px; border-radius: var(--radius-sm); font-size: 0.75rem; font-weight: 500; font-family: var(--font-mono); }
 .smClassBadge.FINANCIAR { background: var(--color-success-soft); color: var(--color-success); }
 .smClassBadge.UTILIZAR { background: var(--color-warning-soft); color: var(--color-warning); }
 .smClassBadge.EQUIVALENTE { background: var(--color-surface-2); color: var(--color-text-secondary); }
 
-.smFootnote { font-size: 11px; color: var(--color-text-muted); margin-top: var(--space-3); line-height: 1.5; }
+.smFootnote { font-size: 0.6875rem; color: var(--color-text-muted); margin-top: var(--space-3); line-height: 1.5; }
 
 @media (max-width: 480px) {
   .smBalloonRow { grid-template-columns: 1fr; }
-  .resultHero .resultValue { font-size: 30px; }
+  .resultHero .resultValue { font-size: 1.875rem; }
 }

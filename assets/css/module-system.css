@@ -31,17 +31,17 @@
   --mod-space-major-gap: var(--space-6);    /* 32px — major region separation */
 
   /* typography roles */
-  --mod-title-size: clamp(22px, 2.6vw, 30px);
+  --mod-title-size: clamp(1.375rem, calc(2.6vw * var(--fs-scale)), 1.875rem);
   --mod-title-weight: 300;
-  --mod-subtitle-size: 13px;
-  --mod-section-title-size: 17px;
-  --mod-eyebrow-size: 9.5px;
-  --mod-field-label-size: 10.5px;
-  --mod-body-size: 13px;
-  --mod-kpi-label-size: 10.5px;
-  --mod-kpi-value-size: 24px;
-  --mod-table-label-size: 10px;
-  --mod-metadata-size: 11px;
+  --mod-subtitle-size: 0.8125rem;
+  --mod-section-title-size: 1.0625rem;
+  --mod-eyebrow-size: 0.5938rem;
+  --mod-field-label-size: 0.6562rem;
+  --mod-body-size: 0.8125rem;
+  --mod-kpi-label-size: 0.6562rem;
+  --mod-kpi-value-size: 1.5rem;
+  --mod-table-label-size: 0.625rem;
+  --mod-metadata-size: 0.6875rem;
 
   /* surface roles */
   --mod-surface-page: var(--color-canvas);
@@ -81,7 +81,7 @@
 .modFilters{display:flex;align-items:flex-end;gap:var(--mod-space-control-gap);flex-wrap:wrap;margin-bottom:var(--mod-space-control-gap);padding-bottom:var(--mod-space-control-gap);border-bottom:1px solid var(--mod-border)}
 .modField{display:flex;flex-direction:column;gap:var(--mod-space-micro);min-width:160px}
 .modField label{color:var(--mod-muted);font-size:var(--mod-field-label-size);font-weight:500;text-transform:uppercase;letter-spacing:.06em}
-.modField select,.modField input[type="date"],.modField input[type="text"],.modField input[type="number"]{background:var(--mod-surface-panel-2);border:1px solid var(--mod-border-strong);color:var(--color-text-primary);font-family:var(--font-ui);font-size:13px;padding:var(--mod-space-compact);border-radius:var(--radius-sm)}
+.modField select,.modField input[type="date"],.modField input[type="text"],.modField input[type="number"]{background:var(--mod-surface-panel-2);border:1px solid var(--mod-border-strong);color:var(--color-text-primary);font-family:var(--font-ui);font-size:0.8125rem;padding:var(--mod-space-compact);border-radius:var(--radius-sm)}
 .modField select:focus-visible,.modField input:focus-visible{outline:var(--focus-ring);outline-offset:2px}
 @media(max-width:768px){.modField{min-width:130px}}
 
@@ -93,14 +93,14 @@
    --color-accent-primary (functional red), never --color-brand-red
    (institutional-only per tokens.css's own comment).
    ============================================================ */
-.modBtn{font-family:var(--font-ui);font-size:13px;font-weight:500;padding:9px 16px;border-radius:var(--radius-sm);cursor:pointer;display:inline-flex;align-items:center;gap:8px;border:1px solid transparent;line-height:1.2}
+.modBtn{font-family:var(--font-ui);font-size:0.8125rem;font-weight:500;padding:9px 16px;border-radius:var(--radius-sm);cursor:pointer;display:inline-flex;align-items:center;gap:8px;border:1px solid transparent;line-height:1.2}
 .modBtnPrimary{background:var(--mod-accent);border-color:var(--mod-accent);color:#1a0506}
 .modBtnPrimary:hover:not(:disabled){background:#f16571}
 .modBtnSecondary{background:var(--mod-surface-panel-2);border-color:var(--mod-border-strong);color:var(--color-text-primary)}
 .modBtnGhost{background:none;border-color:transparent;color:var(--color-text-secondary);text-decoration:underline;padding:4px 2px}
 .modBtnDanger{background:none;border-color:var(--mod-critical);color:var(--mod-critical)}
 .modBtnDanger:hover:not(:disabled){background:var(--color-critical-soft)}
-.modBtnSm{padding:6px 12px;font-size:12px}
+.modBtnSm{padding:6px 12px;font-size:0.75rem}
 .modBtn:disabled{opacity:.42;cursor:not-allowed}
 .modBtn:focus-visible{outline:2px solid var(--mod-accent);outline-offset:2px}
 
@@ -113,13 +113,13 @@
    underlined active indicator, extracted from .dbModeBtn.
    ============================================================ */
 .modSegmentedGroup{display:flex;gap:var(--space-1);flex-wrap:wrap}
-.modSegItem{background:none;border:1px solid var(--mod-border-strong);color:var(--color-text-secondary);font-family:var(--font-ui);font-size:12.5px;font-weight:500;padding:var(--space-1) var(--mod-space-compact);border-radius:var(--radius-sm);cursor:pointer}
+.modSegItem{background:none;border:1px solid var(--mod-border-strong);color:var(--color-text-secondary);font-family:var(--font-ui);font-size:0.7812rem;font-weight:500;padding:var(--space-1) var(--mod-space-compact);border-radius:var(--radius-sm);cursor:pointer}
 .modSegItem:hover:not(.modSegItemActive){color:var(--color-text-primary)}
 .modSegItem:focus-visible{outline:var(--focus-ring);outline-offset:2px}
 .modSegItemActive{color:var(--color-canvas);background:var(--color-text-primary);border-color:var(--color-text-primary)}
 
 .modTabGroup{display:flex;gap:var(--space-1);flex-wrap:wrap;padding-top:var(--mod-space-compact);margin:var(--mod-space-compact) 0 var(--mod-space-control-gap);border-top:1px solid var(--mod-border)}
-.modTab{position:relative;background:none;border:1px solid var(--mod-border-strong);color:var(--color-text-secondary);font-family:var(--font-ui);font-size:12.5px;font-weight:500;padding:var(--space-1) var(--mod-space-compact);border-radius:var(--radius-sm);cursor:pointer}
+.modTab{position:relative;background:none;border:1px solid var(--mod-border-strong);color:var(--color-text-secondary);font-family:var(--font-ui);font-size:0.7812rem;font-weight:500;padding:var(--space-1) var(--mod-space-compact);border-radius:var(--radius-sm);cursor:pointer}
 .modTab:hover:not(.modTabActive){color:var(--color-text-primary)}
 .modTab:focus-visible{outline:var(--focus-ring);outline-offset:2px}
 .modTabActive{color:var(--color-canvas);background:var(--color-text-primary);border-color:var(--color-text-primary)}
@@ -137,11 +137,11 @@
 .modKpiCard .modKpiHint{color:var(--mod-muted);font-size:var(--mod-metadata-size);margin-top:2px}
 
 /* tier 2 — secondary/executive KPI, smaller value */
-.modKpiCardExec .modKpiValue{font-size:20px}
+.modKpiCardExec .modKpiValue{font-size:1.25rem}
 /* tier 3 — quiet/support KPI, no border-radius emphasis, tightest */
 .modKpiCardSecondary{border-radius:var(--radius-sm);padding:var(--mod-space-card-gap)}
-.modKpiCardSecondary .modKpiValue{font-size:15px;font-family:var(--font-ui);font-weight:500;margin-top:3px}
-.modKpiCardSecondary .modKpiLabel{font-size:10px}
+.modKpiCardSecondary .modKpiValue{font-size:0.9375rem;font-family:var(--font-ui);font-weight:500;margin-top:3px}
+.modKpiCardSecondary .modKpiLabel{font-size:0.625rem}
 
 /* semantic modifiers — position/weight distinguish them from each
    other too, never color alone (Gate 7/dashbi.css precedent) */
@@ -164,7 +164,7 @@
    separate mobile-card renderer — neither is wrong, Gate 8).
    ============================================================ */
 .modTableWrap{overflow-x:auto;border:1px solid var(--mod-border);border-radius:var(--radius-md);margin-bottom:var(--mod-space-control-gap)}
-.modTable{width:100%;border-collapse:collapse;font-size:12.5px}
+.modTable{width:100%;border-collapse:collapse;font-size:0.7812rem}
 .modTable thead th{text-align:left;font-family:var(--font-mono);font-size:var(--mod-table-label-size);text-transform:uppercase;letter-spacing:.05em;color:var(--mod-muted);font-weight:500;padding:var(--mod-space-compact) var(--mod-space-card-gap);border-bottom:1px solid var(--mod-border-strong);white-space:nowrap}
 .modTable td{padding:var(--mod-space-compact) var(--mod-space-card-gap);border-bottom:1px solid var(--mod-border);white-space:nowrap}
 .modTable tbody tr:last-child td{border-bottom:none}
@@ -189,7 +189,7 @@
    .emptyState/.errorState verbatim (already approved).
    ============================================================ */
 .modEmptyState,.modErrorState,.modInfoState,.modSuccessState{text-align:center;padding:40px 20px;color:var(--color-text-secondary);font-size:var(--mod-body-size);border:1px dashed var(--mod-border-strong);border-radius:var(--radius-md)}
-.modEmptyState .modStateTitle,.modErrorState .modStateTitle,.modInfoState .modStateTitle{color:var(--color-text-primary);font-size:13.5px;font-weight:500;margin-bottom:6px}
+.modEmptyState .modStateTitle,.modErrorState .modStateTitle,.modInfoState .modStateTitle{color:var(--color-text-primary);font-size:0.8438rem;font-weight:500;margin-bottom:6px}
 .modErrorState{border-color:rgba(226,84,58,.4);color:#f3c7ba}
 /* Painel Master Phase 2C, Gate 6 -- explicit mutation-success feedback
    (e.g. "Convite reenviado com sucesso."), mirrors .modErrorState's
@@ -208,16 +208,16 @@
    UI (dashed border, muted mono type — same visual family as the
    Shell's own .nxDevBadge, never the Shell's exact markup/JS).
    ============================================================ */
-.modFixtureBanner{display:flex;align-items:center;gap:var(--mod-space-compact);flex-wrap:wrap;padding:var(--mod-space-compact) var(--mod-space-card-gap);margin-bottom:var(--mod-space-control-gap);border:1px dashed var(--mod-border-strong);border-radius:var(--radius-sm);font-family:var(--font-mono);font-size:10.5px;color:var(--mod-muted)}
+.modFixtureBanner{display:flex;align-items:center;gap:var(--mod-space-compact);flex-wrap:wrap;padding:var(--mod-space-compact) var(--mod-space-card-gap);margin-bottom:var(--mod-space-control-gap);border:1px dashed var(--mod-border-strong);border-radius:var(--radius-sm);font-family:var(--font-mono);font-size:0.6562rem;color:var(--mod-muted)}
 .modFixtureBanner .modFixtureLabel{text-transform:uppercase;letter-spacing:.06em;color:var(--mod-warning)}
-.modFixtureBanner select{background:var(--mod-surface-panel-2);border:1px solid var(--mod-border-strong);color:var(--color-text-primary);font-family:var(--font-mono);font-size:11px;padding:3px var(--mod-space-compact);border-radius:var(--radius-sm)}
+.modFixtureBanner select{background:var(--mod-surface-panel-2);border:1px solid var(--mod-border-strong);color:var(--color-text-primary);font-family:var(--font-mono);font-size:0.6875rem;padding:3px var(--mod-space-compact);border-radius:var(--radius-sm)}
 .modFixtureBanner select:focus-visible{outline:var(--focus-ring);outline-offset:2px}
 
 /* ============================================================
    12. Utility text roles
    ============================================================ */
-.modMuted{color:var(--mod-muted);font-size:12px;margin:0 0 var(--mod-space-card-gap)}
-.modBadge{display:inline-block;font-family:var(--font-mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;border-radius:var(--radius-sm);padding:2px 7px}
+.modMuted{color:var(--mod-muted);font-size:0.75rem;margin:0 0 var(--mod-space-card-gap)}
+.modBadge{display:inline-block;font-family:var(--font-mono);font-size:0.6562rem;text-transform:uppercase;letter-spacing:.05em;border-radius:var(--radius-sm);padding:2px 7px}
 .modBadgeSuccess{color:var(--mod-success);border:1px solid var(--mod-success)}
 .modBadgeWarning{color:var(--mod-warning);border:1px solid var(--mod-warning)}
 .modBadgeCritical{color:var(--mod-critical);border:1px solid var(--mod-critical)}

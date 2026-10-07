@@ -13,17 +13,17 @@
 
 .pShell{display:flex;min-height:100vh}
 .pGlobalNav{width:64px;flex-shrink:0;background:var(--color-surface-1);border-right:1px solid var(--color-hairline);display:flex;flex-direction:column;align-items:center;padding:16px 0;gap:18px;position:sticky;top:0;height:100vh}
-.pGlobalNav .brandMark{width:28px;height:28px;border:1.5px solid var(--color-brand-red);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:11px;color:var(--color-brand-red);font-weight:700}
-.pGlobalNav .gNavBtn{width:36px;height:36px;border-radius:6px;background:none;border:0;color:var(--color-text-muted);font-family:var(--font-mono);font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;text-decoration:none}
+.pGlobalNav .brandMark{width:28px;height:28px;border:1.5px solid var(--color-brand-red);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:0.6875rem;color:var(--color-brand-red);font-weight:700}
+.pGlobalNav .gNavBtn{width:36px;height:36px;border-radius:6px;background:none;border:0;color:var(--color-text-muted);font-family:var(--font-mono);font-size:0.625rem;cursor:pointer;display:flex;align-items:center;justify-content:center;text-decoration:none}
 .pGlobalNav .gNavBtn.active,.pGlobalNav .gNavBtn:hover{color:var(--color-accent-primary);background:rgba(238,75,87,.1)}
 .pGlobalNav .gNavBtn:focus-visible{outline:var(--focus-ring);outline-offset:2px}
 .pMain{flex:1;min-width:0;display:flex;flex-direction:column}
 .pTopBar{position:sticky;top:0;z-index:40;background:rgba(10,10,10,.92);backdrop-filter:blur(4px);border-bottom:1px solid var(--color-hairline);display:flex;align-items:center;gap:16px;padding:0 20px;height:52px}
-.pBreadcrumb{font-family:var(--font-mono);font-size:11px;color:var(--color-text-muted)}
+.pBreadcrumb{font-family:var(--font-mono);font-size:0.6875rem;color:var(--color-text-muted)}
 .pBreadcrumb b{color:var(--color-text-primary);font-weight:500}
 .pUserArea{margin-left:auto;display:flex;align-items:center;gap:12px}
-.pUserChip{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--color-text-secondary)}
-.pUserAvatar{width:26px;height:26px;border-radius:50%;background:var(--color-surface-2);border:1px solid var(--color-hairline-strong);display:flex;align-items:center;justify-content:center;font-size:10px;font-family:var(--font-mono);color:var(--color-text-muted)}
+.pUserChip{display:flex;align-items:center;gap:8px;font-size:0.75rem;color:var(--color-text-secondary)}
+.pUserAvatar{width:26px;height:26px;border-radius:50%;background:var(--color-surface-2);border:1px solid var(--color-hairline-strong);display:flex;align-items:center;justify-content:center;font-size:0.625rem;font-family:var(--font-mono);color:var(--color-text-muted)}
 .pContent{flex:1;padding:28px 40px 100px;max-width:1500px;width:100%;margin:0 auto;position:relative}
 
 .ctxBeam{position:fixed;top:52px;left:64px;width:0;height:2px;background:linear-gradient(90deg,var(--color-accent-primary),transparent);opacity:0;pointer-events:none;z-index:50}
@@ -52,7 +52,7 @@ body.landing-active #nxContentOutlet{padding:0;max-width:none;flex:none}
    can sit above the tab list, inside the same column, without
    affecting .fNav's own flex/gap role. */
 .fNavCol{width:42%;flex-shrink:0;background:var(--color-surface-1);padding:70px 0 70px 56px;display:flex;flex-direction:column;justify-content:center;border-right:1px solid var(--color-hairline);position:relative}
-.fNavEyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--color-text-muted);margin:0 0 20px;padding-right:40px}
+.fNavEyebrow{font-family:var(--font-mono);font-size:0.6875rem;letter-spacing:.09em;text-transform:uppercase;color:var(--color-text-muted);margin:0 0 20px;padding-right:40px}
 .fNav{display:flex;flex-direction:column;gap:4px}
 .fNavItem{position:relative;display:flex;align-items:baseline;gap:15px;background:none;border:0;padding:11px 40px 11px 0;text-align:left;cursor:pointer;color:var(--color-text-muted);width:100%}
 .fNavItem:before{content:"";position:absolute;left:-56px;top:-6px;bottom:-6px;width:120px;background:radial-gradient(ellipse at left, rgba(238,75,87,.14), transparent 72%);opacity:0}
@@ -61,8 +61,8 @@ body.landing-active #nxContentOutlet{padding:0;max-width:none;flex:none}
   .fNavItem:before{transition:opacity calc(var(--duration-fast) * 1.25) var(--ease-precise)}
   .fNavItem .idx{transition:opacity var(--duration-fast) var(--ease-precise)}
 }
-.fNavItem .idx{font-family:var(--font-mono);font-size:12.5px;color:var(--color-accent-primary);font-variant-numeric:tabular-nums;opacity:0;width:22px;flex-shrink:0}
-.fNavItem .label{font-family:var(--font-ui);font-size:clamp(27px,3.5vw,45px);font-weight:300;letter-spacing:-.012em;line-height:1.06;color:inherit}
+.fNavItem .idx{font-family:var(--font-mono);font-size:0.7812rem;color:var(--color-accent-primary);font-variant-numeric:tabular-nums;opacity:0;width:22px;flex-shrink:0}
+.fNavItem .label{font-family:var(--font-ui);font-size:clamp(1.6875rem,calc(3.5vw * var(--fs-scale)),2.8125rem);font-weight:300;letter-spacing:-.012em;line-height:1.06;color:inherit}
 .fNavItem:hover{color:var(--color-text-secondary)}
 .fNavItem:hover:before{opacity:.55}
 .fNavItem.active{color:var(--color-text-primary)}
@@ -107,8 +107,8 @@ body.landing-active #nxContentOutlet{padding:0;max-width:none;flex:none}
    (brief §5). ~5.4:1 contrast (#1a0506 on #ee4b57, computed) clears
    WCAG AA. */
 .fAnalystCta{margin-top:28px;padding-top:24px;padding-right:40px;border-top:1px solid var(--color-hairline)}
-.fAnalystCtaHint{font-size:13px;line-height:1.5;color:var(--color-text-muted);margin:0 0 12px;max-width:36ch}
-.fAnalystCtaBtn{display:inline-flex;align-items:center;gap:9px;min-height:44px;background:var(--color-accent-primary);border:1px solid var(--color-accent-primary);border-radius:var(--radius-sm);padding:0 18px;font-family:var(--font-ui);font-size:13.5px;font-weight:500;color:#1a0506;cursor:pointer}
+.fAnalystCtaHint{font-size:0.8125rem;line-height:1.5;color:var(--color-text-muted);margin:0 0 12px;max-width:36ch}
+.fAnalystCtaBtn{display:inline-flex;align-items:center;gap:9px;min-height:44px;background:var(--color-accent-primary);border:1px solid var(--color-accent-primary);border-radius:var(--radius-sm);padding:0 18px;font-family:var(--font-ui);font-size:0.8438rem;font-weight:500;color:#1a0506;cursor:pointer}
 .fAnalystCtaIcon{color:inherit;flex-shrink:0}
 @media(prefers-reduced-motion:no-preference){ .fAnalystCtaBtn{transition:background var(--duration-fast) var(--ease-precise),filter var(--duration-fast) var(--ease-precise)} }
 .fAnalystCtaBtn:hover{background:#f16571;border-color:#f16571}
@@ -124,7 +124,7 @@ body.landing-active #nxContentOutlet{padding:0;max-width:none;flex:none}
    (complements the eyebrow on the left) that also gives a single-item
    category (e.g. Brabus Intelligence) the same confirming signal every
    multi-item category gets, without a special-cased interaction. */
-.fDetailEyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--color-accent-primary);margin:0 0 22px}
+.fDetailEyebrow{font-family:var(--font-mono);font-size:0.6875rem;letter-spacing:.09em;text-transform:uppercase;color:var(--color-accent-primary);margin:0 0 22px}
 
 /* AUTH FOUNDATION Phase 2E, Gate 7/17: .fModuleBlock is now a real
    <a href> for an available module (moduleBlockHtml) -- reset link
@@ -134,7 +134,7 @@ body.landing-active #nxContentOutlet{padding:0;max-width:none;flex:none}
 .fModuleBlock:hover,.fModuleBlock:focus-visible{background:rgba(255,255,255,.028)}
 .fModuleBlock:focus-visible{outline:var(--focus-ring);outline-offset:2px}
 .fModuleTop{display:flex;align-items:center;justify-content:space-between;gap:16px}
-.fModuleTitle{font-size:19.5px;font-weight:500;letter-spacing:-.004em;margin:0;color:var(--color-text-primary)}
+.fModuleTitle{font-size:1.2188rem;font-weight:500;letter-spacing:-.004em;margin:0;color:var(--color-text-primary)}
 /* Gate 4/7 fix: the arrow previously only existed on hover (opacity:0
    at rest) -- the single strongest missing "this is a destination"
    signal identified in the human-confirmed UX audit. Visible-but-quiet
@@ -143,7 +143,7 @@ body.landing-active #nxContentOutlet{padding:0;max-width:none;flex:none}
 .fModuleArrow{color:var(--color-text-muted);flex-shrink:0;opacity:.4}
 @media(prefers-reduced-motion:no-preference){ .fModuleArrow{transition:opacity var(--duration-fast) var(--ease-precise), transform var(--duration-fast) var(--ease-precise)} }
 .fModuleBlock:hover .fModuleArrow,.fModuleBlock:focus-visible .fModuleArrow{opacity:1;transform:translateX(3px);color:var(--color-accent-primary)}
-.fModuleDesc{font-size:14px;line-height:1.62;color:var(--color-text-secondary);margin:7px 0 0;max-width:54ch}
+.fModuleDesc{font-size:0.875rem;line-height:1.62;color:var(--color-text-secondary);margin:7px 0 0;max-width:54ch}
 
 /* AUTH FOUNDATION Phase 2E, Gate 10/16: deferred/unauthorized module
    destinations (moduleBlockHtml) -- truthfully non-interactive, never
@@ -153,7 +153,7 @@ body.landing-active #nxContentOutlet{padding:0;max-width:none;flex:none}
    "locked" visual language. */
 .fModuleBlockDeferred{cursor:default;opacity:.45}
 .fModuleBlockDeferred:hover{background:none}
-.fModuleSoon{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.04em;color:var(--color-text-muted);border:1px solid var(--color-hairline-strong);border-radius:3px;padding:2px 7px;flex-shrink:0}
+.fModuleSoon{font-family:var(--font-mono);font-size:0.6562rem;letter-spacing:.04em;color:var(--color-text-muted);border:1px solid var(--color-hairline-strong);border-radius:3px;padding:2px 7px;flex-shrink:0}
 
 @media(max-width:1000px){
   .fNavCol{width:46%;padding-left:32px}
@@ -173,11 +173,11 @@ body.landing-active #nxContentOutlet{padding:0;max-width:none;flex:none}
   .fNavItem{padding:5px 0 9px;flex-shrink:0;width:auto}
   .fNavItem:before{display:none}
   .fNavItem .idx{display:none}
-  .fNavItem .label{font-size:17px;font-weight:300}
+  .fNavItem .label{font-size:1.0625rem;font-weight:300}
   .fNavItem.active .label{font-weight:500}
   .fCanvas{padding:26px 18px 48px;align-items:flex-start}
   .fCanvasInner{max-width:none}
-  .fModuleTitle{font-size:18px}
+  .fModuleTitle{font-size:1.125rem}
   .fDetailEyebrow{margin-bottom:14px}
   .fAnalystCta{padding-right:0;margin-top:16px;padding-top:16px}
   .fAnalystCtaBtn{width:100%;justify-content:center}
@@ -201,36 +201,36 @@ body.landing-active #nxContentOutlet{padding:0;max-width:none;flex:none}
 .pBrand{display:flex;align-items:center;gap:9px;padding:0 16px;margin:0 8px 22px;text-decoration:none;color:var(--color-text-primary)}
 .pBrand:focus-visible{outline:var(--focus-ring);outline-offset:2px;border-radius:var(--radius-sm)}
 .pBrandLogo{height:15px;width:auto;display:block;opacity:.92}
-.pBrandWord{font-family:var(--font-mono);font-size:10px;font-weight:500;letter-spacing:.03em;color:var(--color-text-secondary);padding-left:9px;border-left:1px solid var(--color-hairline-strong)}
+.pBrandWord{font-family:var(--font-mono);font-size:0.625rem;font-weight:500;letter-spacing:.03em;color:var(--color-text-secondary);padding-left:9px;border-left:1px solid var(--color-hairline-strong)}
 .pNavGroups{display:flex;flex-direction:column}
 .pNavGroup + .pNavGroup{margin-top:16px}
-.pNavGroupLabel{font-family:var(--font-mono);font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted);padding:0 16px;margin:0 8px 6px;opacity:.75}
-.pGlobalNav .pNavItem{display:flex;align-items:center;gap:10px;padding:8px 14px;margin:0 8px 2px;border-radius:var(--radius-sm);color:var(--color-text-secondary);text-decoration:none;font-family:var(--font-ui);font-size:12.5px;border-left:2px solid transparent}
+.pNavGroupLabel{font-family:var(--font-mono);font-size:0.5625rem;letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted);padding:0 16px;margin:0 8px 6px;opacity:.75}
+.pGlobalNav .pNavItem{display:flex;align-items:center;gap:10px;padding:8px 14px;margin:0 8px 2px;border-radius:var(--radius-sm);color:var(--color-text-secondary);text-decoration:none;font-family:var(--font-ui);font-size:0.7812rem;border-left:2px solid transparent}
 .pGlobalNav .pNavItem:hover{color:var(--color-text-primary);background:rgba(255,255,255,.04)}
 .pGlobalNav .pNavItem:hover .pNavIcon{background:var(--color-elevated-surface)}
 .pGlobalNav .pNavItem.active{color:var(--color-text-primary);border-left-color:var(--color-accent-primary);background:rgba(238,75,87,.08)}
 .pGlobalNav .pNavItem:focus-visible{outline:var(--focus-ring);outline-offset:2px}
 .pGlobalNav .pNavItem .pNavIcon{color:inherit;width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;background:var(--color-surface-2);flex-shrink:0}
-.pGlobalNav .pNavItem .pNavIconFallback{font-family:var(--font-mono);font-size:9.5px}
+.pGlobalNav .pNavItem .pNavIconFallback{font-family:var(--font-mono);font-size:0.5938rem}
 .pGlobalNav .pNavItem.active .pNavIcon{color:var(--color-accent-primary);background:rgba(238,75,87,.14)}
 .pNavLabel{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pGlobalNav .pNavItemDeferred{display:flex;align-items:center;gap:10px;padding:8px 14px;margin:0 8px 2px;border-radius:var(--radius-sm);color:var(--color-text-muted);opacity:.62;cursor:default;border-left:2px solid transparent}
-.pNavSoon{font-family:var(--font-mono);font-size:8px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted);border:1px solid var(--color-hairline-strong);border-radius:var(--radius-sm);padding:1px 5px;flex-shrink:0}
+.pNavSoon{font-family:var(--font-mono);font-size:0.5rem;letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted);border:1px solid var(--color-hairline-strong);border-radius:var(--radius-sm);padding:1px 5px;flex-shrink:0}
 
 /* ---------- Shell Wave 2A.1 Gate 3: top-bar breadcrumb hierarchy ----------
    "Portal F&I" demoted to a small system tag; the current module now
    carries the actual visual weight, reading as a product label rather
    than a developer path segment. Same 52px .pTopBar height, no new
    vertical chrome. */
-.pBreadcrumbTag{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)}
-.pBreadcrumbSep{color:var(--color-hairline-strong);margin:0 10px;font-size:13px;font-weight:300}
-.pBreadcrumbCurrent{font-family:var(--font-ui);font-size:14px;font-weight:500;letter-spacing:-.005em;color:var(--color-text-primary)}
+.pBreadcrumbTag{font-family:var(--font-mono);font-size:0.5938rem;letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)}
+.pBreadcrumbSep{color:var(--color-hairline-strong);margin:0 10px;font-size:0.8125rem;font-weight:300}
+.pBreadcrumbCurrent{font-family:var(--font-ui);font-size:0.875rem;font-weight:500;letter-spacing:-.005em;color:var(--color-text-primary)}
 
 .pUserInfo{display:flex;flex-direction:column;gap:1px;line-height:1.25;min-width:0}
-.pUserName{display:flex;align-items:center;gap:6px;color:var(--color-text-primary);font-size:12.5px;font-weight:500;min-width:0}
+.pUserName{display:flex;align-items:center;gap:6px;color:var(--color-text-primary);font-size:0.7812rem;font-weight:500;min-width:0}
 .pUserNameText{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px}
-.pUserBadge{font-family:var(--font-mono);font-size:8.5px;letter-spacing:.05em;color:var(--color-accent-primary);border:1px solid rgba(238,75,87,.35);border-radius:var(--radius-sm);padding:1px 5px;flex-shrink:0}
-.pUserContext{font-size:10.5px;color:var(--color-text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pUserBadge{font-family:var(--font-mono);font-size:0.5312rem;letter-spacing:.05em;color:var(--color-accent-primary);border:1px solid rgba(238,75,87,.35);border-radius:var(--radius-sm);padding:1px 5px;flex-shrink:0}
+.pUserContext{font-size:0.6562rem;color:var(--color-text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* ============================================================
    Shell Wave 2B — responsive drawer (tablet/mobile)
@@ -279,7 +279,7 @@ body.nav-drawer-open .pNavBackdrop{display:block}
 @media(min-width:1280px){
   body.module-open .pNavPin{
     display:flex;align-items:center;gap:10px;margin:auto 8px 0;padding:8px 14px;border:0;border-left:2px solid transparent;
-    border-radius:var(--radius-sm);background:none;color:var(--color-text-muted);font-family:var(--font-ui);font-size:12px;cursor:pointer;text-align:left
+    border-radius:var(--radius-sm);background:none;color:var(--color-text-muted);font-family:var(--font-ui);font-size:0.75rem;cursor:pointer;text-align:left
   }
   body.module-open .pNavPin .pNavIcon{width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
   body.module-open .pNavPin:hover{color:var(--color-text-primary);background:rgba(255,255,255,.04)}

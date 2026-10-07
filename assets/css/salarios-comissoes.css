@@ -67,8 +67,8 @@
   background: var(--color-surface-1);
 }
 .salCardTop { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-bottom: var(--space-2); flex-wrap: wrap; }
-.salCardName { font-weight: 600; font-size: 14px; }
-.salCardFields { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-1) var(--mod-space-control-gap); margin: 0 0 var(--mod-space-control-gap); font-size: 12.5px; }
+.salCardName { font-weight: 600; font-size: 0.875rem; }
+.salCardFields { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-1) var(--mod-space-control-gap); margin: 0 0 var(--mod-space-control-gap); font-size: 0.7812rem; }
 .salCardFields dt { color: var(--mod-muted); }
 .salCardFields dd { margin: 0; color: var(--color-text-secondary); text-align: right; font-variant-numeric: tabular-nums; }
 
@@ -94,7 +94,7 @@
   max-height: 80vh;
   overflow-y: auto;
 }
-.salModal h3 { margin: 0 0 var(--mod-space-control-gap); font-size: 15px; }
+.salModal h3 { margin: 0 0 var(--mod-space-control-gap); font-size: 0.9375rem; }
 
 /* ---------- Detalhes — operation rows (RH-5F) -- replaces the old
    6-column .modTable (which forced Data/Chassi to wrap mid-value inside
@@ -110,7 +110,7 @@
   padding: var(--mod-space-compact) var(--mod-space-card-gap);
 }
 .salOpRow.salOpRowFinanced { border-left: 3px solid var(--mod-success); }
-.salOpRowPrimary { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; font-size: 13px; }
+.salOpRowPrimary { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; font-size: 0.8125rem; }
 .salOpDate, .salOpChassis { font-family: var(--font-mono); white-space: nowrap; color: var(--color-text-secondary); }
 .salOpModel { font-weight: 600; flex: 1 1 auto; min-width: 0; overflow-wrap: break-word; }
 .salOpRowFinancial {
@@ -121,8 +121,8 @@
 }
 .salOpMetric { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .salOpMetricLabel { color: var(--mod-muted); font-size: var(--mod-metadata-size); text-transform: uppercase; letter-spacing: .04em; }
-.salOpMetricValue { font-variant-numeric: tabular-nums; font-size: 13px; }
-.salOpRowMeta { margin-top: var(--mod-space-compact); font-size: 11.5px; color: var(--mod-muted); }
+.salOpMetricValue { font-variant-numeric: tabular-nums; font-size: 0.8125rem; }
+.salOpRowMeta { margin-top: var(--mod-space-compact); font-size: 0.7188rem; color: var(--mod-muted); }
 
 /* ---------- Histórico (RH-4C, MASTER-only read-only viewer) ---------- */
 .salHistoryMeta { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
@@ -241,12 +241,12 @@
   padding-left: var(--space-1);
   padding-right: var(--space-1);
 }
-.salEquipeTableWrap .modTable th { font-size: 10.5px; }
-.salEquipeTableWrap .modCurrencyCol { font-size: 12.5px; }
+.salEquipeTableWrap .modTable th { font-size: 0.6562rem; }
+.salEquipeTableWrap .modCurrencyCol { font-size: 0.7812rem; }
 .salEquipeTableWrap .modActionCol .modBtnSm {
   padding-left: var(--space-1);
   padding-right: var(--space-1);
-  font-size: 11.5px;
+  font-size: 0.7188rem;
 }
 /* RH-5F.1A -- Gate 31's own principle (already applied to the Detalhes
    modal) generalized here: the NAME column is the one place safe to
@@ -283,7 +283,7 @@
   }
   .salEquipeTableWrap .modCurrencyCol,
   .salAnalystTableWrap .modCurrencyCol {
-    font-size: 11.5px;
+    font-size: 0.7188rem;
   }
   .salEquipeTableWrap .modTable td:first-child,
   .salAnalystTableWrap .modTable td:first-child {
@@ -309,7 +309,7 @@
   }
   .salEquipeTableWrap .modCurrencyCol,
   .salAnalystTableWrap .modCurrencyCol {
-    font-size: 10px;
+    font-size: 0.625rem;
   }
   .salEquipeTableWrap .modTable td:first-child,
   .salAnalystTableWrap .modTable td:first-child {
@@ -319,7 +319,7 @@
   .salAnalystTableWrap .modActionCol .modBtnSm {
     padding-left: 4px;
     padding-right: 4px;
-    font-size: 10.5px;
+    font-size: 0.6562rem;
   }
 }
 
@@ -350,7 +350,7 @@
   background: var(--mod-surface-panel-2);
   color: var(--color-text-primary);
   font-family: var(--font-mono);
-  font-size: 12.5px;
+  font-size: 0.7812rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .05em;
@@ -389,7 +389,7 @@
 .salGroupHeading {
   color: var(--color-text-primary);
   font-family: var(--font-mono);
-  font-size: 12.5px;
+  font-size: 0.7812rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .05em;
@@ -409,7 +409,7 @@
 .salOrphanStoreHeading {
   color: var(--color-text-primary);
   font-family: var(--font-mono);
-  font-size: 12.5px;
+  font-size: 0.7812rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .05em;
@@ -427,7 +427,7 @@
 .salAnalystSection { margin-top: var(--mod-space-compact); }
 .salAnalystHeading {
   color: var(--mod-muted);
-  font-size: 11.5px;
+  font-size: 0.7188rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: .05em;
@@ -435,7 +435,7 @@
   padding-left: calc(var(--space-2) + 3px);
 }
 .salAnalystTableWrap { margin-left: var(--space-3); }
-.salAnalystTable th, .salAnalystTable td { font-size: 12.5px; }
+.salAnalystTable th, .salAnalystTable td { font-size: 0.7812rem; }
 /* border-style (not margin-left) for the mobile indent -- a card is a
    flex child sized to its container; adding a left MARGIN pushes its
    right edge past the viewport at narrow widths instead of shrinking it
@@ -457,7 +457,7 @@
 .salRangesDisclosure summary {
   cursor: pointer;
   font-weight: 600;
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--color-text-primary);
   list-style: none;
 }
@@ -471,10 +471,10 @@
   gap: var(--mod-space-control-gap);
   margin-top: var(--mod-space-control-gap);
 }
-.salRangesGrid ul { margin: 0; padding-left: 18px; font-size: 12.5px; color: var(--color-text-secondary); }
+.salRangesGrid ul { margin: 0; padding-left: 18px; font-size: 0.7812rem; color: var(--color-text-secondary); }
 .salRangesGrid li { margin-bottom: var(--space-1); }
 .salRangesGrid b { color: var(--color-text-primary); font-variant-numeric: tabular-nums; }
-.salRangesNote { font-size: 11.5px; margin-top: var(--mod-space-control-gap); }
+.salRangesNote { font-size: 0.7188rem; margin-top: var(--mod-space-control-gap); }
 
 /* ---------- Comissão — Gestor F&I (RH-5C.1, live/open-period) --
    deliberately a DIFFERENT visual treatment than .salManagerRow/
@@ -524,8 +524,8 @@
    it, never removed. ---------- */
 .salFaixaCompactCard { display: flex; flex-direction: column; justify-content: center; }
 .salFaixaCompactValue { display: flex; align-items: center; gap: var(--space-1); margin-top: var(--mod-space-micro); }
-.salFaixaTierBadge { font-size: 11px; padding: 3px 8px; }
-.salFaixaPct { font-family: var(--font-mono); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.salFaixaTierBadge { font-size: 0.6875rem; padding: 3px 8px; }
+.salFaixaPct { font-family: var(--font-mono); font-size: 0.8125rem; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
 
 /* ---------- Team Faixas / team total caption (RH-5F.3A, GERENTE only).
    RH-5F.3B, Human UAT correction: the dedicated "Comissão Total da
@@ -533,9 +533,9 @@
    caption (never re-added as a card, never deleted) so it stays visible
    directly above the Equipe table it summarizes. A plain caption, not a
    KPI -- it's a tally + a reference figure, not a primary result. ---------- */
-.salTeamFaixasNote { margin: var(--mod-space-control-gap) 0 0; font-size: 12.5px; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1); }
+.salTeamFaixasNote { margin: var(--mod-space-control-gap) 0 0; font-size: 0.7812rem; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1); }
 .salTeamTotalInline { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--color-text-primary); }
-.salTeamFaixasNote .salFaixaTierBadge { font-size: 10px; padding: 2px 6px; }
+.salTeamFaixasNote .salFaixaTierBadge { font-size: 0.625rem; padding: 2px 6px; }
 
 /* ---------- viewMode toggle (Atual / Histórico) -- only ever 2 items,
    never a peer-level tab strip alongside Resumo/Equipe/Analistas/Gestor
@@ -562,10 +562,10 @@
   padding-bottom: var(--mod-space-control-gap);
   border-bottom: 1px solid var(--mod-border);
 }
-.salAnalystReconcileNote { margin: 0 0 var(--mod-space-control-gap); font-size: 11.5px; }
+.salAnalystReconcileNote { margin: 0 0 var(--mod-space-control-gap); font-size: 0.7188rem; }
 
 /* Período personalizado: aviso de cálculo do Portal (não oficial) e validação das datas. */
 .salCustomNotes { margin: var(--mod-space-control-gap) 0 0; display: flex; flex-direction: column; gap: var(--space-2); }
-.salCustomNote { margin: 0; padding: var(--space-2) var(--space-3); border: 1px solid var(--color-warning); border-radius: var(--radius-sm); background: var(--color-warning-soft); color: var(--color-text-secondary); font-size: 12.5px; line-height: 1.5; }
+.salCustomNote { margin: 0; padding: var(--space-2) var(--space-3); border: 1px solid var(--color-warning); border-radius: var(--radius-sm); background: var(--color-warning-soft); color: var(--color-text-secondary); font-size: 0.7812rem; line-height: 1.5; }
 .salCustomNote b { color: var(--color-text-primary); }
-.salCustomError { margin: 0; color: var(--color-critical); font-size: 12.5px; }
+.salCustomError { margin: 0; color: var(--color-critical); font-size: 0.7812rem; }

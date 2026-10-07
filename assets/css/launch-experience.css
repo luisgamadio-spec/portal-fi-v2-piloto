@@ -44,7 +44,7 @@
   border: 1px solid rgba(255, 255, 255, .28);
   background: rgba(0, 0, 0, .35);
   color: rgba(255, 255, 255, .78);
-  font: 500 13px/1 var(--font-ui);
+  font: 500 0.8125rem/1 var(--font-ui);
   letter-spacing: .02em;
   cursor: pointer;
   backdrop-filter: blur(6px);
@@ -95,7 +95,7 @@
   margin-left: 4px;
 }
 .nxLaunchXpStartLabel {
-  font: 500 14px/1 var(--font-ui);
+  font: 500 0.875rem/1 var(--font-ui);
   letter-spacing: .03em;
   color: rgba(255, 255, 255, .85);
 }

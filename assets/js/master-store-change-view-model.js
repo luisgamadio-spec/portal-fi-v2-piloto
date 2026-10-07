@@ -19,11 +19,12 @@
 
    NO canonical store catalog exists server-side (no `lojas` table/
    enum anywhere in this system -- confirmed by full-repo search).
-   Origin/destination stores are plain unvalidated `text`. This
-   view-model never invents a hard enum for them -- `storeSuggestions`
-   below is a soft, non-authoritative suggestion list only (derived
-   from already-observed values in the loaded list), the same
-   principle V1's own lojasOptions() uses.
+   Origin/destination stores are plain unvalidated `text`. The form's
+   store list is `storeOptions` below: the distinct `loja` of every
+   active user in master_admin_security_data() -- exactly the source
+   V1's own lojasOptions() uses -- minus the MASTER profile marker.
+   (`storeSuggestions`, derived from already-recorded changes only, is
+   kept for compatibility but no longer feeds the form.)
 
    Department fields ARE a real hard-validated enum server-side
    (NOVOS/SEMINOVOS only) -- DEPARTMENT_OPTIONS below reflects that
@@ -148,13 +149,78 @@
     });
   }
 
+  // ---- Diretório de pessoas (mesma fonte do v1: master_admin_security_data().users ativos) ----
+  // `directory` = linhas já normalizadas pelo provider ({nome, cpf, login, loja, perfil, status}).
+
+  // Convenção "desde sempre" já usada nos registros existentes: sem
+  // transferência anterior, toda a história antes da mudança pertence à
+  // origem (resolve_store_temporal cai na loja ATUAL do cadastro para
+  // datas anteriores a data_inicio_origem -- ou seja, no destino).
+  var ORIGIN_START_SINCE_ALWAYS = '1999-01-01';
+
+  function foldText(s) {
+    return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().trim();
+  }
+
+  // Lojas = valores distintos de `loja` dos usuários ativos (lojasOptions()
+  // do v1), sem o marcador de perfil MASTER, em ordem alfabética.
+  function storeOptions(directory) {
+    var set = {};
+    (directory || []).forEach(function (u) {
+      var l = String(u.loja || '').trim().toUpperCase();
+      if (l && l !== 'MASTER') set[l] = true;
+    });
+    return Object.keys(set).sort(function (a, b) { return a.localeCompare(b, 'pt-BR'); });
+  }
+
+  function sellerOptions(directory) {
+    return (directory || []).filter(function (u) { return u.perfil === 'VENDEDOR'; })
+      .sort(function (a, b) { return String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR'); });
+  }
+
+  function analystOptions(directory) {
+    return (directory || []).filter(function (u) { return u.perfil === 'ANALISTA'; })
+      .sort(function (a, b) { return String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR'); });
+  }
+
+  // Busca por parte do nome (sem acento/caixa) ou por loja.
+  function filterPeople(list, query) {
+    var q = foldText(query);
+    if (!q) return list || [];
+    return (list || []).filter(function (u) {
+      return foldText(u.nome).indexOf(q) !== -1 || foldText(u.loja) === q;
+    });
+  }
+
+  // Preenche os campos do vendedor escolhido. Origem/data inicial seguem
+  // a cadeia (a transferência ativa mais recente, que o servidor exige)
+  // e, sem cadeia, a loja atual do cadastro + "desde sempre".
+  function prefillFromSeller(seller, storeChanges) {
+    var prior = findMostRecentForSeller(storeChanges, seller.cpf, seller.nome);
+    return {
+      cpfVendedor: normalizeCpf(seller.cpf),
+      loginVendedor: String(seller.login || '').trim(),
+      nomeVendedor: String(seller.nome || '').trim(),
+      lojaOrigem: prior ? String(prior.loja_destino || '').trim().toUpperCase() : String(seller.loja || '').trim().toUpperCase(),
+      dataInicioOrigem: prior && prior.data_inicio_destino ? String(prior.data_inicio_destino).slice(0, 10) : ORIGIN_START_SINCE_ALWAYS,
+      origemFonte: prior ? 'CADEIA' : 'CADASTRO'
+    };
+  }
+
   window.NX_MASTER_STORE_CHANGE_VM = {
     DEPARTMENT_OPTIONS: DEPARTMENT_OPTIONS,
+    ORIGIN_START_SINCE_ALWAYS: ORIGIN_START_SINCE_ALWAYS,
     fmtDateBR: fmtDateBR,
     addOneDay: addOneDay,
+    normalizeCpf: normalizeCpf,
     findMostRecentForSeller: findMostRecentForSeller,
     checkChainGuidance: checkChainGuidance,
     storeSuggestions: storeSuggestions,
+    storeOptions: storeOptions,
+    sellerOptions: sellerOptions,
+    analystOptions: analystOptions,
+    filterPeople: filterPeople,
+    prefillFromSeller: prefillFromSeller,
     sortByDestStartDesc: sortByDestStartDesc
   };
 })();

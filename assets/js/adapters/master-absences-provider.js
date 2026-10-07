@@ -170,18 +170,25 @@
   // value sent here would be silently dropped server-side. This
   // provider does not accept or send one, to avoid presenting a field
   // that would appear to save but never actually persists.
-  function createAbsence(fields, params) {
-    return manage('CREATE', {
-      absent_cpf: fields.cpfAnalistaAusente,
-      absent_name: fields.nomeAnalistaAusente,
-      origin_store: fields.lojaOrigem,
-      substitute_cpf: fields.cpfAnalistaSubstituto,
-      substitute_name: fields.nomeAnalistaSubstituto,
-      covered_store: fields.lojaCoberta,
+  // Normalização igual à do servidor/v1: CPF só dígitos, lojas com trim
+  // (em caixa alta, como no cadastro de usuários).
+  function digits(v) { return String(v == null ? '' : v).replace(/\D/g, ''); }
+  function storeCode(v) { return String(v == null ? '' : v).trim().toUpperCase(); }
+  function buildCreatePayload(fields) {
+    return {
+      absent_cpf: digits(fields.cpfAnalistaAusente),
+      absent_name: String(fields.nomeAnalistaAusente || '').trim(),
+      origin_store: storeCode(fields.lojaOrigem),
+      substitute_cpf: digits(fields.cpfAnalistaSubstituto),
+      substitute_name: String(fields.nomeAnalistaSubstituto || '').trim(),
+      covered_store: storeCode(fields.lojaCoberta),
       start_date: fields.dataInicio,
       end_date: fields.dataFim,
       reason: fields.motivo
-    }, params);
+    };
+  }
+  function createAbsence(fields, params) {
+    return manage('CREATE', buildCreatePayload(fields), params);
   }
   function setActive(id, active, params) {
     return manage('SET_ACTIVE', { id: id, active: !!active }, params);
@@ -192,6 +199,7 @@
 
   window.NX_MASTER_ABSENCES_PROVIDER = {
     listAbsences: listAbsences,
+    buildCreatePayload: buildCreatePayload,
     createAbsence: createAbsence,
     setActive: setActive,
     archiveAbsence: archiveAbsence,

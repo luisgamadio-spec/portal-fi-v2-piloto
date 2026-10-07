@@ -170,20 +170,64 @@
     return callRpc('master_admin_manage', { p_entity: 'STORE_CHANGE', p_action: action, p_payload: payload || {} }, params.signal);
   }
 
-  function createStoreChange(fields, params) {
-    return manage('CREATE', {
-      seller_cpf: fields.cpfVendedor,
-      seller_login: fields.loginVendedor,
-      seller_name: fields.nomeVendedor,
-      origin_store: fields.lojaOrigem,
-      destination_store: fields.lojaDestino,
+  function digits(v) { return String(v == null ? '' : v).replace(/\D/g, ''); }
+  function storeCode(v) { return String(v == null ? '' : v).trim().toUpperCase(); }
+
+  // Diretório de pessoas ativas para os formulários (vendedor/analista):
+  // mesma fonte do v1 (master_admin_security_data().users, ativos). O
+  // login (NBS) não vem nesse RPC; é casado por CPF com
+  // master_operational_list_sellers() (portal_sellers.nbs). Se essa
+  // segunda leitura falhar, o login só fica vazio (editável).
+  function listPeopleDirectory(params) {
+    params = params || {};
+    var logins = callRpc('master_operational_list_sellers', {}, params.signal).then(
+      function (d) { return Array.isArray(d) ? d : []; },
+      function () { return []; }
+    );
+    return Promise.all([callRpc('master_admin_security_data', {}, params.signal), logins]).then(function (res) {
+      var data = res[0];
+      if (!data || !Array.isArray(data.users)) {
+        return Promise.reject({ state: 'MALFORMED_RESPONSE', message: 'Resposta inesperada do servidor.' });
+      }
+      var loginByCpf = {};
+      res[1].forEach(function (s) {
+        var c = digits(s && s.cpf_normalizado);
+        var n = String((s && s.nbs) || '').trim();
+        if (c && n) loginByCpf[c] = n;
+      });
+      return data.users.filter(function (u) { return u && u.ativo; }).map(function (u) {
+        var cpf = digits(u.cpf_normalizado || u.cpf);
+        return {
+          nome: String(u.nome || '').trim(),
+          cpf: cpf,
+          login: loginByCpf[cpf] || '',
+          loja: storeCode(u.loja),
+          perfil: String(u.perfil || '').trim().toUpperCase(),
+          status: u.status || ''
+        };
+      });
+    });
+  }
+
+  // Normalização igual à do servidor (master_admin_manage): CPF só
+  // dígitos, lojas/texto com trim; lojas e departamentos em caixa alta.
+  function buildCreatePayload(fields) {
+    return {
+      seller_cpf: digits(fields.cpfVendedor),
+      seller_login: String(fields.loginVendedor || '').trim(),
+      seller_name: String(fields.nomeVendedor || '').trim(),
+      origin_store: storeCode(fields.lojaOrigem),
+      destination_store: storeCode(fields.lojaDestino),
       origin_start: fields.dataInicioOrigem,
       origin_end: fields.dataFimOrigem,
       destination_start: fields.dataInicioDestino,
-      notes: fields.observacao,
-      origin_department: fields.departamentoOrigem,
-      destination_department: fields.departamentoDestino
-    }, params);
+      notes: String(fields.observacao || '').trim(),
+      origin_department: storeCode(fields.departamentoOrigem),
+      destination_department: storeCode(fields.departamentoDestino)
+    };
+  }
+  function createStoreChange(fields, params) {
+    return manage('CREATE', buildCreatePayload(fields), params);
   }
   function setDepartments(id, originDepartment, destinationDepartment, params) {
     return manage('SET_DEPARTMENTS', { id: id, origin_department: originDepartment, destination_department: destinationDepartment }, params);
@@ -197,6 +241,8 @@
 
   window.NX_MASTER_STORE_CHANGE_PROVIDER = {
     listStoreChanges: listStoreChanges,
+    listPeopleDirectory: listPeopleDirectory,
+    buildCreatePayload: buildCreatePayload,
     createStoreChange: createStoreChange,
     setDepartments: setDepartments,
     setActive: setActive,

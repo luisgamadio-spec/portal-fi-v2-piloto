@@ -200,6 +200,12 @@
     modal: null // null | {kind:'confirm'|'success'|'error'|'editDepartments', ...}
   };
 
+  // Diretório de pessoas ativas (vendedores/analistas + lojas) usado pelos
+  // formulários de Mudança de Loja e Férias/Ausências -- mesma fonte do
+  // v1 (master_admin_security_data().users). Carregado ao abrir um
+  // formulário de criação, uma vez por visita ao Painel.
+  var peopleDir = { list: null, loading: false, error: null };
+
   // Painel Master Phase PM-5H -- Utilização dos Simuladores section
   // state. READ-ONLY capability (confirmed live: the only 4 writer
   // RPCs for this capability's own data are called exclusively by the
@@ -3138,8 +3144,18 @@
     return '<div class="maMobileOnly">' + absState.absences.map(absMobileCardHtml).join('') + '</div>';
   }
 
+  // Loja da ausência: lista fechada do cadastro (como o v1); se a lista
+  // não carregar, cai num campo de texto (normalizado no provider).
+  function absStoreFieldHtml(id, selected) {
+    if (peopleDir.list) return storeSelectHtml(id, selected);
+    return '<input type="text" id="' + id + '" value="' + esc(selected) + '">';
+  }
   function absCreateFormHtml() {
     var f = absState.createForm;
+    if (peopleDir.loading) {
+      return '<div class="gbCard absCreateCard"><h3>Nova ausência</h3>' + peopleDirStatusHtml('lojas') +
+        '<div class="adminModalActions"><button type="button" class="modBtnGhost" id="absCancelCreateBtn">Cancelar</button></div></div>';
+    }
     var motivoOptions = ABS_VM.MOTIVO_OPTIONS.map(function (m) {
       return '<option value="' + esc(m) + '"' + (f.motivo === m ? ' selected' : '') + '>' + esc(m) + '</option>';
     }).join('');
@@ -3151,13 +3167,13 @@
       '<label for="absNomeAusente">Nome do analista ausente</label>' +
       '<input type="text" id="absNomeAusente" value="' + esc(f.nomeAnalistaAusente) + '">' +
       '<label for="absLojaOrigem">Loja de origem (opcional)</label>' +
-      '<input type="text" id="absLojaOrigem" value="' + esc(f.lojaOrigem) + '">' +
+      absStoreFieldHtml('absLojaOrigem', f.lojaOrigem) +
       '<label for="absCpfSubstituto">CPF do substituto</label>' +
       '<input type="text" id="absCpfSubstituto" value="' + esc(f.cpfAnalistaSubstituto) + '">' +
       '<label for="absNomeSubstituto">Nome do substituto</label>' +
       '<input type="text" id="absNomeSubstituto" value="' + esc(f.nomeAnalistaSubstituto) + '">' +
       '<label for="absLojaCoberta">Loja coberta</label>' +
-      '<input type="text" id="absLojaCoberta" value="' + esc(f.lojaCoberta) + '">' +
+      absStoreFieldHtml('absLojaCoberta', f.lojaCoberta) +
       '<label for="absIni">Data inicial</label>' +
       '<input type="date" id="absIni" value="' + esc(f.dataInicio) + '">' +
       '<label for="absFim">Data final</label>' +
@@ -3452,9 +3468,126 @@
     }).join('');
   }
 
+  // ---- Diretório de pessoas (vendedores/analistas/lojas) para os formulários ----
+  function peopleDirEnsure() {
+    if (peopleDir.list || peopleDir.loading) return;
+    peopleDir.loading = true;
+    peopleDir.error = null;
+    SC_PROVIDER.listPeopleDirectory({}).then(
+      function (list) { peopleDir.list = list; peopleDir.loading = false; renderPanel(); },
+      function (err) { peopleDir.loading = false; peopleDir.error = err || { state: 'RPC_ERROR' }; renderPanel(); }
+    );
+  }
+  function peopleDirStatusHtml(what) {
+    if (peopleDir.error) {
+      return '<p class="maSubtle gbErrText" role="alert">Não foi possível carregar a lista de ' + esc(what) + '.</p>' +
+        '<button type="button" class="modBtnGhost" id="peopleDirRetryBtn">Tentar novamente</button>';
+    }
+    return '<div class="modLoadingState"><span class="modLoadingDot"></span>Carregando ' + esc(what) + '...</div>';
+  }
+  function storeOptionsList() { return SC_VM.storeOptions(peopleDir.list); }
+  // Lista fechada (sem texto livre), opcionalmente sem a loja `exclude`.
+  function storeSelectHtml(id, selected, exclude) {
+    var ex = String(exclude || '').trim().toUpperCase();
+    var sel = String(selected || '').trim().toUpperCase();
+    return '<select id="' + id + '"><option value="">Selecione</option>' +
+      storeOptionsList().filter(function (s) { return !ex || s !== ex; }).map(function (s) {
+        return '<option value="' + esc(s) + '"' + (sel === s ? ' selected' : '') + '>' + esc(s) + '</option>';
+      }).join('') + '</select>';
+  }
+
+  function scSellerKey(u) { return u.cpf ? 'cpf:' + u.cpf : 'nome:' + u.nome; }
+  function scFindSeller(key) {
+    return SC_VM.sellerOptions(peopleDir.list).filter(function (u) { return scSellerKey(u) === key; })[0] || null;
+  }
+  function scSellerItemsHtml(query) {
+    var items = SC_VM.filterPeople(SC_VM.sellerOptions(peopleDir.list), query);
+    if (!items.length) return '<p class="maSubtle scPickEmpty">Nenhum vendedor ativo encontrado.</p>';
+    return items.map(function (u) {
+      return '<button type="button" role="option" class="scPickOpt" data-key="' + esc(scSellerKey(u)) + '">' +
+        '<b>' + esc(u.nome) + '</b> <span class="maSubtle">· ' + esc(u.loja || 'sem loja') + '</span></button>';
+    }).join('');
+  }
+  function scPickSeller(key) {
+    var f = scState.createForm;
+    var u = scFindSeller(key);
+    if (!f || !u) return;
+    scReadFormIntoState();
+    var p = SC_VM.prefillFromSeller(u, scState.storeChanges);
+    f.sellerKey = key;
+    f.sellerLoja = u.loja;
+    f.cpfVendedor = p.cpfVendedor; f.cpfLocked = !!p.cpfVendedor;
+    f.loginVendedor = p.loginVendedor; f.loginLocked = !!p.loginVendedor;
+    f.nomeVendedor = p.nomeVendedor;
+    f.lojaOrigem = p.lojaOrigem;
+    f.origemLocked = !!p.lojaOrigem && storeOptionsList().indexOf(p.lojaOrigem) !== -1;
+    if (!f.origemLocked) f.lojaOrigem = '';
+    f.dataInicioOrigem = p.dataInicioOrigem;
+    f.origemFonte = p.origemFonte;
+    if (f.lojaDestino && f.lojaDestino === f.lojaOrigem) f.lojaDestino = '';
+    f.error = null;
+    renderPanel();
+  }
+  function scClearSeller() {
+    var f = scState.createForm;
+    if (!f) return;
+    scReadFormIntoState();
+    f.sellerKey = null; f.sellerLoja = '';
+    f.cpfVendedor = ''; f.loginVendedor = ''; f.nomeVendedor = ''; f.lojaOrigem = '';
+    f.cpfLocked = false; f.loginLocked = false; f.origemLocked = false;
+    f.dataInicioOrigem = ''; f.origemFonte = null;
+    renderPanel();
+    var busca = document.getElementById('scVendBusca');
+    if (busca) busca.focus();
+  }
+  // Copia os valores atuais do DOM para o estado (antes de re-renderizar
+  // ou salvar), sem perder o que já foi digitado.
+  function scReadFormIntoState() {
+    var f = scState.createForm;
+    if (!f) return f;
+    function val(id) { var el = document.getElementById(id); return el ? el.value : null; }
+    var v;
+    if ((v = val('scCpf')) !== null) f.cpfVendedor = v;
+    if ((v = val('scLogin')) !== null) f.loginVendedor = v;
+    if ((v = val('scLojaOrigem')) !== null) f.lojaOrigem = v.trim().toUpperCase();
+    if ((v = val('scLojaDestino')) !== null) f.lojaDestino = v.trim().toUpperCase();
+    if ((v = val('scIniOrigem')) !== null) f.dataInicioOrigem = v;
+    if ((v = val('scFimOrigem')) !== null) f.dataFimOrigem = v;
+    if ((v = val('scIniDestino')) !== null) f.dataInicioDestino = v;
+    if ((v = val('scObs')) !== null) f.observacao = v.trim();
+    if ((v = val('scDeptOrigem')) !== null) f.departamentoOrigem = v;
+    if ((v = val('scDeptDestino')) !== null) f.departamentoDestino = v;
+    if ((v = val('scVendBusca')) !== null) f.sellerQuery = v;
+    return f;
+  }
+
+  function scSellerBlockHtml(f) {
+    if (!f.sellerKey) {
+      return '<label for="scVendBusca">Vendedor</label>' +
+        '<input type="search" id="scVendBusca" autocomplete="off" placeholder="Digite parte do nome" value="' + esc(f.sellerQuery || '') + '" aria-controls="scVendList">' +
+        '<div id="scVendList" class="scPickList" role="listbox" aria-label="Vendedores ativos">' + scSellerItemsHtml(f.sellerQuery) + '</div>';
+    }
+    var ro = function (locked) { return locked ? ' readonly class="scReadonly"' : ''; };
+    return '<label>Vendedor</label>' +
+      '<div class="scPicked"><span><b>' + esc(f.nomeVendedor) + '</b> <span class="maSubtle">· ' + esc(f.sellerLoja || 'sem loja') + '</span></span>' +
+      '<button type="button" class="modBtnGhost" id="scTrocarVendBtn">Trocar vendedor</button></div>' +
+      '<label for="scCpf">CPF do vendedor' + (f.cpfLocked ? ' (do cadastro)' : ' (não cadastrado — informe, só números)') + '</label>' +
+      '<input type="text" id="scCpf" inputmode="numeric" value="' + esc(f.cpfVendedor) + '"' + ro(f.cpfLocked) + '>' +
+      '<label for="scLogin">Login do vendedor' + (f.loginLocked ? ' (do cadastro)' : ' (não cadastrado — opcional)') + '</label>' +
+      '<input type="text" id="scLogin" value="' + esc(f.loginVendedor) + '"' + ro(f.loginLocked) + '>' +
+      '<label for="scLojaOrigem">Loja de origem' + (f.origemLocked ? (f.origemFonte === 'CADEIA' ? ' (destino da transferência ativa mais recente)' : ' (loja atual do vendedor)') : ' (não cadastrada — escolha)') + '</label>' +
+      (f.origemLocked
+        ? '<input type="text" id="scLojaOrigem" value="' + esc(f.lojaOrigem) + '" readonly class="scReadonly">'
+        : storeSelectHtml('scLojaOrigem', f.lojaOrigem));
+  }
+
   function scCreateFormHtml() {
     var f = scState.createForm;
-    var prior = SC_VM.findMostRecentForSeller(scState.storeChanges, f.cpfVendedor, f.nomeVendedor);
+    if (!peopleDir.list) {
+      return '<div class="gbCard scCreateCard"><h3>Nova mudança de loja</h3>' + peopleDirStatusHtml('vendedores e lojas') +
+        '<div class="adminModalActions"><button type="button" class="modBtnGhost" id="scCancelCreateBtn">Cancelar</button></div></div>';
+    }
+    var prior = f.sellerKey ? SC_VM.findMostRecentForSeller(scState.storeChanges, f.cpfVendedor, f.nomeVendedor) : null;
     var chainHint = prior
       ? '<p class="note scChainCard">Transferência ativa mais recente deste vendedor: <b>' + esc(prior.loja_destino) + '</b> desde ' + esc(SC_VM.fmtDateBR(prior.data_inicio_destino)) + '. A origem desta nova transferência deve começar a partir dessa loja/data.</p>'
       : '';
@@ -3466,19 +3599,16 @@
       '<h3>Nova mudança de loja</h3>' +
       '<p class="note scRetroWarn">⚠️ Esta transferência pode afetar retroativamente a atribuição de comissão/salário do vendedor para datas já registradas, quando um período de comissão que envolva essas datas for calculado.</p>' +
       chainHint +
-      '<label for="scCpf">CPF do vendedor (opcional)</label>' +
-      '<input type="text" id="scCpf" value="' + esc(f.cpfVendedor) + '">' +
-      '<label for="scLogin">Login do vendedor (opcional)</label>' +
-      '<input type="text" id="scLogin" value="' + esc(f.loginVendedor) + '">' +
-      '<label for="scNome">Nome do vendedor</label>' +
-      '<input type="text" id="scNome" value="' + esc(f.nomeVendedor) + '">' +
-      '<label for="scLojaOrigem">Loja de origem (opcional)</label>' +
-      '<input type="text" id="scLojaOrigem" value="' + esc(f.lojaOrigem) + '" list="scStoreSuggestions">' +
+      scSellerBlockHtml(f) +
       '<label for="scLojaDestino">Loja de destino</label>' +
-      '<input type="text" id="scLojaDestino" value="' + esc(f.lojaDestino) + '" list="scStoreSuggestions">' +
-      '<datalist id="scStoreSuggestions">' + SC_VM.storeSuggestions(scState.storeChanges).map(function (s) { return '<option value="' + esc(s) + '">'; }).join('') + '</datalist>' +
+      storeSelectHtml('scLojaDestino', f.lojaDestino, f.lojaOrigem) +
       '<label for="scIniOrigem">Data inicial da origem</label>' +
       '<input type="date" id="scIniOrigem" value="' + esc(f.dataInicioOrigem) + '">' +
+      (f.sellerKey
+        ? '<p class="maSubtle scFieldHint">' + (f.origemFonte === 'CADEIA'
+            ? 'Preenchida com o início da transferência ativa mais recente deste vendedor (' + esc(SC_VM.fmtDateBR(prior && prior.data_inicio_destino)) + ').'
+            : 'Sem transferência anterior: ' + esc(SC_VM.fmtDateBR(SC_VM.ORIGIN_START_SINCE_ALWAYS)) + ' significa “desde sempre” — todo o histórico antes da mudança fica na loja de origem. Altere só se souber a data real.') + '</p>'
+        : '') +
       '<label for="scFimOrigem">Data final da origem</label>' +
       '<input type="date" id="scFimOrigem" value="' + esc(f.dataFimOrigem) + '">' +
       '<label for="scIniDestino">Data inicial do destino</label>' +
@@ -3509,7 +3639,7 @@
       ? '<p class="note gbWarn gbHomologBanner">🧪 MODO DE HOMOLOGAÇÃO — alterações realizadas nesta tela são simuladas e não modificam os dados reais.</p>'
       : '';
     var html = '<h2>Mudança de Loja - Vendedores</h2>' +
-      '<p class="note">Registre transferências de loja de vendedores. Não há loja/enum pré-cadastrado: as sugestões abaixo vêm apenas de registros já existentes.</p>' +
+      '<p class="note">Registre transferências de loja de vendedores. Vendedores e lojas vêm do cadastro de usuários ativos (a mesma lista do v1).</p>' +
       homologBanner;
     if (scState.error) {
       html += errorStateHtml(scState.error.state, scState.error.message) +
@@ -3657,26 +3787,17 @@
 
   function scSaveCreateHandler() {
     if (inFlight.scAction) return;
-    var f = scState.createForm;
-    var cpf = (document.getElementById('scCpf') || {}).value || '';
-    var login = (document.getElementById('scLogin') || {}).value || '';
-    var nome = ((document.getElementById('scNome') || {}).value || '').trim();
-    var lojaOrigem = ((document.getElementById('scLojaOrigem') || {}).value || '').trim();
-    var lojaDestino = ((document.getElementById('scLojaDestino') || {}).value || '').trim();
-    var iniOrigem = (document.getElementById('scIniOrigem') || {}).value || '';
-    var fimOrigem = (document.getElementById('scFimOrigem') || {}).value || '';
-    var iniDestino = (document.getElementById('scIniDestino') || {}).value || '';
-    var obs = ((document.getElementById('scObs') || {}).value || '').trim();
-    var deptOrigem = (document.getElementById('scDeptOrigem') || {}).value || '';
-    var deptDestino = (document.getElementById('scDeptDestino') || {}).value || '';
-    f.cpfVendedor = cpf; f.loginVendedor = login; f.nomeVendedor = nome;
-    f.lojaOrigem = lojaOrigem; f.lojaDestino = lojaDestino;
-    f.dataInicioOrigem = iniOrigem; f.dataFimOrigem = fimOrigem; f.dataInicioDestino = iniDestino;
-    f.observacao = obs; f.departamentoOrigem = deptOrigem; f.departamentoDestino = deptDestino;
-    if (!nome || !lojaDestino) { f.error = 'Informe o nome do vendedor e a loja de destino.'; renderPanel(); return; }
-    if (!iniOrigem || !fimOrigem || !iniDestino) { f.error = 'Informe as três datas (início/fim da origem e início do destino).'; renderPanel(); return; }
-    if (fimOrigem < iniOrigem) { f.error = 'Data final da origem não pode ser anterior à inicial.'; renderPanel(); return; }
-    if (lojaOrigem && lojaOrigem.toUpperCase() === lojaDestino.toUpperCase()) { f.error = 'As lojas de origem e destino devem ser diferentes.'; renderPanel(); return; }
+    var f = scReadFormIntoState();
+    if (!f) return;
+    var stores = storeOptionsList();
+    if (!f.sellerKey || !scFindSeller(f.sellerKey)) { f.error = 'Selecione o vendedor na lista.'; renderPanel(); return; }
+    f.cpfVendedor = SC_VM.normalizeCpf(f.cpfVendedor);
+    if (f.cpfVendedor.length !== 11) { f.error = 'Informe o CPF do vendedor (11 dígitos) — sem ele a mudança não é ligada ao cadastro do vendedor.'; renderPanel(); return; }
+    if (!f.lojaOrigem || stores.indexOf(f.lojaOrigem) === -1) { f.error = 'Escolha a loja de origem na lista.'; renderPanel(); return; }
+    if (!f.lojaDestino || stores.indexOf(f.lojaDestino) === -1) { f.error = 'Escolha a loja de destino na lista.'; renderPanel(); return; }
+    if (f.lojaOrigem === f.lojaDestino) { f.error = 'As lojas de origem e destino devem ser diferentes.'; renderPanel(); return; }
+    if (!f.dataInicioOrigem || !f.dataFimOrigem || !f.dataInicioDestino) { f.error = 'Informe as três datas (início/fim da origem e início do destino).'; renderPanel(); return; }
+    if (f.dataFimOrigem < f.dataInicioOrigem) { f.error = 'Data final da origem não pode ser anterior à inicial.'; renderPanel(); return; }
     f.error = null;
     inFlight.scAction = true;
     var btn = document.getElementById('scSaveCreateBtn');
@@ -5322,6 +5443,7 @@
     var absNewBtn = document.getElementById('absNewBtn');
     if (absNewBtn) absNewBtn.addEventListener('click', function () {
       absState.createForm = { cpfAnalistaAusente: '', nomeAnalistaAusente: '', lojaOrigem: '', cpfAnalistaSubstituto: '', nomeAnalistaSubstituto: '', lojaCoberta: '', dataInicio: '', dataFim: '', motivo: '', error: null, overlapWarning: null };
+      peopleDirEnsure();
       renderPanel();
     });
     var absCancelCreateBtn = document.getElementById('absCancelCreateBtn');
@@ -5349,9 +5471,60 @@
     if (scRetry) scRetry.addEventListener('click', scLoad);
     var scNewBtn = document.getElementById('scNewBtn');
     if (scNewBtn) scNewBtn.addEventListener('click', function () {
-      scState.createForm = { cpfVendedor: '', loginVendedor: '', nomeVendedor: '', lojaOrigem: '', lojaDestino: '', dataInicioOrigem: '', dataFimOrigem: '', dataInicioDestino: '', observacao: '', departamentoOrigem: '', departamentoDestino: '', error: null };
+      scState.createForm = { cpfVendedor: '', loginVendedor: '', nomeVendedor: '', lojaOrigem: '', lojaDestino: '', dataInicioOrigem: '', dataFimOrigem: '', dataInicioDestino: '', observacao: '', departamentoOrigem: '', departamentoDestino: '', error: null,
+        sellerKey: null, sellerLoja: '', sellerQuery: '', cpfLocked: false, loginLocked: false, origemLocked: false, origemFonte: null, iniDestinoManual: false };
+      peopleDirEnsure();
       renderPanel();
     });
+    var peopleDirRetryBtn = document.getElementById('peopleDirRetryBtn');
+    if (peopleDirRetryBtn) peopleDirRetryBtn.addEventListener('click', function () { peopleDirEnsure(); renderPanel(); });
+    var scVendBusca = document.getElementById('scVendBusca');
+    var scVendList = document.getElementById('scVendList');
+    function scWirePickOptions() {
+      if (!scVendList) return;
+      scVendList.querySelectorAll('.scPickOpt').forEach(function (el) {
+        el.addEventListener('click', function () { scPickSeller(el.getAttribute('data-key')); });
+      });
+    }
+    scWirePickOptions();
+    if (scVendBusca && scVendList) {
+      // Filtra sem re-renderizar o painel (mantém o foco no campo).
+      scVendBusca.addEventListener('input', function () {
+        if (scState.createForm) scState.createForm.sellerQuery = scVendBusca.value;
+        scVendList.innerHTML = scSellerItemsHtml(scVendBusca.value);
+        scWirePickOptions();
+      });
+      scVendBusca.addEventListener('keydown', function (ev) {
+        if (ev.key !== 'Enter') return;
+        ev.preventDefault();
+        var first = scVendList.querySelector('.scPickOpt');
+        if (first) scPickSeller(first.getAttribute('data-key'));
+      });
+    }
+    var scTrocarVendBtn = document.getElementById('scTrocarVendBtn');
+    if (scTrocarVendBtn) scTrocarVendBtn.addEventListener('click', scClearSeller);
+    // Origem escolhida na lista (vendedor sem loja no cadastro): o destino
+    // é re-renderizado sem a loja de origem.
+    var scLojaOrigemSel = document.getElementById('scLojaOrigem');
+    if (scLojaOrigemSel && scLojaOrigemSel.tagName === 'SELECT') {
+      scLojaOrigemSel.addEventListener('change', function () {
+        var f = scReadFormIntoState();
+        if (f && f.lojaDestino === f.lojaOrigem) f.lojaDestino = '';
+        renderPanel();
+      });
+    }
+    // Início do destino = dia seguinte ao fim da origem (regra do servidor),
+    // enquanto o usuário não editar o início do destino à mão.
+    var scFimOrigemEl = document.getElementById('scFimOrigem');
+    var scIniDestinoEl = document.getElementById('scIniDestino');
+    if (scIniDestinoEl) scIniDestinoEl.addEventListener('input', function () { if (scState.createForm) scState.createForm.iniDestinoManual = true; });
+    if (scFimOrigemEl && scIniDestinoEl) {
+      scFimOrigemEl.addEventListener('change', function () {
+        var f = scState.createForm;
+        if (!f || f.iniDestinoManual || !scFimOrigemEl.value) return;
+        scIniDestinoEl.value = SC_VM.addOneDay(scFimOrigemEl.value);
+      });
+    }
     var scCancelCreateBtn = document.getElementById('scCancelCreateBtn');
     if (scCancelCreateBtn) scCancelCreateBtn.addEventListener('click', function () { scState.createForm = null; renderPanel(); });
     var scSaveCreateBtn = document.getElementById('scSaveCreateBtn');

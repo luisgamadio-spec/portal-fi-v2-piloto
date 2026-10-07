@@ -16,6 +16,10 @@
    decimal-ambiguity fix and the raw-cell-value read strategy that
    avoids it), same forward-fill/row-taxonomy rules for Base 03, same
    "most recent VALIDATED batch per source" official-batch selection.
+   07/10/2026: the original port predated v1's T35918/M4 change (client
+   document on Base 01, one document-keyed row per PAGA/FATURADA
+   operation on Base 03); now ported, plus import guards that v1 lacks
+   (gbBase01DocumentGuard / gbBase03EnrichmentGuard).
    Nothing here re-derives a rule the real backend RPCs already own
    (chassis/CPF/NBS identity resolution, alert classification, is_
    master() authority) -- this file only builds the exact request
@@ -65,6 +69,23 @@
     return isFinite(n) ? n : 0;
   }
   function gbOnlyDigits(v) { return (v === null || v === undefined ? '' : v).toString().replace(/\D/g, ''); }
+  // Incidente T35918/M4 (porte do v1 em produção, 07/10/2026) --
+  // normalização do documento (CPF/CNPJ) do CLIENTE para a ponte de
+  // identidade Base 01 <-> Base 03. 9/10 dígitos = CPF que perdeu zeros à
+  // esquerda por coerção numérica do Excel; 12/13 = o mesmo para CNPJ.
+  // Reparo controlado, nunca um pad genérico: outros comprimentos ficam
+  // INVALID. A chave de casamento (HMAC) só é calculada no servidor.
+  function gbNormalizeDocumentForMatch(v) {
+    var s = (v === null || v === undefined ? '' : v).toString().trim();
+    if (s.slice(-2) === '.0') s = s.slice(0, -2);
+    var digits = gbOnlyDigits(s);
+    if (!digits) return { normalized: null, shape: 'BLANK' };
+    if (digits.length === 11) return { normalized: digits, shape: 'VALID_CPF_SHAPE' };
+    if (digits.length === 14) return { normalized: digits, shape: 'VALID_CNPJ_SHAPE' };
+    if (digits.length === 9 || digits.length === 10) return { normalized: digits.padStart(11, '0'), shape: 'REPAIRED_CPF_SHAPE' };
+    if (digits.length === 12 || digits.length === 13) return { normalized: digits.padStart(14, '0'), shape: 'REPAIRED_CNPJ_SHAPE' };
+    return { normalized: null, shape: 'INVALID_OTHER' };
+  }
   function gbCleanChassis(v) { return (v === null || v === undefined ? '' : v).toString().toUpperCase().replace(/[^A-Z0-9]/g, ''); }
   function gbParseDateBR(v) {
     if (!v) return null;
@@ -175,6 +196,11 @@
       source_kind: 'CURRENT',
       source_transaction: null,
       vehicle_model: String(gbGetCol(raw, ['Modelo'])).trim() || null,
+      // Incidente T35918/M4 -- documento do CLIENTE (nunca do vendedor).
+      // Na Base 01 a coluna real é "Cód. Cliente" (contém o CPF/CNPJ). O
+      // servidor (master_operational_import_sales) só usa este campo para
+      // calcular a chave de casamento com a Base 03; não o grava como está.
+      client_document_normalized: gbNormalizeDocumentForMatch(gbGetCol(raw, ['Cód. Cliente'])).normalized,
       _diagOk: !!(chassis && saleDate && (department === 'NOVOS' || department === 'SEMINOVOS'))
     };
   }
@@ -236,18 +262,9 @@
   }
 
   // ---------------- mapeamento BASE 03 (Complementar / F&I) ----------------
-  // Prioridade oficial de classificação: SUBSIDIADO > REVERSÃO > COPARTICIPADO > BALÃO.
-  function gbScoreBase03Row(codigoIFRaw, tcDevolvidaRaw, balaoRaw) {
-    var ifTxt = gbNormalize(codigoIFRaw);
-    var ifNum = gbAsNumber(codigoIFRaw);
-    var tcNum = gbAsNumber(tcDevolvidaRaw);
-    var balaoNum = gbAsNumber(balaoRaw);
-    if (ifNum === 999 || ifTxt.indexOf('SUBSIDIADO') !== -1) return 100;
-    if (ifNum === 777 || ifTxt.indexOf('REVERSAO') !== -1) return 90;
-    if (tcNum === 1 || ifTxt.indexOf('COPARTICIPADO') !== -1) return 85;
-    if (balaoNum > 0) return 80;
-    return 0;
-  }
+  // A prioridade de classificação de plano (SUBSIDIADO > REVERSÃO >
+  // COPARTICIPADO > BALÃO > LINEAR) é decidida só no banco
+  // (operational_metrics); o navegador não escolhe operação por plano.
   function gbContainsSpfExtra(nomeOpcional) {
     return gbNormalize(nomeOpcional).indexOf('SPF EXTRA') !== -1;
   }
@@ -276,45 +293,86 @@
       tc_returned: String(gbGetCol(raw, ['Tabela - TC Devolvida (R$)'])).trim() || null
     };
   }
-  // Melhor sinal de classificação por cliente, para enriquecer a Base 02
-  // oficial (usado como p_finance_rows de applyBase03).
-  function gbBuildBase03ClientIndex(base03Rows) {
-    var bestByClient = {};
+  // Incidente T35918/M4 (porte do v1 em produção, 07/10/2026) -- uma linha
+  // por operação PAGA/FATURADA candidata, com o documento do cliente
+  // normalizado (nunca o nome, nunca a chave HMAC). master_operational_
+  // apply_base03 casa por documento com a Base 01, reforça o filtro PAGA/
+  // FATURADA e só enriquece quando há EXATAMENTE UMA operação elegível
+  // por documento (contrato confirmado via pg_get_functiondef, 07/10).
+  // O formato antigo (agregado por nome do cliente) é ignorado pelo
+  // servidor: foi o que zerou o enriquecimento em 07/10/2026.
+  function gbBuildBase03FinanceRows(base03Rows) {
+    var REALIZED = { PAGA: true, FATURADA: true };
+    var rows = [];
     base03Rows.forEach(function (raw) {
-      var clientKey = gbNormalize(gbGetCol(raw, ['Cli - Nome']));
-      if (!clientKey) return;
+      var status = gbNormalize(gbGetCol(raw, ['Op - Situação']));
+      if (!REALIZED[status]) return; // banda -- o servidor reforça o mesmo filtro
+      var opCode = String(gbGetCol(raw, ['Op - Código'])).trim();
+      if (!opCode) return;
+      var doc = gbNormalizeDocumentForMatch(gbGetCol(raw, ['Cli - CPF/CNPJ']));
+      if (!doc.normalized) return; // sem documento utilizável, não há como casar com a Base 01
       var codigoIFRaw = gbGetCol(raw, ['Tabela - Código IF']);
       var tcDevolvidaRaw = gbGetCol(raw, ['Tabela - TC Devolvida (R$)']);
       var balaoRaw = gbGetCol(raw, ['Op Fin - Balão PMT (R$)']);
-      var score = gbScoreBase03Row(codigoIFRaw, tcDevolvidaRaw, balaoRaw);
-      var prev = bestByClient[clientKey];
-      if (!prev || score > prev.score) {
-        bestByClient[clientKey] = {
-          score: score,
-          codigoIF: codigoIFRaw !== '' ? String(codigoIFRaw).trim() : null,
-          tcDevolvida: tcDevolvidaRaw !== '' ? gbAsNumber(tcDevolvidaRaw) : null,
-          balaoValor: balaoRaw !== '' ? gbAsNumber(balaoRaw) : null,
-          parcelas: gbAsNumber(gbGetCol(raw, ['Op Fin - Quantidade Parcelas'])) || null,
-          pmt: gbAsNumber(gbGetCol(raw, ['Op Fin - PMT (R$)'])) || null
-        };
-      }
+      rows.push({
+        client_document_normalized: doc.normalized,
+        op_code: opCode,
+        status: status,
+        plan_codigo_if: codigoIFRaw !== '' && codigoIFRaw != null ? String(codigoIFRaw).trim() : null,
+        tc_devolvida: tcDevolvidaRaw !== '' && tcDevolvidaRaw != null ? gbAsNumber(tcDevolvidaRaw) : null,
+        balloon_value: balaoRaw !== '' && balaoRaw != null ? gbAsNumber(balaoRaw) : null,
+        installments: gbAsNumber(gbGetCol(raw, ['Op Fin - Quantidade Parcelas'])) || null,
+        installment_value: gbAsNumber(gbGetCol(raw, ['Op Fin - PMT (R$)'])) || null,
+        vehicle_model: ''
+      });
     });
-    return bestByClient;
+    return rows;
   }
-  function gbBuildBase03FinanceRows(rawRows) {
-    var clientIndex = gbBuildBase03ClientIndex(rawRows);
-    return Object.keys(clientIndex).map(function (clientKey) {
-      var sig = clientIndex[clientKey];
-      return {
-        client_match_key: clientKey,
-        vehicle_model: '',
-        installments: sig.parcelas,
-        installment_value: sig.pmt,
-        balloon_value: sig.balaoValor,
-        tc_devolvida: sig.tcDevolvida,
-        plan_codigo_if: sig.codigoIF
-      };
-    }).filter(function (r) { return r.tc_devolvida !== null || r.plan_codigo_if || r.balloon_value !== null || r.installments !== null; });
+
+  // ---------------- travas de importação (incidente 07/10/2026) ----------------
+  // Em 07/10/2026 a Base 03 foi gravada enriquecendo 0 linhas financeiras
+  // (normal: ~1.500) sem nenhum aviso. Estas funções decidem, ANTES de
+  // gravar, se a importação deve parar. Puras: só números e textos.
+  var GB_MIN_DOC_COVERAGE = 0.5;    // Base 01: fração mínima de linhas com documento do cliente
+  var GB_MIN_ENRICH_RATIO = 0.5;    // Base 03: fração mínima do último enriquecimento normal
+  // "N linhas financeiras enriquecidas" da mensagem gravada pelo servidor em cada lote SPF_CURRENT.
+  function gbParseEnrichedCount(validationMessage) {
+    var m = String(validationMessage || '').match(/(\d+)\s+linhas financeiras enriquecidas/);
+    return m ? Number(m[1]) : null;
+  }
+  // Último enriquecimento NORMAL (> 0) entre os lotes Base 03 validados -- um
+  // lote que já veio zerado nunca vira a referência.
+  function gbLastNormalEnrichment(batches) {
+    var spf = (batches || []).filter(function (b) { return b.source_type === 'SPF_CURRENT' && b.status === 'VALIDATED'; })
+      .sort(function (a, b) { return new Date(b.completed_at || b.created_at) - new Date(a.completed_at || a.created_at); });
+    for (var i = 0; i < spf.length; i++) {
+      var n = gbParseEnrichedCount(spf[i].validation_message);
+      if (n !== null && n > 0) return n;
+    }
+    return null;
+  }
+  function gbBase01DocumentGuard(rows) {
+    var total = (rows || []).length;
+    var comDoc = (rows || []).filter(function (r) { return !!r.client_document_normalized; }).length;
+    var block = total > 0 && comDoc / total < GB_MIN_DOC_COVERAGE;
+    return {
+      block: block, total: total, comDocumento: comDoc,
+      motivo: block
+        ? 'Só ' + gbFmtNum(comDoc) + ' de ' + gbFmtNum(total) + ' linha(s) trazem o CPF/CNPJ do cliente (coluna "Cód. Cliente"). Sem ele, a Base 03 não consegue completar parcelas, balão e plano dos financiamentos. Nada foi gravado: confira se é a Base 01 completa, com a coluna "Cód. Cliente".'
+        : null
+    };
+  }
+  function gbBase03EnrichmentGuard(financeRowsSent, matched, lastNormal) {
+    var m = Number(matched) || 0;
+    var motivo = null;
+    if (!financeRowsSent) {
+      motivo = 'Nenhuma operação PAGA/FATURADA com CPF/CNPJ do cliente foi encontrada no arquivo (colunas "Cli - CPF/CNPJ" e "Op - Situação"). A importação foi bloqueada para não gravar a Base 03 sem completar os financiamentos.';
+    } else if (m === 0) {
+      motivo = 'A Base 03 não completaria NENHUM financiamento da Base 02 oficial (0 linhas). A importação foi bloqueada: confira se a Base 01 e a Base 02 foram atualizadas antes, com os arquivos completos.';
+    } else if (lastNormal && m < lastNormal * GB_MIN_ENRICH_RATIO) {
+      motivo = 'A Base 03 completaria só ' + gbFmtNum(m) + ' financiamento(s), bem abaixo da última importação normal (' + gbFmtNum(lastNormal) + '). A importação foi bloqueada: confira se a Base 01, a Base 02 e a Base 03 são os arquivos completos e do mesmo dia.';
+    }
+    return { block: !!motivo, matched: m, lastNormal: lastNormal || null, motivo: motivo };
   }
   // Classifica as linhas cruas da Base 03 em: PRINCIPAL (Cli-Nome + Op-
   // Código), SPF EXTRA (sem Cli-Nome próprio, Opcional-Nome contém "SPF
@@ -412,11 +470,14 @@
     gbBase02Classify: gbBase02Classify,
     gbBuildBase02Row: gbBuildBase02Row,
     gbBuildColaboradorRow: gbBuildColaboradorRow,
-    gbScoreBase03Row: gbScoreBase03Row,
+    gbNormalizeDocumentForMatch: gbNormalizeDocumentForMatch,
     gbContainsSpfExtra: gbContainsSpfExtra,
     gbBuildBase03OperationalRow: gbBuildBase03OperationalRow,
-    gbBuildBase03ClientIndex: gbBuildBase03ClientIndex,
     gbBuildBase03FinanceRows: gbBuildBase03FinanceRows,
+    gbParseEnrichedCount: gbParseEnrichedCount,
+    gbLastNormalEnrichment: gbLastNormalEnrichment,
+    gbBase01DocumentGuard: gbBase01DocumentGuard,
+    gbBase03EnrichmentGuard: gbBase03EnrichmentGuard,
     gbClassifyBase03Rows: gbClassifyBase03Rows,
     selectOfficialBatches: selectOfficialBatches,
     gbFmtDateTime: gbFmtDateTime,

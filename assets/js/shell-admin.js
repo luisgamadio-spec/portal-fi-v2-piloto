@@ -1858,6 +1858,7 @@
     renderPanel();
     GB_PROVIDER.listBatches({}).then(
       function (batches) {
+        gbState.allBatches = batches || [];
         gbState.officialBatches = GB_VM.selectOfficialBatches(batches);
         gbState.loading = false;
         gbState.loaded = true;
@@ -2175,6 +2176,11 @@
       });
       var missingList = Object.keys(missingByNbs).map(function (k) { return missingByNbs[k]; });
 
+      // Trava (incidente 07/10/2026): sem o documento do cliente a Base 03
+      // não completa os financiamentos -- para ANTES de abrir qualquer lote.
+      var docGuard = GB_VM.gbBase01DocumentGuard(rowsToSend);
+      if (docGuard.block) return Promise.reject({ message: 'IMPORTAÇÃO BLOQUEADA — ' + docGuard.motivo });
+
       gbSetProgress(0, rowsToSend.length);
       return GB_PROVIDER.beginImport('SALES_CURRENT', file.name, sha256, rowsToSend.length).then(function (batchId) {
         return gbImportChunked(GB_PROVIDER.importSales, batchId, rowsToSend).then(function (accepted) {
@@ -2246,7 +2252,16 @@
     gbSetProgress(0, 1);
     return GB_PROVIDER.applyBase03(file.name, sha256, financeRows, cls.allRows, true).then(function (preview) {
       gbSetProgress(1, 1);
-      var extraHtml = '<div class="gbRow"><span>Enriquecimento financeiro (clientes que serão atualizados na Base 02 oficial)</span><b>' + esc(GB_VM.gbFmtNum(preview.finance_rows_matched)) + '</b></div>' +
+      // Trava (incidente 07/10/2026): 0 financiamentos completados, ou bem
+      // menos que a última importação normal, bloqueia a confirmação.
+      var guard = GB_VM.gbBase03EnrichmentGuard(financeRows.length, preview.finance_rows_matched,
+        GB_VM.gbLastNormalEnrichment(gbState.allBatches));
+      var guardHtml = guard.block
+        ? '<div class="gbWarn gbGuardBlock" role="alert"><div><b>🔴 IMPORTAÇÃO BLOQUEADA</b></div><div>' + esc(guard.motivo) + '</div></div>'
+        : '';
+      var extraHtml = guardHtml +
+        '<div class="gbRow"><span>Enriquecimento financeiro (clientes que serão atualizados na Base 02 oficial)</span><b>' + esc(GB_VM.gbFmtNum(preview.finance_rows_matched)) + '</b></div>' +
+        (guard.lastNormal ? '<div class="gbRow"><span>Última importação normal</span><b>' + esc(GB_VM.gbFmtNum(guard.lastNormal)) + '</b></div>' : '') +
         '<div class="gbRow"><span>Linhas operacionais principais</span><b>' + esc(GB_VM.gbFmtNum(cls.principalRows.length)) + '</b></div>' +
         '<div class="gbRow"><span>Linhas SPF Extra (complementares)</span><b>' + esc(GB_VM.gbFmtNum(cls.spfRows.length)) + '</b></div>' +
         (cls.discardedTotalRows ? '<div class="gbRow"><span>Linhas descartadas (subtotais/lixo de planilha)</span><b>' + esc(GB_VM.gbFmtNum(cls.discardedTotalRows)) + '</b></div>' : '') +
@@ -2256,9 +2271,10 @@
       gbShowDiagnostic({
         titulo: 'BASE 03 — COMPLEMENTAR / F&I', arquivo: file.name, linhasLidas: rawRows.length,
         aceitas: cls.allLikelyAccepted, rejeitadas: cls.allLikelyRejected, avisos: [],
-        okOverride: cls.principalRows.length > 0 || rawRows.length === 0,
+        okOverride: (cls.principalRows.length > 0 || rawRows.length === 0) && !guard.block,
         extraHtml: extraHtml,
         onConfirmar: function () {
+          if (guard.block) return Promise.reject({ message: guard.motivo });
           // Em homologação, o resultado é montado a partir dos números já
           // comprovados pelo próprio dry_run acima (uma consulta real) --
           // nunca inventa dado novo, só não grava. O gate da provider
@@ -2274,7 +2290,8 @@
               })
             : GB_PROVIDER.applyBase03(file.name, sha256, financeRows, cls.allRows, false);
           return resultPromise.then(function (result) {
-            gbShowSuccess('BASE 03 — COMPLEMENTAR / F&I', file.name, result.spf_accepted || 0);
+            gbShowSuccess('BASE 03 — COMPLEMENTAR / F&I', file.name, result.spf_accepted || 0,
+              GB_VM.gbFmtNum(result.finance_rows_matched) + ' financiamento(s) da Base 02 oficial completado(s) com parcelas, balão e plano.');
           });
         }
       });

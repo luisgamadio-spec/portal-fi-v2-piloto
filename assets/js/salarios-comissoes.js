@@ -220,6 +220,15 @@
   function getAuthContext() {
     return (window.NX_AUTH_CORE && typeof window.NX_AUTH_CORE.getContext === 'function') ? window.NX_AUTH_CORE.getContext() : null;
   }
+  // Retorno/Rentabilidade: só para os perfis que o servidor autoriza a receber esses campos
+  // (_operational_ocultar_retorno_vendedor: MASTER, DIRETOR, GERENTE, ANALISTA). Para os demais
+  // (vendedor, RH) o servidor já não manda o dado; aqui só some a coluna/cartão vazio.
+  function veRetorno() {
+    var c = getAuthContext();
+    var p = String((c && c.perfil) || '').trim().toUpperCase();
+    return !!c && (c.isMaster === true || p === 'MASTER' || p.indexOf('DIRETOR') === 0 || p === 'GERENTE' || p === 'ANALISTA');
+  }
+  function soRetorno(html) { return veRetorno() ? html : ''; }
   // Presentation-only helpers (see file header) -- mirror V1's own
   // podeVerAnalista/podeVerGerente exactly, never a new rule.
   function canSeeAnalistas(ctx) {
@@ -278,6 +287,13 @@
       // from client-side date math.
       var current = rows.filter(function (p) { return p.periodo_atual === true; })[0];
       selectedPeriodId = (current || rows[0] || {}).id || null;
+      // Link com ?de=&ate=: abre direto no intervalo personalizado (com a mesma validação da tela).
+      var daUrl = lerIntervaloDaUrl();
+      if (daUrl) {
+        var errUrl = validarPeriodo(daUrl.data_inicio, daUrl.data_fim);
+        if (errUrl) { customError = 'O período do link não foi aplicado: ' + errUrl; gravarIntervaloNaUrl(null); }
+        else { customRange = daUrl; selectedPeriodId = CUSTOM_ID; customError = ''; }
+      }
       render(outletRef);
       if (selectedPeriodId) return loadDashboard();
     }).catch(function () {
@@ -306,18 +322,43 @@
     d.setUTCFullYear(d.getUTCFullYear() + 1); d.setUTCDate(d.getUTCDate() - 1);
     return d.toISOString().slice(0, 10);
   }
+  // Última data aceita: o fim do ciclo atual (competência marcada como atual); sem ciclo atual, hoje.
+  function limiteFim() {
+    var atual = (periods || []).filter(function (p) { return p.periodo_atual === true; })[0];
+    var hoje = hojeIso();
+    return atual && isoValida(atual.data_fim) && atual.data_fim > hoje ? atual.data_fim : hoje;
+  }
   function validarPeriodo(ini, fim) {
-    if (!isoValida(ini) || !isoValida(fim)) return 'Informe a data inicial e a data final.';
-    if (ini > fim) return 'A data inicial precisa ser igual ou anterior à data final.';
-    if (fim > hojeIso() || ini > hojeIso()) return 'O período não pode ter datas depois de hoje.';
+    if (!isoValida(ini) || !isoValida(fim)) return 'Informe a data inicial (De) e a data final (Até).';
+    if (ini > fim) return 'A data "De" precisa ser igual ou anterior à data "Até".';
+    var lim = limiteFim();
+    if (fim > lim || ini > lim) return 'O período não pode passar do fim do ciclo atual (' + fmtDateBR(lim) + ').';
     if (fim > limiteUmAno(ini)) return 'O período pode ter no máximo 1 ano.';
     return '';
+  }
+  // Intervalo na URL (?de=AAAA-MM-DD&ate=AAAA-MM-DD), para recarregar e compartilhar o link com o filtro.
+  function lerIntervaloDaUrl() {
+    try {
+      var q = new URLSearchParams(window.location.search);
+      if (!q.has('de') && !q.has('ate')) return null;
+      return { data_inicio: q.get('de') || '', data_fim: q.get('ate') || '' };
+    } catch (e) { return null; }
+  }
+  function gravarIntervaloNaUrl(r) {
+    try {
+      var u = new URL(window.location.href);
+      if (r) { u.searchParams.set('de', r.data_inicio); u.searchParams.set('ate', r.data_fim); }
+      else { u.searchParams.delete('de'); u.searchParams.delete('ate'); }
+      var novo = u.pathname + u.search + u.hash;
+      if (novo !== window.location.pathname + window.location.search + window.location.hash) window.history.replaceState(window.history.state, '', novo);
+    } catch (e) { /* sem History API: o filtro só não fica no link */ }
   }
   function aplicarPersonalizado(ini, fim) {
     customError = validarPeriodo(ini, fim);
     if (customError) { render(outletRef); return false; }
     customRange = { data_inicio: ini, data_fim: fim };
     selectedPeriodId = CUSTOM_ID;
+    gravarIntervaloNaUrl(customRange);
     loadDashboard();
     return true;
   }
@@ -530,14 +571,15 @@
     if (newId === CUSTOM_ID) {
       // Começa com as datas do período que estava selecionado (fim limitado a hoje); o usuário ajusta e aplica.
       var base = selectedPeriod() || {};
-      var hoje = hojeIso();
-      var ini = customRange ? customRange.data_inicio : (base.data_inicio && base.data_inicio <= hoje ? base.data_inicio : hoje);
-      var fim = customRange ? customRange.data_fim : (base.data_fim && base.data_fim < hoje ? base.data_fim : hoje);
+      var lim = limiteFim();
+      var ini = customRange ? customRange.data_inicio : (base.data_inicio && base.data_inicio <= lim ? base.data_inicio : lim);
+      var fim = customRange ? customRange.data_fim : (base.data_fim && base.data_fim <= lim ? base.data_fim : lim);
       aplicarPersonalizado(ini, fim);
       return;
     }
     customError = '';
     selectedPeriodId = newId;
+    gravarIntervaloNaUrl(null);
     loadDashboard();
   }
 
@@ -766,17 +808,18 @@
       return '<option value="' + esc(p.id) + '"' + (p.id === selectedPeriodId ? ' selected' : '') + '>' +
         esc(p.nome_periodo || (fmtDateBR(p.data_inicio) + ' a ' + fmtDateBR(p.data_fim))) +
         (p.periodo_atual ? ' (atual)' : '') + '</option>';
-    }).join('') + '<option value="' + CUSTOM_ID + '"' + (selectedPeriodId === CUSTOM_ID ? ' selected' : '') + '>Período personalizado</option>';
+    }).join('') + '<option value="' + CUSTOM_ID + '"' + (selectedPeriodId === CUSTOM_ID ? ' selected' : '') + '>Personalizado (escolher datas)</option>';
     var html = '<div class="modFilters"><label class="modField">Período<select id="salPeriodSelect">' + options + '</select></label>';
     if (selectedPeriodId === CUSTOM_ID) {
       var r = customRange || {};
-      var hoje = hojeIso();
-      html += '<div class="modField"><label for="salCustomStart">Data inicial</label><input id="salCustomStart" type="date" max="' + hoje + '" value="' + esc(r.data_inicio || '') + '"></div>' +
-        '<div class="modField"><label for="salCustomEnd">Data final</label><input id="salCustomEnd" type="date" max="' + hoje + '" value="' + esc(r.data_fim || '') + '"></div>' +
+      var lim = limiteFim();
+      html += '<div class="modField"><label for="salCustomStart">De</label><input id="salCustomStart" type="date" max="' + lim + '" value="' + esc(r.data_inicio || '') + '"></div>' +
+        '<div class="modField"><label for="salCustomEnd">Até</label><input id="salCustomEnd" type="date" max="' + lim + '" value="' + esc(r.data_fim || '') + '"></div>' +
         '<div class="modField"><label>&nbsp;</label><button type="button" class="modBtn modBtnSecondary" id="salCustomApply">Aplicar</button></div>';
     }
     html += '</div>';
     if (selectedPeriodId === CUSTOM_ID) html += customPeriodNoteHtml();
+    else if (customError) html += '<div class="salCustomNotes"><p id="salCustomError" class="salCustomError" role="alert">' + esc(customError) + '</p></div>';
     return html;
   }
 
@@ -1006,10 +1049,10 @@
       kpiCard('Financiadas', fmtInt(t.financed_count)) +
       kpiCard('Conversão', fmtPct(t.share_percent), conversionKpiClass(t.share_percent)) +
       kpiCard('Produção', fmtMoney(t.production_value)) +
-      kpiCard('Retorno', fmtMoney(t.return_value)) +
+      soRetorno(kpiCard('Retorno', fmtMoney(t.return_value))) +
       kpiCard('SPF Extra', fmtMoney(t.spf_value)) +
       kpiCard('SPF Líquido', fmtMoney(t.spf_net_value)) +
-      kpiCard('Rentabilidade', fmtMoney(t.profitability_value), 'modKpiCardSuccess') +
+      soRetorno(kpiCard('Rentabilidade', fmtMoney(t.profitability_value), 'modKpiCardSuccess')) +
       '</div>' +
       (dashboard.analystMetricsError || dashboard.managerDirectoryError ? partialFailureNoteHtml() : '')
     );
@@ -1259,9 +1302,9 @@
       '<td class="modNumCol">' + fmtInt(r.financed_count) + '</td>' +
       '<td class="modNumCol">' + conversionCellHtml(r.share_percent) + '</td>' +
       '<td class="modNumCol modCurrencyCol">' + fmtMoney(r.production_value) + '</td>' +
-      '<td class="modNumCol modCurrencyCol">' + fmtMoney(r.return_value) + '</td>' +
+      soRetorno('<td class="modNumCol modCurrencyCol">' + fmtMoney(r.return_value) + '</td>') +
       '<td class="modNumCol modCurrencyCol">' + fmtMoney(r.spf_net_value) + '</td>' +
-      '<td class="modNumCol modCurrencyCol">' + fmtMoney(r.profitability_value) + '</td>' +
+      soRetorno('<td class="modNumCol modCurrencyCol">' + fmtMoney(r.profitability_value) + '</td>') +
       '<td class="modNumCol">' + faixaCellHtml(faixaMatch) + '</td>' +
       '<td class="modNumCol modCurrencyCol">' + comissaoTotalCellHtml(faixaMatch) + '</td>' +
       (r.seller_id ? '<td class="modActionCol"><button type="button" class="modBtn modBtnGhost modBtnSm" data-details="' + esc(r.seller_id) + '" data-name="' + esc(r.seller_name || '') + '">Detalhes</button></td>' : '<td></td>') +
@@ -1275,9 +1318,9 @@
       '<td class="modNumCol">' + fmtInt(t.financed_count) + '</td>' +
       '<td class="modNumCol">' + conversionCellHtml(trailing.shareValue) + '</td>' +
       '<td class="modNumCol modCurrencyCol">' + fmtMoney(t.production_value) + '</td>' +
-      '<td class="modNumCol modCurrencyCol">' + fmtMoney(t.return_value) + '</td>' +
+      soRetorno('<td class="modNumCol modCurrencyCol">' + fmtMoney(t.return_value) + '</td>') +
       '<td class="modNumCol modCurrencyCol">' + fmtMoney(t.spf_net_value) + '</td>' +
-      '<td class="modNumCol modCurrencyCol">' + fmtMoney(t.profitability_value) + '</td>' +
+      soRetorno('<td class="modNumCol modCurrencyCol">' + fmtMoney(t.profitability_value) + '</td>') +
       '<td class="modNumCol">' + faixaCellHtml(trailing.faixaMatch) + '</td>' +
       '<td class="modNumCol modCurrencyCol">' + comissaoTotalCellHtml(trailing.faixaMatch) + '</td><td></td></tr>';
   }
@@ -1288,9 +1331,9 @@
       '<dl class="salCardFields">' +
       '<dt>Vendidas / Financiadas</dt><dd>' + fmtInt(r.sold_count) + ' / ' + fmtInt(r.financed_count) + '</dd>' +
       '<dt>Produção</dt><dd>' + fmtMoney(r.production_value) + '</dd>' +
-      '<dt>Retorno</dt><dd>' + fmtMoney(r.return_value) + '</dd>' +
+      soRetorno('<dt>Retorno</dt><dd>' + fmtMoney(r.return_value) + '</dd>') +
       '<dt>SPF Líquido</dt><dd>' + fmtMoney(r.spf_net_value) + '</dd>' +
-      '<dt>Rentabilidade</dt><dd>' + fmtMoney(r.profitability_value) + '</dd>' +
+      soRetorno('<dt>Rentabilidade</dt><dd>' + fmtMoney(r.profitability_value) + '</dd>') +
       '<dt>% Comissão</dt><dd>' + faixaCellHtml(faixaMatch) + '</dd>' +
       '<dt>Comissão Total</dt><dd class="salCommissionTotalValue">' + comissaoTotalCellHtml(faixaMatch) + '</dd>' +
       '</dl>' +
@@ -1305,9 +1348,9 @@
       '<dl class="salCardFields">' +
       '<dt>Vendidas / Financiadas</dt><dd>' + fmtInt(t.sold_count) + ' / ' + fmtInt(t.financed_count) + '</dd>' +
       '<dt>Produção</dt><dd>' + fmtMoney(t.production_value) + '</dd>' +
-      '<dt>Retorno</dt><dd>' + fmtMoney(t.return_value) + '</dd>' +
+      soRetorno('<dt>Retorno</dt><dd>' + fmtMoney(t.return_value) + '</dd>') +
       '<dt>SPF Líquido</dt><dd>' + fmtMoney(t.spf_net_value) + '</dd>' +
-      '<dt>Rentabilidade</dt><dd>' + fmtMoney(t.profitability_value) + '</dd>' +
+      soRetorno('<dt>Rentabilidade</dt><dd>' + fmtMoney(t.profitability_value) + '</dd>') +
       '<dt>% Comissão</dt><dd>' + faixaCellHtml(trailing.faixaMatch) + '</dd>' +
       '<dt>Comissão Total</dt><dd class="salCommissionTotalValue">' + comissaoTotalCellHtml(trailing.faixaMatch) + '</dd>' +
       '</dl></div>';
@@ -1471,13 +1514,13 @@
         // now-authoritative Comissão Total column -- colspan raised from
         // 10 to 11 accordingly (RH-5B.3's own established fix for this
         // exact "linha cortada, sem continuidade" defect class).
-        var header = '<tr class="salGroupHeaderRow"><th colspan="11">' + esc(g.store || '—') + ' · ' + esc(g.department || '—') + '</th></tr>';
+        var header = '<tr class="salGroupHeaderRow"><th colspan="' + (veRetorno() ? 11 : 9) + '">' + esc(g.store || '—') + ' · ' + esc(g.department || '—') + '</th></tr>';
         var rowsHtml = g.rows.map(sellerRowDesktopHtml).join('');
         var trailing = trailingRowDesktopHtml(trailingGroupRow(ctx, g, directory));
         return header + rowsHtml + trailing;
       }).join('');
       var table = '<div class="modTableWrap salDesktopOnly salEquipeTableWrap"><table class="modTable"><thead><tr>' +
-        '<th>Vendedor</th><th>Vendidas</th><th>Financiadas</th><th>Conversão</th><th>Produção</th><th>Retorno</th><th>SPF Líq.</th><th>Rentabilidade</th><th>% Comissão</th><th>Comissão Total</th><th>Ações</th>' +
+        '<th>Vendedor</th><th>Vendidas</th><th>Financiadas</th><th>Conversão</th><th>Produção</th>' + soRetorno('<th>Retorno</th>') + '<th>SPF Líq.</th>' + soRetorno('<th>Rentabilidade</th>') + '<th>% Comissão</th><th>Comissão Total</th><th>Ações</th>' +
         '</tr></thead><tbody>' + body + '</tbody></table></div>';
       consumedStores[sg.store || ''] = true;
       return '<div class="salStoreGroup">' + table + (showAnalysts ? analystRowsDesktopTableHtml(analystByStore[sg.store || '']) : '') + '</div>';
@@ -1764,9 +1807,9 @@
       '</div>' +
       '<div class="salOpRowFinancial">' +
       '<div class="salOpMetric"><span class="salOpMetricLabel">Valor financiado</span><span class="salOpMetricValue">' + fmtMoney(r.financed_value) + '</span></div>' +
-      '<div class="salOpMetric"><span class="salOpMetricLabel">Retorno</span><span class="salOpMetricValue">' + fmtMoney(r.return_considered) + '</span></div>' +
+      soRetorno('<div class="salOpMetric"><span class="salOpMetricLabel">Retorno</span><span class="salOpMetricValue">' + fmtMoney(r.return_considered) + '</span></div>') +
       '<div class="salOpMetric"><span class="salOpMetricLabel">SPF Extra (70%)</span><span class="salOpMetricValue">' + fmtMoney(r.spf_70) + '</span></div>' +
-      '<div class="salOpMetric"><span class="salOpMetricLabel">Rentabilidade</span><span class="salOpMetricValue">' + fmtMoney(r.operation_profitability) + '</span></div>' +
+      soRetorno('<div class="salOpMetric"><span class="salOpMetricLabel">Rentabilidade</span><span class="salOpMetricValue">' + fmtMoney(r.operation_profitability) + '</span></div>') +
       (r.modality ? '<div class="salOpMetric"><span class="salOpMetricLabel">Modalidade</span><span class="salOpMetricValue">' + esc(r.modality) + '</span></div>' : '') +
       '</div>' +
       (r.applied_rule ? '<div class="salOpRowMeta">' + esc(r.applied_rule) + '</div>' : '') +

@@ -74,6 +74,32 @@
   }
   var pendingContext = null;
 
+  // Login interrompido (08/10/2026): a senha foi aceita, mas a página recarregou
+  // (ou houve falha momentânea) antes de registrar_meu_login terminar. A marca
+  // por aba faz a restauração da sessão completar o registro (ultimo_login e a
+  // checagem de troca de senha obrigatória) antes de liberar o Portal. Recarga
+  // normal, com o registro já feito, não registra de novo.
+  var REGISTRO_KEY = 'nxLoginPendenteRegistro';
+  function registroPendente(v) {
+    try {
+      if (v === undefined) return window.sessionStorage.getItem(REGISTRO_KEY) === '1';
+      if (v) window.sessionStorage.setItem(REGISTRO_KEY, '1'); else window.sessionStorage.removeItem(REGISTRO_KEY);
+    } catch (e) { /* sem sessionStorage: vale só o fluxo normal de login */ }
+    return !!v;
+  }
+  // Gate comum ao login e à restauração com registro pendente: registra o login e
+  // diz se a troca de senha é obrigatória. Falhou -> encerra a sessão (como no v1).
+  function gateRegistroLogin() {
+    if (!window.NX_AUTH || typeof window.NX_AUTH.registerLogin !== 'function') return trocaPendente();
+    return window.NX_AUTH.registerLogin().then(function (r) {
+      registroPendente(false);
+      return !!(r && r.primeiroAcesso) || trocaPendente();
+    }, function (err) {
+      registroPendente(false);
+      return window.NX_AUTH.signOut().catch(function () {}).then(function () { throw err; });
+    });
+  }
+
   var state = STATES.INITIALIZING_SESSION;
   var context = null; // Auth Context, null unless state === AUTHORIZED
   var listeners = [];
@@ -180,11 +206,13 @@
       return window.NX_AUTH.getSession().then(function (session) {
         if (!session) {
           trocaPendente(false);
+          registroPendente(false);
           setState(STATES.SIGNED_OUT);
           return;
         }
-        // recarga da página no meio de uma troca obrigatória: continua exigindo a troca
-        return resolveAfterSession(function () { return trocaPendente(); });
+        // Recarga no meio de um login (registro pendente): completa o registro antes
+        // de liberar. Recarga no meio de uma troca obrigatória: continua exigindo a troca.
+        return resolveAfterSession(function () { return registroPendente() ? gateRegistroLogin() : trocaPendente(); });
       }).catch(function (err) {
         setState(classifyError(err), err);
       });
@@ -204,14 +232,11 @@
       return window.NX_AUTH.signIn(email, password, captchaToken).then(function () {
         if (guard()) guard().iniciarSessao(); // the 10 h limit counts from this login
         // Paridade com o v1: registrar_meu_login (ultimo_login) só após login
-        // interativo, nunca no boot; ele também informa se a troca de senha
-        // é obrigatória. Falhou -> o login falha e a sessão é encerrada (como no v1).
-        return resolveAfterSession(function () {
-          if (typeof window.NX_AUTH.registerLogin !== 'function') return false;
-          return window.NX_AUTH.registerLogin().then(function (r) { return !!(r && r.primeiroAcesso); }, function (err) {
-            return window.NX_AUTH.signOut().catch(function () {}).then(function () { throw err; });
-          });
-        });
+        // interativo, nunca numa recarga normal; ele também informa se a troca de
+        // senha é obrigatória. Falhou -> o login falha e a sessão é encerrada (como no v1).
+        // A marca fica até o registro terminar: se a página recarregar antes, o boot completa.
+        registroPendente(true);
+        return resolveAfterSession(gateRegistroLogin);
       }).catch(function (err) {
         context = null;
         var msg = String((err && err.message) || err || '');
@@ -245,6 +270,7 @@
 
     logout: function () {
       trocaPendente(false);
+      registroPendente(false);
       pendingContext = null;
       if (guard()) guard().limparSessao();
       return window.NX_AUTH.signOut().then(function () {

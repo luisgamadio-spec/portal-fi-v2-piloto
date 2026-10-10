@@ -203,10 +203,13 @@
   // caller decides. Chassis arrives pre-masked by the server
   // (contains_masked_chassis:true is the EXPECTED, safe shape here,
   // not rejected by the anti-leak guard above).
-  function loadSalaryDetails(start, end, sellerId) {
+  // store (opcional): o servidor filtra a loja ANTES do limite de linhas (detalhe do Analista).
+  function loadSalaryDetails(start, end, sellerId, store) {
     var invalid = requirePeriod(start, end);
     if (invalid) return invalid;
-    return callRpc('operational_salary_details', { p_start: start, p_end: end, p_seller_id: sellerId || null });
+    var params = { p_start: start, p_end: end, p_seller_id: sellerId || null };
+    if (store) params.p_store = store;
+    return callRpc('operational_salary_details', params);
   }
 
   // Convenience aggregate mirroring V1's own real, proven resilience

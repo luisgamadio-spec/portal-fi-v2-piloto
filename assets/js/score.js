@@ -1123,18 +1123,27 @@
     var region = document.getElementById('scTableRegion');
     if (region) region.innerHTML = loadingHtml();
 
-    window.NX_SCORE_REAL_PROVIDER.loadScoreReal({ start: currentDateStart, end: currentDateEnd, signal: controller.signal }).then(
-      function (payload) {
+    var P = window.NX_SCORE_REAL_PROVIDER;
+    // Nota oficial calculada no SERVIDOR (operational_score_vendedores, 09/10/2026): o retorno por
+    // contrato não precisa vir ao navegador. Se a função ainda não existir (NOT_AVAILABLE), cai no
+    // cálculo de antes (calcScores) -- mesma nota. Outros erros do Score do servidor viram erro na tela.
+    var servidor = (P.loadScoreServidor && window.NX_SCORE_SERVIDOR_VM)
+      ? P.loadScoreServidor({ start: currentDateStart, end: currentDateEnd, signal: controller.signal })
+          .catch(function (err) { if (err && err.state === 'NOT_AVAILABLE') return null; throw err; })
+      : Promise.resolve(null);
+    Promise.all([P.loadScoreReal({ start: currentDateStart, end: currentDateEnd, signal: controller.signal }), servidor]).then(
+      function (res) {
         if (mySeq !== renderSeq) return;
+        var payload = res[0];
         var mapped;
         try {
           mapped = window.NX_SCORE_REAL_VIEW_MODEL.buildRealResult(payload);
+          realResult = res[1] ? window.NX_SCORE_SERVIDOR_VM.mapRows(res[1], payload) : window.NX_SCORE_ADAPTER.compute(mapped.sales, mapped.fins);
         } catch (e) {
           var r2 = document.getElementById('scTableRegion');
           if (r2) r2.innerHTML = errorStateHtml(e && e.state, e && e.message);
           return;
         }
-        realResult = window.NX_SCORE_ADAPTER.compute(mapped.sales, mapped.fins);
         // RESTAURAÇÃO DE FILTROS -- item 4: retém o payload CRU (nunca
         // o mapped, que já perdeu operation_reference/model/valores)
         // exclusivamente para "Ver vendas detalhadas". Mesma requisição

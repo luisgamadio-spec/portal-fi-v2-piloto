@@ -268,8 +268,17 @@
       '<tbody>' + (body || '<tr><td colspan="13" class="modMuted">Nenhum coparticipado encontrado no filtro atual.</td></tr>') + '</tbody></table></div>';
   }
 
+  // Retorno só para os perfis que o servidor autoriza (MASTER, DIRETOR, GERENTE, ANALISTA); para os demais
+  // o servidor não manda o valor (09/10/2026), então a coluna some em vez de mostrar R$ 0,00.
+  function cpVeRetorno() {
+    var c = (window.NX_AUTH_CORE && typeof window.NX_AUTH_CORE.getContext === 'function') ? window.NX_AUTH_CORE.getContext() : null;
+    var p = String((c && c.perfil) || '').trim().toUpperCase();
+    return !!c && (c.isMaster === true || p === 'MASTER' || p.indexOf('DIRETOR') === 0 || p === 'GERENTE' || p === 'ANALISTA');
+  }
   function renderSubsidiadosTable(fins) {
     var A = window.NX_COPARTICIPADO_ADAPTER;
+    var mostraRet = cpVeRetorno();
+    var hCab = mostraRet ? CP_SUBS_HEADERS : CP_SUBS_HEADERS.filter(function (x) { return x !== 'Retorno'; });
     var rows = fins.filter(function (r) { return r.plano === 'SUBSIDIADO'; });
     var lojas = {}, vendedores = {};
     rows.forEach(function (r) { lojas[r.loja] = 1; vendedores[r.vendedor] = 1; });
@@ -282,7 +291,7 @@
         '<td data-th="' + h[3] + '" data-group="' + g[3] + '">' + esc(r.dept) + '</td>' +
         '<td data-th="' + h[4] + '" data-group="' + g[4] + '">' + esc(r.modelo) + '</td>' +
         '<td class="modNumCol" data-th="' + h[5] + '" data-group="' + g[5] + '">' + A.money(r.valorFinanciado) + '</td>' +
-        '<td class="modNumCol" data-th="' + h[6] + '" data-group="' + g[6] + '">' + A.money(r.retorno) + '</td>' +
+        (mostraRet ? '<td class="modNumCol" data-th="' + h[6] + '" data-group="' + g[6] + '">' + A.money(r.retorno) + '</td>' : '') +
         '<td class="modNumCol" data-th="' + h[7] + '" data-group="' + g[7] + '">' + A.money(r.receitaSPF) + '</td>' +
         '<td data-th="' + h[8] + '" data-group="' + g[8] + '"><span class="modBadge modBadgeNeutral">' + esc(r.situacaoB3 || '') + '</span></td>' +
         '<td class="modNumCol" data-th="' + h[9] + '" data-group="' + g[9] + '">' + esc(A.iso(r.data)) + '</td>' +
@@ -302,9 +311,9 @@
       // Own export action, own view -- never shown in Visão Coparticipados.
       '<div class="cpExportBar"><button type="button" class="modBtn modBtnGhost cpExportSubsBtn" id="cpExportSubsBtn">Exportar Subsidiados</button>' +
       '<span id="cpExportStatus" class="modMuted cpExportStatus" role="status" aria-live="polite"></span></div>' +
-      '<div class="modTableWrap"><table class="modTable cpTableSubs">' + cpColGroup(h) +
-      '<thead>' + cpHeadRow(h) + '</thead>' +
-      '<tbody>' + (body || '<tr><td colspan="11" class="modMuted">Nenhum subsidiado encontrado no filtro atual.</td></tr>') + '</tbody></table></div>';
+      '<div class="modTableWrap"><table class="modTable cpTableSubs' + (mostraRet ? '' : ' cpSemRetorno') + '">' + cpColGroup(hCab) +
+      '<thead>' + cpHeadRow(hCab) + '</thead>' +
+      '<tbody>' + (body || '<tr><td colspan="' + hCab.length + '" class="modMuted">Nenhum subsidiado encontrado no filtro atual.</td></tr>') + '</tbody></table></div>';
   }
 
   function populateStoreOptions(fins, sales) {
@@ -599,8 +608,9 @@
       return;
     }
     var headers = ['Nome do cliente', 'Vendedor', 'Loja vinculada', 'Departamento', 'Modelo do carro', 'Família do carro', 'Valor de venda', 'Valor financiado', 'Retorno', 'SPF Extra', 'Situação', 'Prazo', 'Parcela', 'Data da venda', 'Chassi'];
+    var semRet = !cpVeRetorno();
     var dataRows = fins.map(function (r) {
-      return [
+      var linha = [
         r.cliente || '',
         r.vendedor || '',
         r.loja || '',
@@ -617,7 +627,10 @@
         window.NX_XLSX_EXPORT_HELPER.excelDateValue(r.data) || '',
         r.chassi || ''
       ];
+      if (semRet) linha.splice(8, 1); // sem a coluna Retorno
+      return linha;
     });
+    if (semRet) headers = headers.filter(function (x) { return x !== 'Retorno'; });
     var columnTypes = {
       moneyCols: new Set(['Valor de venda', 'Valor financiado', 'Retorno', 'SPF Extra', 'Parcela']),
       dateCols: new Set(['Data da venda']),

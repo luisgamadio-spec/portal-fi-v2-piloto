@@ -126,8 +126,52 @@
     });
   }
 
+  // Score calculado no servidor (operational_score_vendedores). Mesmo escopo de
+  // operational_score_coparticipated_data; nenhum valor em R$. Se a função ainda
+  // não existir no banco (PGRST202/404), rejeita com state NOT_AVAILABLE para a
+  // tela cair no cálculo de antes -- a publicação da tela não depende da ordem.
+  function loadScoreServidor(params) {
+    params = params || {};
+    var start = params.start || DEFAULT_START;
+    var end = params.end || todayIso();
+    var cfg = window.NX_INTELLIGENCE_CONFIG || {};
+    if (!cfg.supabaseUrl || !cfg.supabasePublishableKey) return Promise.reject({ state: 'RPC_ERROR', message: 'Configuração real ausente neste ambiente.' });
+    if (!window.NX_AUTH || typeof window.NX_AUTH.getAccessToken !== 'function') return Promise.reject({ state: 'SESSION_EXPIRED', message: 'Sessão indisponível.' });
+    return window.NX_AUTH.getAccessToken().then(function (token) {
+      if (!token) return Promise.reject({ state: 'SESSION_EXPIRED', message: 'Sessão expirada.' });
+      var tc = typeof AbortController === 'function' && !params.signal ? new AbortController() : null;
+      var signal = params.signal || (tc && tc.signal);
+      var timer = tc ? setTimeout(function () { tc.abort(); }, DEFAULT_TIMEOUT_MS) : null;
+      return fetch(cfg.supabaseUrl + '/rest/v1/rpc/operational_score_vendedores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': cfg.supabasePublishableKey, 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ p_start: start, p_end: end }),
+        signal: signal
+      }).then(function (resp) {
+        if (timer) clearTimeout(timer);
+        return resp.json().catch(function () { return null; }).then(function (body) {
+          if (!resp.ok) {
+            var code = body && body.code;
+            if (resp.status === 404 || code === 'PGRST202') return Promise.reject({ state: 'NOT_AVAILABLE', message: 'Score no servidor ainda não disponível.' });
+            return Promise.reject({ state: classifyError(code, resp.status), message: (body && body.message) || 'Erro ao carregar o Score.' });
+          }
+          if (!body || !Array.isArray(body.rows)) return Promise.reject({ state: 'MALFORMED_RESPONSE', message: 'Resposta inesperada do servidor.' });
+          return body;
+        });
+      }, function (err) {
+        if (timer) clearTimeout(timer);
+        if (err && err.name === 'AbortError') {
+          if (params.signal && params.signal.aborted) return Promise.reject({ state: 'ABORTED', message: 'Requisição cancelada.' });
+          return Promise.reject({ state: 'TIMEOUT', message: 'Tempo de resposta excedido.' });
+        }
+        return Promise.reject({ state: 'RPC_ERROR', message: 'Falha de rede.' });
+      });
+    });
+  }
+
   window.NX_SCORE_REAL_PROVIDER = {
     loadScoreReal: loadScoreReal,
+    loadScoreServidor: loadScoreServidor,
     _internal: { DEFAULT_START: DEFAULT_START, todayIso: todayIso }
   };
 })();

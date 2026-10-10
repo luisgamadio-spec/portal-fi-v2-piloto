@@ -19,7 +19,7 @@
 <link rel="stylesheet" href="assets/css/simuladores.css?v=dc449d3157">
 <link rel="stylesheet" href="assets/css/painel-analista-fi.css?v=5147347a51">
 <link rel="stylesheet" href="assets/css/central-atendimento-fi.css?v=b3a1e91ea2">
-<link rel="stylesheet" href="assets/css/salarios-comissoes.css?v=3bd3e1ba12">
+<link rel="stylesheet" href="assets/css/salarios-comissoes.css?v=c51caa71cb">
 <link rel="stylesheet" href="assets/css/intelligence.css?v=f6b1317154">
 <link rel="stylesheet" href="assets/css/bi-chat.css?v=3436c15061">
 <link rel="stylesheet" href="assets/css/shell-admin.css?v=c205eed624">
@@ -156,8 +156,9 @@ if(location.hostname==='127.0.0.1'||location.hostname==='localhost'){
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js" integrity="sha384-OUW9euuUyxyHcAhTqbhI+Iyb8LMssXt/cpz0yXhs9UWG2/R/uaWdakx/4cfww7Vb" crossorigin="anonymous"></script>
 <script src="assets/js/lib/xlsx-export-helper.js?v=ed5c0041ee"></script>
 <script src="assets/js/adapters/score.adapter.js?v=9e95bf8ea0"></script>
-<script src="assets/js/adapters/score-real-provider.js?v=27967828a2"></script>
+<script src="assets/js/adapters/score-real-provider.js?v=f76cdbf9e8"></script>
 <script src="assets/js/adapters/score-real-view-model.js?v=ac0d549e34"></script>
+<script src="assets/js/adapters/score-servidor-view-model.js?v=f08b11bb47"></script>
 <!-- SCORE HOMOLOGADO (HUMAN_APPROVED) -- integração final do critério
      "Utilização + Conversão" (RPC governada score_utilization_
      conversion_scope_data, EXECUTE só para authenticated, escopo
@@ -175,12 +176,12 @@ if(location.hostname==='127.0.0.1'||location.hostname==='localhost'){
 <script src="assets/js/adapters/score-utilization-view-model.js?v=930253063f"></script>
 <script src="assets/js/adapters/score-utilization-conversion-view-model.js?v=64f4573bb3"></script>
 <script src="assets/js/adapters/score-utilization-governed-provider.js?v=f2f402e053"></script>
-<script src="assets/js/score.js?v=3e6fdb8ab5"></script>
+<script src="assets/js/score.js?v=1faf6825a2"></script>
 <script src="assets/js/adapters/coparticipado.adapter.js?v=46af70fa83"></script>
 <script src="assets/js/adapters/coparticipado-real-provider.js?v=16a497c331"></script>
 <script src="assets/js/adapters/coparticipado-governed-rates-provider.js?v=ad47d34ce0"></script>
 <script src="assets/js/adapters/coparticipado-real-view-model.js?v=e0b1021f0b"></script>
-<script src="assets/js/coparticipado.js?v=b53689b9f8"></script>
+<script src="assets/js/coparticipado.js?v=b5cb8a000f"></script>
 <script src="assets/js/lookups/store-display.js?v=29bf67f7c6"></script>
 <script src="assets/js/adapters/gestao-fixture-provider.js?v=f9265e5f0e"></script>
 <script src="assets/js/adapters/gestao-real-provider.js?v=13dc53a1f7"></script>
@@ -208,8 +209,8 @@ if(location.hostname==='127.0.0.1'||location.hostname==='localhost'){
      HISTORY_PROVIDER / _VM (loaded further below, Painel Master's own
      script block) via lazy window.* lookups inside salarios-comissoes.js
      -- no separate historical provider script tag needed here anymore. -->
-<script src="assets/js/adapters/salarios-comissoes-real-provider.js?v=a5f51edba7"></script>
-<script src="assets/js/salarios-comissoes.js?v=fab6e90614"></script>
+<script src="assets/js/adapters/salarios-comissoes-real-provider.js?v=61bbefc990"></script>
+<script src="assets/js/salarios-comissoes.js?v=6a1b28d4f8"></script>
 <!-- Brabus Intelligence RESET -- shell-level launcher + drawer, visual
      shell only (no adapter, no state machine, no context provider, no
      voice). mounted once by shell.js's boot() calling

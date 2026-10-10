@@ -634,7 +634,8 @@
       .map(function (r) { return { start: r.covered_start, end: r.covered_end }; });
     analystDetailsModal = { row: row, state: 'LOADING', data: null, error: null, operations: null };
     render(outletRef);
-    PROVIDER.loadSalaryDetails(period.data_inicio, period.data_fim, null).then(function (data) {
+    // A loja vai para o servidor: o limite de linhas passa a valer só para a loja, não para o grupo todo.
+    PROVIDER.loadSalaryDetails(period.data_inicio, period.data_fim, null, row.store).then(function (data) {
       if (mountRoute !== null && window.NX_ROUTER.currentRouteId() !== mountRoute) return; // SALFIX1: stale, navigated away
       if (!analystDetailsModal || analystDetailsModal.row !== row) return;
       var allRows = (data && data.rows) || [];
@@ -1815,6 +1816,17 @@
       (r.applied_rule ? '<div class="salOpRowMeta">' + esc(r.applied_rule) + '</div>' : '') +
       '</div>';
   }
+  // operational_salary_details devolve no máximo row_limit (2.000) operações, as mais recentes primeiro, e avisa com
+  // truncated/row_count. grupo=true: a lista veio da consulta do grupo todo (detalhe do Analista, filtrado por loja
+  // depois), então o corte pode deixar a loja incompleta mesmo com poucas linhas na tela.
+  function limiteDetalhesHtml(data, grupo) {
+    if (!data || data.truncated !== true) return '';
+    var lim = fmtInt(data.row_limit || 2000), tot = fmtInt(data.row_count);
+    return '<div class="modInfoState salDetailLimitNote" role="status"><div class="modStateTitle">Limite de ' + lim + ' operações atingido</div>' +
+      (grupo
+        ? 'O período tem ' + tot + ' operações no grupo e a consulta traz só as ' + lim + ' mais recentes; esta lista pode estar incompleta. Reduza o período para ver todas.'
+        : 'Mostrando as ' + lim + ' operações mais recentes de ' + tot + ' no período. Reduza o período para ver todas.') + '</div>';
+  }
   function detailsModalHtml() {
     if (!detailsModal) return '';
     var body;
@@ -1824,8 +1836,9 @@
       body = errorStateFor(detailsModal.error, 'os detalhes');
     } else {
       var rows = (detailsModal.data && detailsModal.data.rows) || [];
-      body = !rows.length ? '<div class="modEmptyState"><div class="modStateTitle">Nenhuma operação encontrada.</div></div>' :
-        '<div class="salOpList">' + rows.map(detailOperationRowHtml).join('') + '</div>';
+      body = limiteDetalhesHtml(detailsModal.data, false) +
+        (!rows.length ? '<div class="modEmptyState"><div class="modStateTitle">Nenhuma operação encontrada.</div></div>' :
+        '<div class="salOpList">' + rows.map(detailOperationRowHtml).join('') + '</div>');
     }
     return '<div class="salModalBackdrop"><div class="salModal" role="dialog" aria-modal="true" aria-labelledby="salModalTitle">' +
       '<h3 id="salModalTitle">Detalhes — ' + esc(detailsModal.sellerName || '') + '</h3>' +
@@ -1875,7 +1888,7 @@
       body = errorStateFor(analystDetailsModal.error, 'os detalhes');
     } else {
       var ops = analystDetailsModal.operations || [];
-      var summary = '<div class="salAnalystDetailSummary">' +
+      var summary = limiteDetalhesHtml(analystDetailsModal.data, true) + '<div class="salAnalystDetailSummary">' +
         '<div class="salOpMetric"><span class="salOpMetricLabel">Loja</span><span class="salOpMetricValue">' + esc(row.store || '—') + '</span></div>' +
         '<div class="salOpMetric"><span class="salOpMetricLabel">SPF (UND)</span><span class="salOpMetricValue">' + fmtInt(row.spf_count) + ' UND</span></div>' +
         '<div class="salOpMetric"><span class="salOpMetricLabel">% Comissão</span><span class="salOpMetricValue">' + faixaCellHtml(faixaMatch) + '</span></div>' +

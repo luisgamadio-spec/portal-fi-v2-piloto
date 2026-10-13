@@ -499,11 +499,21 @@
   // Analistas) to attach a Faixa badge -- returns null (never a
   // fabricated classification) if the rows haven't loaded/aren't
   // authorized/no match exists for this specific row.
+  // Comissão por loja e departamento (13/10/2026): um vendedor transferido tem
+  // uma linha por loja (e por departamento) na competência; buscar só pelo id
+  // devolvia a comissão de OUTRA loja dele. Compara sem diferença de
+  // maiúsculas/espaços.
+  function mesmaChave(a, b) {
+    return String(a == null ? '' : a).trim().toUpperCase() === String(b == null ? '' : b).trim().toUpperCase();
+  }
+  function mesmaLinhaVendedor(r, sellerId, store, department) {
+    return sellerId != null && r.seller_id === sellerId && mesmaChave(r.store, store) && mesmaChave(r.department, department);
+  }
   function faixaFor(perfil, store, department, sellerId) {
     if (!faixaRows || !Array.isArray(faixaRows.rows)) return null;
     return faixaRows.rows.filter(function (r) {
       if (r.perfil !== perfil) return false;
-      if (perfil === 'VENDEDOR') return sellerId != null && r.seller_id === sellerId;
+      if (perfil === 'VENDEDOR') return mesmaLinhaVendedor(r, sellerId, store, department);
       if (perfil === 'GERENTE') return r.store === store && r.department === department;
       if (perfil === 'ANALISTA') return r.store === store;
       return false;
@@ -536,17 +546,17 @@
   // store, server-filtered) for those two profiles, or ownCommission
   // (VENDEDOR's own single row) for a seller viewing themselves. Never
   // exposes a seller outside whatever the server already scoped.
-  function sellerFaixaMatch(sellerId) {
-    var direct = faixaFor('VENDEDOR', null, null, sellerId);
+  function sellerFaixaMatch(sellerId, store, department) {
+    var direct = faixaFor('VENDEDOR', store, department, sellerId);
     if (direct) return direct;
     var ctx = getAuthContext();
     if (!ctx || sellerId == null) return null;
     if ((ctx.perfil === 'ANALISTA' || ctx.perfil === 'GERENTE') && scopeCommission && Array.isArray(scopeCommission.rows)) {
-      var m = scopeCommission.rows.filter(function (r) { return r.perfil === 'VENDEDOR' && r.seller_id === sellerId; })[0];
+      var m = scopeCommission.rows.filter(function (r) { return r.perfil === 'VENDEDOR' && mesmaLinhaVendedor(r, sellerId, store, department); })[0];
       if (m) return m;
     }
     if (ctx.perfil === 'VENDEDOR' && ownCommission && Array.isArray(ownCommission.rows)) {
-      var m2 = ownCommission.rows.filter(function (r) { return r.perfil === 'VENDEDOR' && r.seller_id === sellerId; })[0];
+      var m2 = ownCommission.rows.filter(function (r) { return r.perfil === 'VENDEDOR' && mesmaLinhaVendedor(r, sellerId, store, department); })[0];
       if (m2) return m2;
     }
     return null;
@@ -1296,7 +1306,7 @@
     return v >= CONVERSION_THRESHOLD ? 'modKpiCardSuccess' : 'modKpiCardWarning';
   }
   function sellerRowDesktopHtml(r) {
-    var faixaMatch = sellerFaixaMatch(r.seller_id);
+    var faixaMatch = sellerFaixaMatch(r.seller_id, r.store, r.department);
     return '<tr>' +
       '<td>' + esc(r.seller_name || '—') + '</td>' +
       '<td class="modNumCol">' + fmtInt(r.sold_count) + '</td>' +
@@ -1326,7 +1336,7 @@
       '<td class="modNumCol modCurrencyCol">' + comissaoTotalCellHtml(trailing.faixaMatch) + '</td><td></td></tr>';
   }
   function sellerCardHtml(r) {
-    var faixaMatch = sellerFaixaMatch(r.seller_id);
+    var faixaMatch = sellerFaixaMatch(r.seller_id, r.store, r.department);
     return '<div class="salCard"><div class="salCardTop"><span class="salCardName">' + esc(r.seller_name || '—') + '</span>' +
       conversionCellHtml(r.share_percent) + '</div>' +
       '<dl class="salCardFields">' +

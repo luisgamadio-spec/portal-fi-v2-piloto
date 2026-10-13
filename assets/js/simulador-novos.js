@@ -11,7 +11,6 @@
   var S = window.NX_SIMULADOR_SHARED;
   var N = window.NX_SIMULADOR_NOVOS_ADAPTER;
   var CAMP = window.NX_CAMPANHA_ADAPTER;
-  var CC = window.NX_CASH_CONVERSION_ADAPTER;
   var GOVERNED = window.NX_COPARTICIPADO_GOVERNED_RATES_PROVIDER;
   var RATES = window.NX_SIMULADOR_RATES_PROVIDER;
 
@@ -338,8 +337,7 @@
     { id: 'subsidiadas', group: 'Campanhas', label: 'Taxas Subsidiadas' },
     { id: 'triton', group: 'Campanhas', label: 'Semestral Triton / Outlander' },
     { id: 'descobridor', group: 'Ferramentas', label: 'Descobridor de Taxa' },
-    { id: 'antecipacao', group: 'Ferramentas', label: 'Antecipação de Parcelas' },
-    { id: 'cashconversion', group: 'Ferramentas', label: 'Cash Conversion' }
+    { id: 'antecipacao', group: 'Ferramentas', label: 'Antecipação de Parcelas' }
   ];
   var MODE_DESC = {
     tradicional: 'Financiamento tradicional com balão opcional — entrada mínima de 10%.',
@@ -350,8 +348,7 @@
     subsidiadas: 'Comparação de taxas subsidiadas por prazo — entrada mínima de 50%.',
     triton: 'Campanha Taxa 0% — entrada fixa por modelo, sem alteração manual.',
     descobridor: 'Estima a taxa efetiva a partir do valor financiado, prazo e parcela.',
-    antecipacao: 'Calcula o valor com desconto para antecipação de parcelas.',
-    cashconversion: 'Compara o custo do financiamento com o rendimento de manter o capital aplicado.'
+    antecipacao: 'Calcula o valor com desconto para antecipação de parcelas.'
   };
   var TRAD_TERMS = [12, 24, 30, 36, 40, 42, 48];
   var PERIOD_TERMS = [24, 36, 48];
@@ -764,12 +761,6 @@
           '<span class="hint">Limite máximo: ' + ANT_BALAO_MAX + ' balões.</span></div>' +
           '<div class="smBalloonList" id="nAntBaloesList"></div>' +
           '<button type="button" class="btn btn-primary" id="nCalc" style="width:100%;margin-top:6px">Calcular</button>';
-      case 'cashconversion':
-        return UI.moneyField('nCapital', 'Capital', 'R$ 100.000,00') +
-          UI.moneyField('nParcelaCC', 'Parcela ofertada', 'R$ 2.500,00') +
-          UI.numberField('nPrazoCC', 'Prazo (meses)', 36, { min: 1, max: 60 }) +
-          UI.percentField('nTaxaCC', 'Taxa de aplicação mensal (%)', '0,80') +
-          '<button type="button" class="btn btn-primary" id="nCalc" style="width:100%;margin-top:6px">Calcular</button>';
       default:
         return '';
     }
@@ -917,8 +908,6 @@
       var antQtdSel = document.getElementById('nAntQtdBaloes');
       if (antQtdSel) antQtdSel.addEventListener('change', function () { renderAntBaloesList(); });
       document.getElementById('nCalc').addEventListener('click', calcAntecipacao);
-    } else if (mode === 'cashconversion') {
-      document.getElementById('nCalc').addEventListener('click', calcCashConversion);
     }
   }
 
@@ -1218,19 +1207,6 @@
     html += UI.secondaryGrid(secondaryItems);
     if (r.missing) html = UI.warningBlock('Algumas parcelas não tinham percentual cadastrado na tabela e foram calculadas sem desconto.') + html;
     html += '<div class="smTableWrap"><table class="smTable"><thead><tr><th>Parcela</th><th>Vencimento</th><th>Valor bruto</th><th>Desconto</th><th>Valor final</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
-    setResult(html);
-  }
-  function calcCashConversion() {
-    var taxaPct = Number(String(UI.textVal('nTaxaCC')).replace(',', '.')) || 0;
-    var r = CC.compute({ capital: UI.moneyVal('nCapital'), parcela: UI.moneyVal('nParcelaCC'), prazoMeses: UI.numVal('nPrazoCC'), taxaAplicacao: taxaPct / 100 });
-    if (!r) { setResult(UI.errorBlock('Não foi possível calcular com os dados informados.')); return; }
-    var html = '<div class="resultHero"><p class="kpiLabel">Classificação</p><p><span class="smClassBadge ' + r.classificacao + '">' + r.classificacao + '</span></p></div>';
-    html += UI.secondaryGrid([
-      { label: 'Valor final do financiamento', value: UI.brl(r.valorFinalFinanciamento) },
-      { label: 'Capital final projetado', value: UI.brl(r.valorFuturoAplicacao) },
-      { label: 'Rendimento projetado', value: UI.brl(r.rendimentoAplicacao) },
-      { label: 'Diferença projetada', value: UI.brl(r.diferencaProjetada) }
-    ]);
     setResult(html);
   }
 

@@ -731,6 +731,8 @@
     { id: 'gestaoBases', label: 'Gestão de Bases', active: true },
     { id: 'gestaoSimuladores', label: 'Gestão dos Simuladores', active: true },
     { id: 'utilizacaoSimuladores', label: 'Utilização dos Simuladores', active: true },
+    // Cash Conversion: taxas de referência (Selic, CDI, Focus, IR, FGC) que a tela e a Brabus IA usam.
+    { id: 'referenciasMercado', label: 'Referências de Mercado', active: true },
     // Painel Master Phase PM-5H: grouped with Períodos de Comissão
     // (same "competência" domain), positioned right after it -- NOT
     // adjacent to a "Fechamento de Competência" entry, since that
@@ -840,6 +842,8 @@
       scEnter();
     } else if (currentSection === 'utilizacaoSimuladores') {
       suEnter();
+    } else if (currentSection === 'referenciasMercado') {
+      renderPanel();
     } else if (currentSection === 'historicoCompetencias') {
       historyEnter();
     } else if (currentSection === 'fechamentoCompetencia') {
@@ -5268,6 +5272,14 @@
       renderGbModalRoot();
       panel.innerHTML = renderGestaoBasesSection();
       wireInteraction();
+      return;
+    }
+
+    if (currentSection === 'referenciasMercado') {
+      // Seção autocontida (assets/js/master-cash-referencias.js): ela mesma lê, desenha e grava.
+      // Fora da produção a gravação é simulada, como nas outras seções travadas.
+      if (!window.NX_MASTER_CASH_REF) { panel.innerHTML = errorStateHtml('BACKEND_ERROR', 'Módulo de Referências de Mercado não carregado.'); return; }
+      window.NX_MASTER_CASH_REF.entrar(panel, { producao: maIsProductionEnvironment() });
       return;
     }
 

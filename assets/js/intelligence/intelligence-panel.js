@@ -804,7 +804,44 @@
     return card;
   }
 
+  // Cash Conversion v3 (linguagem de vendedor): veredito, 1 número em destaque, plano (parcela, prazo, entrada),
+  // até 3 argumentos curtos; aplicações, cálculo, custo, observações e fonte ficam em "Ver detalhes"; rodapé curto uma vez.
+  function blocoCashV3(b) {
+    var card = el('div', 'biCard biCardCash biCardCashV3');
+    card.appendChild(cabecalhoCartao(String(b.veredito || b.titulo || ''), []));
+    if (b.desatualizada) card.appendChild(el('p', 'biCardNote biCashAviso', String(b.desatualizada)));
+    var d = b.destaque || {};
+    var hero = el('div', 'biCashHero');
+    hero.appendChild(el('span', 'biFigLabel', String(d.rotulo || '')));
+    hero.appendChild(el('span', 'biCashValue', String(d.valor || '')));
+    if (d.complemento) hero.appendChild(el('span', 'biCashRead', String(d.complemento)));
+    card.appendChild(hero);
+    var pl = b.plano || {};
+    var linha = [pl.nome, pl.como_paga !== d.valor ? pl.como_paga : null, pl.entrada ? 'entrada de ' + pl.entrada : null].filter(Boolean).join(' · ');
+    if (linha) card.appendChild(el('p', 'biCashPlano', linha));
+    var args = (Array.isArray(b.argumentos) ? b.argumentos : []).filter(Boolean).slice(0, 3);
+    if (args.length) {
+      var ul = el('ul', 'biCashArgs');
+      args.forEach(function (x) { ul.appendChild(el('li', '', String(x))); });
+      card.appendChild(ul);
+    }
+    var det = b.detalhes || {};
+    var box = el('details', 'biCashDetalhes');
+    box.appendChild(el('summary', '', 'Ver detalhes'));
+    var apl = (Array.isArray(det.aplicacoes) ? det.aplicacoes : []).filter(Boolean);
+    if (apl.length) box.appendChild(tabela([['Aplicação', false], ['Sobra estimada', true]], apl.map(function (x) { return { cells: [String(x.aplicacao || ''), String(x.sobra_estimada || '')] }; }), {}));
+    (Array.isArray(det.mais_argumentos) ? det.mais_argumentos : []).forEach(function (x) { box.appendChild(el('p', 'biCardNote', String(x))); });
+    if (det.custo_do_financiamento) box.appendChild(el('p', 'biCardNote', 'Custo do financiamento: ' + String(det.custo_do_financiamento) + '.'));
+    if (det.como_foi_calculado) box.appendChild(el('p', 'biCardNote', String(det.como_foi_calculado)));
+    (Array.isArray(det.observacoes) ? det.observacoes : []).forEach(function (x) { box.appendChild(el('p', 'biCardNote', String(x))); });
+    if (det.fonte) box.appendChild(el('p', 'biCardNote', String(det.fonte)));
+    card.appendChild(box);
+    if (b.rodape) card.appendChild(el('p', 'biCardNote biCashRodape', String(b.rodape)));
+    return card;
+  }
+
   function blocoCash(b) {
+    if (b && b.veredito) return blocoCashV3(b);
     if (b && (b.cenario_focus_conservador || b.frase_cliente || b.modo)) return blocoCashV2(b);
     var card = el('div', 'biCard biCardCash');
     card.appendChild(cabecalhoCartao(b.titulo, []));

@@ -164,6 +164,13 @@
 .baiPanelDrawer .biCashValue{font-size:1.625rem;font-weight:600;line-height:1.15;font-variant-numeric:tabular-nums;color:var(--color-text-primary)}
 .baiPanelDrawer .biCashRead{font-size:0.8125rem;color:var(--color-text-secondary)}
 .baiPanelDrawer .biCashArgs{margin:6px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:0.8125rem;line-height:1.45;color:var(--color-text-primary)}
+.baiPanelDrawer .biCardCashV3 .biCashHero{margin:6px 0 4px}
+.baiPanelDrawer .biCashPlano{margin:4px 0 0;font-size:0.8125rem;color:var(--color-text-secondary);overflow-wrap:anywhere}
+.baiPanelDrawer .biCashDetalhes{margin-top:10px;font-size:0.8125rem}
+.baiPanelDrawer .biCashDetalhes > summary{cursor:pointer;color:var(--color-text-secondary);font-weight:500}
+.baiPanelDrawer .biCashDetalhes[open] > summary{margin-bottom:6px}
+.baiPanelDrawer .biCashAviso{color:var(--color-warning)}
+.baiPanelDrawer .biCashRodape{margin-top:10px}
 
 /* salario */
 .baiPanelDrawer .biSalHead{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-2);margin-bottom:2px}

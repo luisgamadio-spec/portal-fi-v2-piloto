@@ -50,7 +50,7 @@
   function mwIsProductionEnvironment() {
     return !!(window.NX_ENVIRONMENT && window.NX_ENVIRONMENT.name === 'AUTHORIZED_PRODUCTION');
   }
-  var MW_WRITE_NAMES = { 'master_convidar_usuario': true, 'master_atualizar_autorizacao_usuario': true, 'master_reenviar_convite': true, 'master_gerar_continuacao_primeiro_acesso': true, 'admin-invite-user': true, 'admin-generate-user-access-link': true };
+  var MW_WRITE_NAMES = { 'master_convidar_usuario': true, 'master_atualizar_autorizacao_usuario': true, 'master_reenviar_convite': true, 'master_gerar_continuacao_primeiro_acesso': true, 'master_atualizar_login_nbs_usuario': true, 'admin-invite-user': true, 'admin-generate-user-access-link': true };
   function mwBlockedWrite(name) {
     if (mwIsProductionEnvironment() || !MW_WRITE_NAMES[name]) return null;
     return Promise.reject({ state: 'HOMOLOG_BLOCKED', codigo: 'MODO_HOMOLOGACAO', message: 'MODO HOMOLOGAÇÃO — nenhuma alteração é gravada neste ambiente.' });
@@ -207,6 +207,15 @@
     }, params.signal);
   }
 
+  // Login NBS (13/10/2026). O servidor normaliza (sem espaços, maiúsculas),
+  // recusa NBS de outro usuário/CPF divergente e, ao gravar, reconcilia a
+  // produção e encerra pendências cadastrais que passaram a bater.
+  // Resolve com { ok, codigo, login_nbs }.
+  function updateLoginNbs(usuarioId, valor, params) {
+    params = params || {};
+    return callRpc('master_atualizar_login_nbs_usuario', { p_usuario_id: usuarioId, p_login_nbs: valor }, params.signal);
+  }
+
   // WIRED, NOT EXECUTED THIS PHASE.
   // Real V1 contract (Phase 0/1 audit): for the "no Auth account yet"
   // case, resend is the SAME two-step shape as invite -- reset the
@@ -298,6 +307,7 @@
     loadMasterUsersData: loadMasterUsersData,
     inviteUser: inviteUser,
     updateUserAuthorization: updateUserAuthorization,
+    updateLoginNbs: updateLoginNbs,
     resendInvite: resendInvite,
     generateAccessLink: generateAccessLink,
     generateContinuationLink: generateContinuationLink

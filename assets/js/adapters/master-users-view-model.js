@@ -110,6 +110,8 @@
       perfil: u.perfil || '',
       loja: u.loja || '',
       status: u.status || '',
+      // Login NBS (13/10/2026): exibido/editável no detalhe; vem de master_admin_security_data.
+      loginNbs: u.login_nbs || '',
       ativo: !!u.ativo,
       lifecycle: lifecycle,
       adminState: adminState,

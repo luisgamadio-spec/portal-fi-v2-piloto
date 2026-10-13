@@ -292,6 +292,7 @@
   // Create/Edit form working state — reset on view change.
   var createForm = null;
   var editForm = null;
+  var nbsForm = null; // { id, valor, error, busy } -- edição do Login NBS no detalhe
   var pendingConfirm = null; // {kind, payload} while a confirm step is shown
 
   // Phase 2C, Gate 6/7 (human UAT fix): explicit success feedback for
@@ -528,13 +529,17 @@
     var editing = editForm && editForm.id === r.id;
     if (editing) {
       out += renderEditForm(r);
+    } else if (nbsForm && nbsForm.id === r.id) {
+      out += renderNbsForm(r);
     } else {
       out += fieldRow('Nome', r.nome) + fieldRow('E-mail', r.emailAuth) + fieldRow('CPF', r.cpfMasked) +
         fieldRow('Perfil', r.perfil) + fieldRow('Loja', r.loja || '—') + fieldRow('Departamento', r.status || '—') +
+        fieldRow('Login NBS', r.loginNbs || '—') +
         '<div class="maDetailField"><span class="maDetailLabel">Situação</span>' + situationBadgesHtml(r) + '</div>' +
         (r.emailDivergente ? '<p class="maWarnNote">O e-mail de autenticação diverge do e-mail cadastrado.</p>' : '') +
         '<div class="maDetailActions">' +
         '<button type="button" class="modBtn" id="maEditBtn">Editar autorização</button>' +
+        '<button type="button" class="modBtn" id="maNbsEditBtn">Editar Login NBS</button>' +
         '<button type="button" class="modBtn' + (r.ativo ? ' modBtnDanger' : '') + '" id="maToggleActiveBtn">' + (r.ativo ? 'Bloquear' : 'Reativar') + '</button>' +
         (r.conviteId ? '<button type="button" class="modBtn" id="maResendBtn">Reenviar convite</button>' : '') +
         (r.accessLinkAction ? '<button type="button" class="modBtn" id="maGenerateLinkBtn">' + esc(r.accessLinkAction.label) + '</button>' : '') +
@@ -586,6 +591,52 @@
       '<button type="submit" class="modBtn" id="maEditSubmit"' + (inFlight.edit ? ' disabled' : '') + '>Salvar alterações</button>' +
       '<button type="button" class="modBtnGhost" id="maEditCancel">Cancelar</button>' +
       '</div></form>';
+  }
+
+  // Login NBS (13/10/2026): permite ao Master corrigir o Login NBS do
+  // cadastro. Ao gravar, o servidor reconcilia a produção e encerra as
+  // pendências cadastrais que passaram a bater.
+  var NBS_RESULT_COPY = {
+    VALOR_OBRIGATORIO: 'Informe o Login NBS.',
+    USUARIO_NAO_ENCONTRADO: 'Usuário não encontrado. Atualize a lista e tente de novo.',
+    NBS_VINCULADO_OUTRO_USUARIO: 'Este Login NBS já está no cadastro de outro usuário ativo.',
+    NBS_CPF_DIVERGENTE: 'Este Login NBS pertence, na base de vendedores, a um CPF diferente do deste usuário.'
+  };
+  function renderNbsForm(r) {
+    return '<form id="maNbsForm" novalidate>' +
+      '<p class="maSubtle">' + esc(r.nome) + ' — Login NBS atual: <strong>' + esc(r.loginNbs || '—') + '</strong></p>' +
+      '<div class="modField"><label for="maNbsInput">Novo Login NBS</label>' +
+      '<input id="maNbsInput" type="text" autocomplete="off" spellcheck="false" maxlength="40" value="' + esc(nbsForm.valor) + '"></div>' +
+      '<p class="maSubtle">Espaços são removidos e as letras viram maiúsculas automaticamente.</p>' +
+      (nbsForm.error ? '<p class="maFieldError" role="alert">' + esc(nbsForm.error) + '</p>' : '') +
+      '<div class="maDetailActions">' +
+      '<button type="submit" class="modBtn" id="maNbsSubmit"' + (nbsForm.busy ? ' disabled' : '') + '>' + (nbsForm.busy ? 'Salvando…' : 'Salvar Login NBS') + '</button>' +
+      '<button type="button" class="modBtnGhost" id="maNbsCancel">Cancelar</button>' +
+      '</div></form>';
+  }
+  function submitNbsForm() {
+    if (!nbsForm || nbsForm.busy) return;
+    var valor = String(nbsForm.valor || '').replace(/\s+/g, '').toUpperCase();
+    if (!valor) { nbsForm.error = NBS_RESULT_COPY.VALOR_OBRIGATORIO; renderUserModalRoot(); return; }
+    nbsForm.busy = true; nbsForm.error = null; renderUserModalRoot();
+    window.NX_MASTER_USERS_PROVIDER.updateLoginNbs(nbsForm.id, valor, {}).then(function (res) {
+      if (!nbsForm) return;
+      var codigo = res && res.codigo;
+      if (res && res.ok) {
+        nbsForm = null;
+        successMessage = codigo === 'SEM_ALTERACAO' ? 'O Login NBS já estava assim — nada foi alterado.' : 'Login NBS atualizado. Pendências cadastrais que passaram a bater foram encerradas.';
+        loadUsers();
+        return;
+      }
+      nbsForm.busy = false;
+      nbsForm.error = NBS_RESULT_COPY[codigo] || 'Não foi possível salvar o Login NBS.';
+      renderUserModalRoot();
+    }, function (err) {
+      if (!nbsForm) return;
+      nbsForm.busy = false;
+      nbsForm.error = (STATE_COPY[err && err.state] || STATE_COPY.RPC_ERROR).body;
+      renderUserModalRoot();
+    });
   }
 
   // ---------- create/invite ----------
@@ -734,6 +785,7 @@
     currentSection = targetId;
     currentDetailId = null;
     editForm = null;
+    nbsForm = null;
     pendingConfirm = null;
     successMessage = null;
     generatedLink = null;
@@ -1241,6 +1293,7 @@
   function openUserModal(id, triggerEl, opts) {
     currentDetailId = id;
     editForm = null;
+    nbsForm = null;
     pendingConfirm = null;
     successMessage = null;
     generatedLink = null;
@@ -1257,6 +1310,7 @@
     var closedId = currentDetailId;
     currentDetailId = null;
     editForm = null;
+    nbsForm = null;
     pendingConfirm = null;
     successMessage = null;
     generatedLink = null;
@@ -5780,6 +5834,20 @@
       editForm = { id: r.id, perfil: r.perfil, loja: r.loja, status: r.status, ativo: r.ativo, error: null };
       renderUserModalRoot();
     });
+    var nbsBtn = document.getElementById('maNbsEditBtn');
+    if (nbsBtn) nbsBtn.addEventListener('click', function () {
+      var r = rowById(currentDetailId);
+      editForm = null;
+      nbsForm = { id: r.id, valor: r.loginNbs || '', error: null, busy: false };
+      renderUserModalRoot();
+      var inp = document.getElementById('maNbsInput'); if (inp) { inp.focus(); inp.select(); }
+    });
+    var nbsInput = document.getElementById('maNbsInput');
+    if (nbsInput) nbsInput.addEventListener('input', function (e) { nbsForm.valor = e.target.value; });
+    var nbsCancel = document.getElementById('maNbsCancel');
+    if (nbsCancel) nbsCancel.addEventListener('click', function () { nbsForm = null; renderUserModalRoot(); });
+    var nbsFormEl = document.getElementById('maNbsForm');
+    if (nbsFormEl) nbsFormEl.addEventListener('submit', function (e) { e.preventDefault(); submitNbsForm(); });
     var editCancel = document.getElementById('maEditCancel');
     if (editCancel) editCancel.addEventListener('click', function () { editForm = null; renderUserModalRoot(); });
     var editPerfil = document.getElementById('maEditPerfil');

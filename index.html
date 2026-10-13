@@ -116,10 +116,6 @@ if(location.hostname==='127.0.0.1'||location.hostname==='localhost'){
   // there, auth and write-safety already resolve correctly without a
   // further code change.
   document.write('<script src="assets/js/intelligence-runtime-config.production.js?v=a2363c6fe1"><\/script>');
-} else if(location.hostname==='v2.brabus.blistiq.com.br'){
-  // PILOTO de produção do V2 (repositório portal-fi-v2-piloto): config própria,
-  // AUTHORIZED_PRODUCTION só neste host -- o Painel Master grava aqui.
-  document.write('<script src="assets/js/intelligence-runtime-config.piloto.js?v=cd23ab9ed0"><\/script>');
 }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.0" integrity="sha384-De+l/Df7qym5QBDVocD3+gW1S7IjR3epf+6KbRDjB3FCCzM/LqVTwqckT6FhFar8" crossorigin="anonymous"></script>

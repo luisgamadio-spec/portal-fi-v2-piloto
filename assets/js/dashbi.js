@@ -837,11 +837,16 @@
         sub = parts.length > 1 ? parts.slice(1).join(' · ') : '';
       }
       var key = kind + '-' + i;
+      // 14/10/2026: retorno oculto para este perfil aparece como '—' (nunca R$ 0,00).
+      var oc = r.retornoOculto === true;
+      var receitaTxt = oc ? '—' : A.money(r.receita);
+      var receitaTotalTxt = oc ? '—' : A.money(r.receitaTotal);
+      var retornoTxt = oc ? '—' : A.pct(r.retorno);
       var detailGroups = [
         { label: 'Detalhe', items: [
-          { label: 'Receita', value: esc(A.money(r.receita)) },
+          { label: 'Receita', value: esc(receitaTxt) },
           { label: 'Receita SPF', value: esc(A.money(r.receitaSPF)) },
-          { label: 'Retorno', value: esc(A.pct(r.retorno)) }
+          { label: 'Retorno', value: esc(retornoTxt) }
         ] }
       ];
       rows.push('<tr><td data-th="#">' + (i + 1) + 'º</td><td data-th="Nome">' + esc(nome) + (sub ? '<div class="dbTableSub">' + esc(sub) + '</div>' : '') + '</td>' +
@@ -849,7 +854,7 @@
         '<td class="dbNumCol" data-th="Financiamentos">' + esc(String(r.fin)) + '</td>' +
         '<td class="dbNumCol" data-th="Share">' + penetracaoCellHtml(A, r.penetracao) + '</td>' +
         '<td class="dbNumCol" data-th="Produção Total">' + esc(A.money(r.producao)) + '</td>' +
-        '<td class="dbNumCol" data-th="Receita Total">' + esc(A.money(r.receitaTotal)) + '</td>' +
+        '<td class="dbNumCol" data-th="Receita Total">' + esc(receitaTotalTxt) + '</td>' +
         '<td class="dbDetailToggleCell">' + detailToggleHtml(ns, key) + '</td></tr>' +
         detailRowHtml(ns, key, 8, detailGroups));
 
@@ -858,7 +863,7 @@
         dbMobileField('Financiamentos', esc(String(r.fin)), 'dbMobileFieldPair') +
         dbMobileField('Share', penetracaoCellHtml(A, r.penetracao), 'dbMobileFieldEmph') +
         dbMobileField('Produção Total', esc(A.money(r.producao))) +
-        dbMobileField('Receita Total', esc(A.money(r.receitaTotal)));
+        dbMobileField('Receita Total', esc(receitaTotalTxt));
       cards.push(dbMobileCard(ns, key, (i + 1) + 'º ' + nome, sub || null, primaryFieldsHtml, detailGroups));
     });
     return { rowsHtml: rows.join(''), cards: cards };
@@ -895,7 +900,9 @@
     var lojas = A.rankingFromViews(salesView, finsView, 'loja').slice(0, 10);
     return '<div class="dbRankingSection">' +
       '<h2 style="margin-top:0">Ranking — ' + esc(currentDeptView) + '</h2>' +
-      '<p class="dbMuted">Top 10, ordenado por maior Receita Total captada no período selecionado.</p>' +
+      '<p class="dbMuted">' + (vendedores.concat(lojas).some(function (r) { return r.retornoOculto; })
+        ? 'Top 10. Onde o retorno não é exibido para o seu perfil (—), a ordem é por financiamentos e depois vendas.'
+        : 'Top 10, ordenado por maior Receita Total captada no período selecionado.') + '</p>' +
       rankingTableHtml(A, 'Vendedores', vendedores, 'vendedor') +
       rankingTableHtml(A, 'Lojas', lojas, 'loja') +
       '</div>';

@@ -895,30 +895,45 @@
     return `${r.vendedor || "NÃO INFORMADO"} | ${r.dept || "NÃO INFORMADO"} | ${loja}`;
   };
 
+  // 14/10/2026: retorno oculto (vendedor/RH, ou vendedor de outra loja para analista/gerente) -- a linha mostra '—'
+  // e, havendo retorno oculto, o ranking ordena por financiamentos e depois vendas (decisão do Luis).
+  const marca = (o, r) => { if (r.retornoOculto) o._oculto = true; else o._visivel = true; if (r.receitaDistribuida) o._distribuido = true; };
   salesView.forEach(r=>{
     const k = keyFor(r);
     if(!map[k]) map[k] = {Nome:k, vendas:0, fin:0, receita:0, receitaSPF:0, receitaTotal:0, producao:0};
     map[k].vendas += 1;
+    marca(map[k], r);
   });
 
   finsView.forEach(r=>{
     const k = keyFor(r);
     if(!map[k]) map[k] = {Nome:k, vendas:0, fin:0, receita:0, receitaSPF:0, receitaTotal:0, producao:0};
     map[k].fin += 1;
+    marca(map[k], r);
     map[k].receita += r.receita || 0;
     map[k].receitaSPF += r.receitaSPF || 0;
     map[k].receitaTotal += (r.receita || 0) + (r.receitaSPF || 0);
     map[k].producao += r.producao || 0;
   });
 
-  return Object.values(map)
-    .map((r,i)=>({
-      ...r,
-      penetracao:r.vendas ? r.fin/r.vendas : 0,
-      retorno:r.producao ? (r.receitaTotal || ((r.receita||0)+(r.receitaSPF||0)))/r.producao : 0,
-      retornoTotal:r.producao ? (r.receitaTotal || ((r.receita||0)+(r.receitaSPF||0)))/r.producao : 0
-    }))
-    .sort((a,b)=>((b.receitaTotal||b.receita||0)-(a.receitaTotal||a.receita||0)));
+  const lista = Object.values(map)
+    .map((r,i)=>{
+      // vendedor: qualquer registro oculto esconde o retorno dele. Loja/departamento: só esconde se não houver retorno
+      // visível nem o total da loja distribuído (ex.: perfil Vendedor, que não recebe retorno nenhum).
+      const oculto = tipo === "vendedor" ? !!r._oculto : (!!r._oculto && !r._visivel && !r._distribuido);
+      const { _oculto, _visivel, _distribuido, ...base } = r;
+      return {
+        ...base,
+        retornoOculto: oculto,
+        penetracao:r.vendas ? r.fin/r.vendas : 0,
+        retorno:r.producao ? (r.receitaTotal || ((r.receita||0)+(r.receitaSPF||0)))/r.producao : 0,
+        retornoTotal:r.producao ? (r.receitaTotal || ((r.receita||0)+(r.receitaSPF||0)))/r.producao : 0
+      };
+    });
+  if (lista.some(r => r.retornoOculto)) {
+    return lista.sort((a,b)=>((b.fin||0)-(a.fin||0)) || ((b.vendas||0)-(a.vendas||0)));
+  }
+  return lista.sort((a,b)=>((b.receitaTotal||b.receita||0)-(a.receitaTotal||a.receita||0)));
 }
 
   function buildNovosLojaRows(results){

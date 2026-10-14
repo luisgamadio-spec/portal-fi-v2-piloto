@@ -66,15 +66,24 @@
   function buildSalesAndFins(metricsRows) {
     var sales = [];
     var fins = [];
+    var retornoDaLoja = [];
     (metricsRows || []).forEach(function (row) {
       var dept = DEPT_MAP[row.department] || row.department;
+      // 14/10/2026 (decisão do Luis): retorno em R$ por vendedor só para quem pode vê-lo. Linha sem retorno (vendedor/RH,
+      // ou vendedor de OUTRA loja para analista/gerente -- retorno_oculto) aparece com '—', nunca R$ 0,00.
+      var retornoOculto = row.retorno_oculto === true ||
+        (row.agregado_loja !== true && !Object.prototype.hasOwnProperty.call(row, 'return_value'));
+      // 'RETORNO DA LOJA' (somente_retorno): só o retorno total da loja/departamento, sem vendas nem financiamentos.
+      // É distribuído abaixo só entre os financiamentos daquela loja/departamento/plano, para os totais por
+      // loja/departamento/grupo baterem -- nunca exibido por vendedor.
+      if (row.somente_retorno === true) { retornoDaLoja.push(row); return; }
       // 14/10/2026: na visão de grupo, analista/gerente recebem as OUTRAS lojas como uma linha "TOTAL DA LOJA"
       // (agregado_loja, sem vendedor). Entra em todos os totais por loja/grupo, mas não no ranking de vendedores.
       var agregadoLoja = row.agregado_loja === true;
       var sold = row.sold_count || 0;
       for (var i = 0; i < sold; i++) {
         sales.push({
-          loja: row.store, dept: dept, vendedor: row.seller_name, agregadoLoja: agregadoLoja,
+          loja: row.store, dept: dept, vendedor: row.seller_name, agregadoLoja: agregadoLoja, retornoOculto: retornoOculto,
           valorVenda: distribute(row.sales_value || 0, sold, i),
           origem: {}
         });
@@ -97,7 +106,7 @@
         var pCount = p.financed_count || 0;
         for (var j = 0; j < pCount; j++) {
           var rec = {
-            loja: row.store, dept: dept, vendedor: row.seller_name, agregadoLoja: agregadoLoja,
+            loja: row.store, dept: dept, vendedor: row.seller_name, agregadoLoja: agregadoLoja, retornoOculto: retornoOculto, planType: p.plan_type,
             producao: distribute(p.production_value || 0, pCount, j),
             receita: distribute(p.return_value || 0, pCount, j),
             // spf_net_value is row-level (not broken down by plan_type in
@@ -116,6 +125,17 @@
           fins.push(rec);
           spfIndex++;
         }
+      });
+    });
+    retornoDaLoja.forEach(function (row) {
+      var dept = DEPT_MAP[row.department] || row.department;
+      var planos = (row.plan_breakdown && row.plan_breakdown.length) ? row.plan_breakdown : [{ plan_type: null, return_value: row.return_value }];
+      planos.forEach(function (p) {
+        var valor = p.return_value || 0;
+        if (!valor) return;
+        var alvo = fins.filter(function (f) { return f.retornoOculto && f.loja === row.store && f.dept === dept && (p.plan_type == null || f.planType === p.plan_type); });
+        if (!alvo.length) alvo = fins.filter(function (f) { return f.retornoOculto && f.loja === row.store && f.dept === dept; });
+        alvo.forEach(function (f, i) { f.receita = (f.receita || 0) + distribute(valor, alvo.length, i); f.receitaDistribuida = true; });
       });
     });
     return { sales: sales, fins: fins };

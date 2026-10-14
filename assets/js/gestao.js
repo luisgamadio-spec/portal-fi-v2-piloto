@@ -550,7 +550,9 @@
       // override anything else anyway (Phase 1 empirical proof), this
       // just stops the UI from offering a choice that does nothing.
       var ctx = window.NX_AUTH_CORE && window.NX_AUTH_CORE.getContext ? window.NX_AUTH_CORE.getContext() : null;
-      var scopedStore = (ctx && !ctx.isMaster && ctx.loja && D.CANONICAL_STORES.indexOf(ctx.loja) !== -1) ? ctx.loja : null;
+      // REGRA (14/10/2026, Luis): Análise F&I do Grupo = GRUPO TODO para todos os perfis. NÃO travar o seletor na
+      // loja do cadastro: todo perfil com acesso escolhe a loja ou 'Todas as lojas' (o servidor também libera).
+      var scopedStore = null;
       if (scopedStore) currentStore = scopedStore;
 
       // value = canonical code (Wave 2 Gate 6): selector value, RPC

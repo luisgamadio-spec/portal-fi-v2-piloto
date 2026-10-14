@@ -68,10 +68,13 @@
     var fins = [];
     (metricsRows || []).forEach(function (row) {
       var dept = DEPT_MAP[row.department] || row.department;
+      // 14/10/2026: na visão de grupo, analista/gerente recebem as OUTRAS lojas como uma linha "TOTAL DA LOJA"
+      // (agregado_loja, sem vendedor). Entra em todos os totais por loja/grupo, mas não no ranking de vendedores.
+      var agregadoLoja = row.agregado_loja === true;
       var sold = row.sold_count || 0;
       for (var i = 0; i < sold; i++) {
         sales.push({
-          loja: row.store, dept: dept, vendedor: row.seller_name,
+          loja: row.store, dept: dept, vendedor: row.seller_name, agregadoLoja: agregadoLoja,
           valorVenda: distribute(row.sales_value || 0, sold, i),
           origem: {}
         });
@@ -94,7 +97,7 @@
         var pCount = p.financed_count || 0;
         for (var j = 0; j < pCount; j++) {
           var rec = {
-            loja: row.store, dept: dept, vendedor: row.seller_name,
+            loja: row.store, dept: dept, vendedor: row.seller_name, agregadoLoja: agregadoLoja,
             producao: distribute(p.production_value || 0, pCount, j),
             receita: distribute(p.return_value || 0, pCount, j),
             // spf_net_value is row-level (not broken down by plan_type in

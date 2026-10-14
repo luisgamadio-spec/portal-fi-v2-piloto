@@ -782,9 +782,10 @@
   sales.forEach(r=>{
     addAgg(a.vendasLoja, r.loja, {qtd:1,vendas:1});
     addAgg(a.vendasDept, r.dept, {qtd:1,vendas:1});
-    addAgg(a.vendasVendDept, `${r.vendedor} | ${r.dept}`, {qtd:1,vendas:1});
+    // 14/10/2026: linhas "TOTAL DA LOJA" (agregadoLoja) contam nos totais por loja/departamento, nunca como vendedor.
+    if(!r.agregadoLoja) addAgg(a.vendasVendDept, `${r.vendedor} | ${r.dept}`, {qtd:1,vendas:1});
     addAgg(a.shareLojaDept, `${r.loja} | ${r.dept}`, {vendas:1});
-    addAgg(a.shareVendDept, `${r.vendedor} | ${r.dept}`, {vendas:1});
+    if(!r.agregadoLoja) addAgg(a.shareVendDept, `${r.vendedor} | ${r.dept}`, {vendas:1});
     if(r.dept==="Novos") addAgg(a.vendasModelo, r.modelo, {qtd:1,vendas:1});
   });
 
@@ -805,10 +806,10 @@
     };
     addAgg(a.finLoja, r.loja, compVals);
     addAgg(a.finDept, r.dept, compVals);
-    addAgg(a.finVendDept, `${r.vendedor} | ${r.dept}`, compVals);
+    if(!r.agregadoLoja) addAgg(a.finVendDept, `${r.vendedor} | ${r.dept}`, compVals);
     addAgg(a.compLojaDept, `${r.loja} | ${r.dept}`, compVals);
     addAgg(a.shareLojaDept, `${r.loja} | ${r.dept}`, compVals);
-    addAgg(a.shareVendDept, `${r.vendedor} | ${r.dept}`, compVals);
+    if(!r.agregadoLoja) addAgg(a.shareVendDept, `${r.vendedor} | ${r.dept}`, compVals);
     if(r.dept==="Novos") {
       addAgg(a.finModelo, r.modelo, compVals);
       addAgg(a.compModelo, r.modelo, compVals);
@@ -880,6 +881,12 @@
 
   function rankingFromViews(salesView, finsView, tipo){
   const map = {};
+  // 14/10/2026: linhas "TOTAL DA LOJA" (outras lojas, visão de grupo de analista/gerente) não são vendedor --
+  // ficam fora do ranking de vendedores; continuam nos rankings por loja/departamento.
+  if (tipo === "vendedor") {
+    salesView = (salesView || []).filter(r => !r.agregadoLoja);
+    finsView = (finsView || []).filter(r => !r.agregadoLoja);
+  }
 
   const keyFor = (r) => {
     if(tipo === "loja") return r.loja || "NÃO LOCALIZADO";

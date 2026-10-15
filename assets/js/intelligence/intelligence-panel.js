@@ -388,7 +388,7 @@
     ['Financiados', 'financiados', 'int', 'financiados_pct', 'pct'],
     ['Share', 'share_pct', 'pct', 'share_pp', 'pp'],
     ['Produção', 'producao', 'brl0', 'producao_pct', 'pct'],
-    ['SPF', 'spf_qtd', 'int', 'spf_qtd', 'int'],
+    ['SPF (qtd)', 'spf_qtd', 'int', 'spf_qtd_pct', 'pct', 'spf_qtd', 'int'],
     ['Retorno', 'retorno', 'brl0', 'retorno_pct', 'pct']
   ];
 
@@ -417,8 +417,15 @@
       var kp = el('div', 'biKpi');
       kp.appendChild(el('span', 'biKpiLabel', k[0]));
       kp.appendChild(el('span', 'biKpiValue', fmt(l[k[1]], k[2])));
-      var dv = vari ? variacao(vari[k[3]], k[4]) : null;
-      if (dv) kp.appendChild(dv);
+      // 15/10/2026: todo indicador mostra a variação; sem base de comparação → "—".
+      // (k[5]/k[6]: campo/formato antigo, para respostas de uma versão anterior do servidor)
+      var vv = vari ? (Object.prototype.hasOwnProperty.call(vari, k[3]) || !k[5] ? variacao(vari[k[3]], k[4]) : variacao(vari[k[5]], k[6])) : null;
+      // base zero (% nulo): mostra "0 → N" com o delta absoluto que o servidor manda (vendidos, financiados, produção, spf_qtd, retorno)
+      var absCampo = String(k[3]).replace(/_pct$/, '');
+      if (!vv && vari && k[4] === 'pct' && absCampo !== k[3] && num(vari[absCampo]) != null && num(vari[absCampo]) !== 0 && num(l[k[1]]) === num(vari[absCampo])) {
+        vv = variacaoBaseZero({ de: 0, para: num(vari[absCampo]) }, k[2]);
+      }
+      if (vari) kp.appendChild(vv || el('span', 'biDelta biDeltaFlat', '—'));
       grid.appendChild(kp);
     });
     card.appendChild(grid);
@@ -480,6 +487,152 @@
     wrap.appendChild(table);
     card.appendChild(wrap);
     card.appendChild(el('p', 'biCardNote', 'Destaque = loja líder no indicador.'));
+    return card;
+  }
+
+  // --- periodos (comparativo no tempo, 15/10/2026) ---------------------
+  // Uma coluna por período (sempre com as datas), uma linha por indicador, a variação colorida e barrinhas lado a lado.
+  // Mês a mês: um mini gráfico por indicador e o melhor/pior mês destacados (o mês em andamento fica de fora).
+  // A tabela rola só dentro do cartão no celular (biTableWrap); a 1ª coluna fica fixa.
+  // Base zero (sem %): mostra a diferença absoluta, ex.: "0 → 5 (+5)" (pedido do Luis, 15/10/2026).
+  function variacaoBaseZero(bz, formato) {
+    if (!bz || num(bz.para) == null) return null;
+    var p = num(bz.para), f = formato === 'brl' ? 'brl0' : formato;
+    var d = el('span', 'biDelta ' + (p > 0 ? 'biDeltaUp' : 'biDeltaDown'));
+    d.appendChild(el('span', 'biDeltaArrow', p > 0 ? '▲' : '▼'));
+    var txt = ' ' + fmt(0, f) + ' → ' + fmt(p, f) + (f === 'int' ? ' (' + (p > 0 ? '+' : '') + fmt(p, 'int') + ')' : '');
+    d.appendChild(document.createTextNode(txt));
+    d.setAttribute('aria-label', 'de ' + fmt(0, f) + ' para ' + fmt(p, f) + '; sem percentual porque a base é zero');
+    return d;
+  }
+  function variacaoOuTraco(v, formato, bz, formatoValor) {
+    var d = variacao(v, formato) || variacaoBaseZero(bz, formatoValor);
+    if (d) return d;
+    var t = el('span', 'biDelta biDeltaFlat', '—');
+    t.setAttribute('aria-label', 'sem base de comparação');
+    return t;
+  }
+  function barrinhas(valores, colunas, mesAMes) {
+    // a referência (mês anterior inteiro) não entra nas barras: ela não é base de comparação
+    var idx = colunas.map(function (c, i) { return i; }).filter(function (i) { return !colunas[i] || colunas[i].papel !== 'referencia'; });
+    var nums = idx.map(function (i) { return num(valores[i]); });
+    var max = Math.max.apply(null, nums.map(function (v) { return v == null ? 0 : Math.abs(v); }).concat([0]));
+    var box = el('span', 'biPerBars');
+    box.setAttribute('aria-hidden', 'true');
+    nums.forEach(function (v, k) {
+      var c = colunas[idx[k]] || {};
+      var papel = c.papel || 'mes';
+      var b = el('span', 'biPerBar biPerBar-' + papel + (mesAMes && c.parcial ? ' biPerBarParcial' : ''));
+      var h = v == null || !max ? 0 : Math.max(4, Math.round(Math.abs(v) / max * 100));
+      b.style.height = h + '%';
+      box.appendChild(b);
+    });
+    return box;
+  }
+  function miniGrafico(valores, colunas, melhor, pior) {
+    var nums = valores.map(function (v) { return num(v); });
+    var ok = nums.filter(function (v) { return v != null; });
+    var W = 96, Hh = 28, n = nums.length;
+    var svgNS = 'http://www.w3.org/2000/svg';
+    var svg = document.createElementNS(svgNS, 'svg');
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + Hh);
+    svg.setAttribute('class', 'biPerSpark');
+    svg.setAttribute('aria-hidden', 'true');
+    if (ok.length < 2) return svg;
+    var max = Math.max.apply(null, ok), min = Math.min.apply(null, ok);
+    var x = function (i) { return n > 1 ? 4 + i * (W - 8) / (n - 1) : W / 2; };
+    var y = function (v) { return max === min ? Hh / 2 : 4 + (1 - (v - min) / (max - min)) * (Hh - 8); };
+    var d = '';
+    nums.forEach(function (v, i) { if (v != null) d += (d ? ' L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1); });
+    var path = document.createElementNS(svgNS, 'path');
+    path.setAttribute('d', d); path.setAttribute('class', 'biPerSparkLine');
+    svg.appendChild(path);
+    nums.forEach(function (v, i) {
+      if (v == null) return;
+      var c = document.createElementNS(svgNS, 'circle');
+      c.setAttribute('cx', x(i).toFixed(1)); c.setAttribute('cy', y(v).toFixed(1));
+      c.setAttribute('r', i === melhor || i === pior ? '3' : '1.8');
+      c.setAttribute('class', i === melhor ? 'biPerDotBest' : i === pior ? 'biPerDotWorst' : (colunas[i] && colunas[i].parcial ? 'biPerDotParcial' : 'biPerDot'));
+      svg.appendChild(c);
+    });
+    return svg;
+  }
+  function blocoPeriodos(b) {
+    var card = el('div', 'biCard biCardPeriodos');
+    var chips = [];
+    if (b.visao) chips.push(chip(String(b.visao), 'biChipAccent'));
+    card.appendChild(cabecalhoCartao(b.titulo || 'Comparativo de períodos', chips));
+    var cols = Array.isArray(b.colunas) ? b.colunas : [];
+    var mesAMes = b.modo === 'mes_a_mes';
+    var wrap = el('div', 'biTableWrap');
+    var table = el('table', 'biTable biCompTable biPerTable' + (mesAMes ? ' biPerMeses' : ''));
+    // Ordem por importância (no celular o que importa aparece sem rolar):
+    //   atual × anterior: Atual | Variação | Base | Referência | Comparativo
+    //   mês a mês: Evolução | Variação | meses (em ordem)      intervalos: intervalos (em ordem) | Variação | Comparativo
+    var idxAtual = -1;
+    cols.forEach(function (c, i) { if (c.papel === 'atual') idxAtual = i; });
+    var ordem = [];
+    if (mesAMes) {
+      ordem.push({ t: 'vis' }, { t: 'var' });
+      cols.forEach(function (c, i) { ordem.push({ t: 'col', i: i }); });
+    } else if (idxAtual >= 0) {
+      ordem.push({ t: 'col', i: idxAtual }, { t: 'var' });
+      cols.forEach(function (c, i) { if (i !== idxAtual) ordem.push({ t: 'col', i: i }); });
+      ordem.push({ t: 'vis' });
+    } else {
+      cols.forEach(function (c, i) { ordem.push({ t: 'col', i: i }); });
+      ordem.push({ t: 'var' }, { t: 'vis' });
+    }
+    var trh = el('tr');
+    trh.appendChild(el('th', null, 'Indicador'));
+    ordem.forEach(function (o) {
+      if (o.t === 'var') { trh.appendChild(el('th', 'biNum', 'Variação')); return; }
+      if (o.t === 'vis') { trh.appendChild(el('th', 'biPerVisual', mesAMes ? 'Evolução' : 'Comparativo')); return; }
+      var c = cols[o.i];
+      var th = el('th', 'biNum biPerCol biPerCol-' + (c.papel || 'mes'));
+      th.appendChild(el('span', 'biPerColNome', String(c.rotulo || '')));
+      th.appendChild(el('span', 'biPerColDatas', String(c.datas || '')));
+      if (c.papel === 'referencia') th.appendChild(el('span', 'biPerTag', 'referência'));
+      else if (c.parcial) th.appendChild(el('span', 'biPerTag', 'parcial'));
+      trh.appendChild(th);
+    });
+    table.appendChild(el('thead')).appendChild(trh);
+    var tbody = table.appendChild(el('tbody'));
+    (Array.isArray(b.linhas) ? b.linhas : []).forEach(function (ln) {
+      var tr = el('tr');
+      tr.appendChild(el('th', 'biRowHead', String(ln.rotulo || ln.indicador || '')));
+      var formato = ln.formato === 'brl' ? 'brl0' : ln.formato;
+      var valores = Array.isArray(ln.valores) ? ln.valores : [];
+      ordem.forEach(function (o) {
+        if (o.t === 'var') {
+          var tdv = el('td', 'biNum');
+          tdv.appendChild(variacaoOuTraco(ln.variacao, ln.variacao_formato === 'pp' ? 'pp' : 'pct', ln.base_zero, ln.formato));
+          tr.appendChild(tdv);
+          return;
+        }
+        if (o.t === 'vis') {
+          var tdg = el('td', 'biPerVisual');
+          tdg.appendChild(mesAMes ? miniGrafico(valores, cols, ln.melhor, ln.pior) : barrinhas(valores, cols, false));
+          tr.appendChild(tdg);
+          return;
+        }
+        var i = o.i, c = cols[i];
+        var td = el('td', 'biNum biPerCell-' + (c.papel || 'mes'), fmt(valores[i], formato));
+        if (mesAMes && i === ln.melhor) { td.className += ' biPerBest'; td.appendChild(el('span', 'biPerMark', 'melhor')); td.setAttribute('aria-label', fmt(valores[i], formato) + ', melhor mês'); }
+        if (mesAMes && i === ln.pior) { td.className += ' biPerWorst'; td.appendChild(el('span', 'biPerMark', 'pior')); td.setAttribute('aria-label', fmt(valores[i], formato) + ', pior mês'); }
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+    wrap.appendChild(table);
+    card.appendChild(wrap);
+    if (b.comparacao) card.appendChild(el('p', 'biCardNote biPerComparacao', String(b.comparacao)));
+    if (mesAMes) card.appendChild(el('p', 'biCardNote', 'Melhor e pior mês marcados em cada indicador (só meses completos); no gráfico, ponto cheio = melhor, ponto vazado = pior.'));
+    else if (idxAtual >= 0) {
+      var base = cols.filter(function (c) { return c.papel === 'base'; })[0];
+      if (base) card.appendChild(el('p', 'biCardNote', 'Barras: cinza = ' + base.rotulo + ' (' + base.datas + ') · azul = ' + cols[idxAtual].rotulo + ' (' + cols[idxAtual].datas + ').'));
+    }
+    (Array.isArray(b.notas) ? b.notas : []).forEach(function (n) { card.appendChild(el('p', 'biCardNote', String(n))); });
     return card;
   }
 
@@ -1467,6 +1620,7 @@
         if (b.tipo === 'opcoes') box.appendChild(blocoOpcoes(b));
         else if (b.tipo === 'resultado') box.appendChild(blocoResultado(b));
         else if (b.tipo === 'comparacao') box.appendChild(blocoComparacao(b));
+        else if (b.tipo === 'periodos') box.appendChild(blocoPeriodos(b));
         else if (b.tipo === 'score') box.appendChild(blocoScore(b));
         else if (b.tipo === 'antecipacao') box.appendChild(blocoAntecipacao(b));
         else if (b.tipo === 'cash') box.appendChild(blocoCash(b));

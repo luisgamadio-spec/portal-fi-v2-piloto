@@ -378,3 +378,36 @@
 .baiPanelDrawer .biAvisoVoz{margin-top:8px!important;font-size:var(--mod-metadata-size);color:var(--color-text-muted)}
 .baiPanelDrawer .biMsgVozPendente{opacity:.7;font-style:italic}
 @media (max-width:480px){.baiPanelDrawer .biVoz{padding:var(--space-2) var(--space-3)}.baiPanelDrawer .biVozOrb{width:60px;height:60px}}
+/* comparativo no tempo (cartão 'periodos', 15/10/2026) */
+.baiPanelDrawer .biPerTable th.biPerCol{white-space:nowrap;vertical-align:bottom}
+.baiPanelDrawer .biPerColNome{display:block;font-weight:600;color:var(--color-text-primary)}
+.baiPanelDrawer .biPerColDatas{display:block;font-size:0.6875rem;font-weight:400;color:var(--color-text-muted);text-transform:none;letter-spacing:0}
+.baiPanelDrawer .biPerTag{display:inline-block;margin-top:2px;padding:0 6px;border-radius:999px;font-size:0.625rem;font-weight:500;text-transform:none;letter-spacing:0;background:var(--mod-surface-panel-2);color:var(--color-text-muted);border:1px solid var(--mod-border)}
+.baiPanelDrawer .biPerCol-referencia,.baiPanelDrawer .biPerCell-referencia{color:var(--color-text-muted);opacity:.8}
+.baiPanelDrawer .biPerCell-atual{font-weight:600;color:var(--color-text-primary)}
+.baiPanelDrawer .biPerVisual{min-width:96px;width:96px}
+.baiPanelDrawer .biPerBars{display:flex;align-items:flex-end;gap:3px;height:26px}
+.baiPanelDrawer .biPerBar{display:block;flex:1 1 0;min-width:6px;border-radius:2px 2px 0 0;background:var(--color-text-muted);opacity:.45}
+.baiPanelDrawer .biPerBar-atual,.baiPanelDrawer .biPerBar-mes,.baiPanelDrawer .biPerBar-intervalo{background:var(--color-info);opacity:1}
+.baiPanelDrawer .biPerBar-base{background:var(--color-text-muted);opacity:.7}
+.baiPanelDrawer .biPerBar-referencia{background:var(--color-text-muted);opacity:.35}
+.baiPanelDrawer .biPerBarParcial{opacity:.55;background-image:repeating-linear-gradient(45deg,transparent 0 3px,rgba(255,255,255,.35) 3px 6px)}
+.baiPanelDrawer .biPerSpark{display:block;width:96px;height:28px;overflow:visible}
+.baiPanelDrawer .biPerSparkLine{fill:none;stroke:var(--color-info);stroke-width:1.5}
+.baiPanelDrawer .biPerDot{fill:var(--color-text-muted)}
+.baiPanelDrawer .biPerDotParcial{fill:none;stroke:var(--color-text-muted);stroke-width:1}
+.baiPanelDrawer .biPerDotBest{fill:var(--color-info)}
+.baiPanelDrawer .biPerDotWorst{fill:var(--mod-surface-elevated);stroke:var(--color-info);stroke-width:1.5}
+.baiPanelDrawer .biPerBest{font-weight:600;color:var(--color-text-primary);box-shadow:inset 0 -2px 0 var(--color-info)}
+.baiPanelDrawer .biPerWorst{box-shadow:inset 0 -2px 0 var(--color-text-muted)}
+.baiPanelDrawer .biPerMark{display:block;font-size:0.625rem;font-weight:500;color:var(--color-text-muted);text-transform:none;letter-spacing:0}
+.baiPanelDrawer .biPerComparacao{color:var(--color-text-secondary)!important;font-weight:500}
+/* celular: datas das colunas em 2 linhas, para Atual e Variação caberem sem rolar */
+@media (max-width:560px){
+.baiPanelDrawer .biPerTable th.biPerCol{white-space:normal;min-width:78px;max-width:96px}
+.baiPanelDrawer .biPerTable th,.baiPanelDrawer .biPerTable td{padding-left:6px;padding-right:6px}
+.baiPanelDrawer .biPerTable .biRowHead{max-width:84px;white-space:normal}
+.baiPanelDrawer .biPerTable .biDelta{white-space:nowrap;font-size:0.75rem}
+}
+/* mês a mês: datas em 2 linhas para os 6 meses caberem no painel */
+.baiPanelDrawer .biPerMeses th.biPerCol{white-space:normal;min-width:84px;max-width:104px}

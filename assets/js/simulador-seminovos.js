@@ -37,6 +37,7 @@
   var UI = window.NX_SIM_UI;
   var S = window.NX_SIMULADOR_SHARED;
   var SN = window.NX_SIMULADOR_SEMINOVOS_ADAPTER;
+  var CC = window.NX_CASH_CONVERSION_ADAPTER;
   var RATES = window.NX_SIMULADOR_RATES_PROVIDER;
 
   /* ---------- SIMLIVE1 (migrate simulator live rate authorities) ----------
@@ -148,13 +149,15 @@
     { id: 'tradicional', group: 'Financiamento', label: 'Tradicional (Balão)' },
     { id: 'ratetable', group: 'Financiamento', label: 'Linear' },
     { id: 'descobridor', group: 'Ferramentas', label: 'Descobridor de Taxa' },
-    { id: 'antecipacao', group: 'Ferramentas', label: 'Antecipação de Parcelas' }
+    { id: 'antecipacao', group: 'Ferramentas', label: 'Antecipação de Parcelas' },
+    { id: 'cashconversion', group: 'Ferramentas', label: 'Cash Conversion' }
   ];
   var MODE_DESC = {
     tradicional: 'Financiamento tradicional com balão opcional — a taxa depende do ano do veículo e da entrada.',
     ratetable: 'Condições próprias por ano do veículo e faixa de entrada — inclui prazo de 50x.',
     descobridor: 'Estima a taxa efetiva a partir do valor financiado, prazo e parcela.',
-    antecipacao: 'Calcula o valor com desconto para antecipação de parcelas.'
+    antecipacao: 'Calcula o valor com desconto para antecipação de parcelas.',
+    cashconversion: 'Compara o custo do financiamento com o rendimento de manter o capital aplicado.'
   };
   var TRAD_TERMS = [12, 24, 30, 36, 40, 42, 48];
 
@@ -495,6 +498,12 @@
           '<span class="hint">Limite máximo: ' + ANT_BALAO_MAX + ' balões.</span></div>' +
           '<div class="smBalloonList" id="sAntBaloesList"></div>' +
           '<button type="button" class="btn btn-primary" id="sCalc" style="width:100%;margin-top:6px">Calcular</button>';
+      case 'cashconversion':
+        return UI.moneyField('sCapital', 'Capital', 'R$ 100.000,00') +
+          UI.moneyField('sParcelaCC', 'Parcela ofertada', 'R$ 2.500,00') +
+          UI.numberField('sPrazoCC', 'Prazo (meses)', 36, { min: 1, max: 60 }) +
+          UI.percentField('sTaxaCC', 'Taxa de aplicação mensal (%)', '0,80') +
+          '<button type="button" class="btn btn-primary" id="sCalc" style="width:100%;margin-top:6px">Calcular</button>';
       default:
         return '';
     }
@@ -614,6 +623,8 @@
       var antQtdSel = document.getElementById('sAntQtdBaloes');
       if (antQtdSel) antQtdSel.addEventListener('change', function () { renderAntBaloesList(); });
       document.getElementById('sCalc').addEventListener('click', calcAntecipacao);
+    } else if (mode === 'cashconversion') {
+      document.getElementById('sCalc').addEventListener('click', calcCashConversion);
     }
   }
 
@@ -748,6 +759,19 @@
     html += UI.secondaryGrid(secondaryItems);
     if (r.missing) html = UI.warningBlock('Algumas parcelas não tinham percentual cadastrado na tabela e foram calculadas sem desconto.') + html;
     html += '<div class="smTableWrap"><table class="smTable"><thead><tr><th>Parcela</th><th>Vencimento</th><th>Valor bruto</th><th>Desconto</th><th>Valor final</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+    setResult(html);
+  }
+  function calcCashConversion() {
+    var taxaPct = Number(String(UI.textVal('sTaxaCC')).replace(',', '.')) || 0;
+    var r = CC.compute({ capital: UI.moneyVal('sCapital'), parcela: UI.moneyVal('sParcelaCC'), prazoMeses: UI.numVal('sPrazoCC'), taxaAplicacao: taxaPct / 100 });
+    if (!r) { setResult(UI.errorBlock('Não foi possível calcular com os dados informados.')); return; }
+    var html = '<div class="resultHero"><p class="kpiLabel">Classificação</p><p><span class="smClassBadge ' + r.classificacao + '">' + r.classificacao + '</span></p></div>';
+    html += UI.secondaryGrid([
+      { label: 'Valor final do financiamento', value: UI.brl(r.valorFinalFinanciamento) },
+      { label: 'Capital final projetado', value: UI.brl(r.valorFuturoAplicacao) },
+      { label: 'Rendimento projetado', value: UI.brl(r.rendimentoAplicacao) },
+      { label: 'Diferença projetada', value: UI.brl(r.diferencaProjetada) }
+    ]);
     setResult(html);
   }
 

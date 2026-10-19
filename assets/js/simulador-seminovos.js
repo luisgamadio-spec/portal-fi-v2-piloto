@@ -152,6 +152,12 @@
     { id: 'antecipacao', group: 'Ferramentas', label: 'Antecipação de Parcelas' },
     { id: 'cashconversion', group: 'Ferramentas', label: 'Cash Conversion' }
   ];
+  // Plano que abre selecionado (19/10/2026, pedido do Luis): sempre o Linear.
+  var MODO_INICIAL = 'ratetable';
+  // Qualquer pedido de plano inexistente abre o plano inicial.
+  function modoValido(id) {
+    return MODES.some(function (m) { return m.id === id; }) ? id : MODO_INICIAL;
+  }
   var MODE_DESC = {
     tradicional: 'Financiamento tradicional com balão opcional — a taxa depende do ano do veículo e da entrada.',
     ratetable: 'Condições próprias por ano do veículo e faixa de entrada — inclui prazo de 50x.',
@@ -184,7 +190,7 @@
   };
   function errMsg(code) { return ERROR_MSG[code] || 'Dados inválidos para este cálculo.'; }
 
-  var currentMode = MODES[0].id;
+  var currentMode = MODO_INICIAL;
   // BALAO-LIMIT-1: canonical max balloon count for Seminovos, recovered
   // from the live Secure source (modules/simulador-seminovos.html #tQtd
   // select, "Escolha até 2 balões. O limite e a taxa são identificados
@@ -379,7 +385,7 @@
   }
 
   function switchMode(id) {
-    currentMode = id;
+    currentMode = modoValido(id);
     balloons = [];
     antBaloes = [];
     document.getElementById('smModeNavRegion').innerHTML = modeNavHtml();
@@ -780,7 +786,7 @@
 
   window.NX_SIMULADOR_SEMINOVOS_PAGE = {
     render: function (outlet) {
-      currentMode = MODES[0].id;
+      currentMode = MODO_INICIAL;
       balloons = [];
       antBaloes = [];
       openCategory = null; // SIM-NAV-4 / F.2: all categories collapsed on entry

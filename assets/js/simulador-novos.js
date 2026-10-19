@@ -360,6 +360,16 @@
     { id: 'antecipacao', group: 'Ferramentas', label: 'Antecipação de Parcelas' },
     { id: 'cashconversion', group: 'Ferramentas', label: 'Cash Conversion' }
   ];
+  // Plano que abre selecionado (19/10/2026, pedido do Luis): sempre o Linear.
+  var MODO_INICIAL = 'linear';
+  // Planos ocultos temporariamente -- o código, as tabelas e o banco continuam.
+  // Para trazer o Semestral Triton / Outlander de volta, deixe a lista vazia: [].
+  var MODOS_OCULTOS = ['triton'];
+  MODES = MODES.filter(function (m) { return MODOS_OCULTOS.indexOf(m.id) === -1; });
+  // Qualquer pedido de plano oculto ou inexistente abre o plano inicial.
+  function modoValido(id) {
+    return MODES.some(function (m) { return m.id === id; }) ? id : MODO_INICIAL;
+  }
   var MODE_DESC = {
     tradicional: 'Financiamento tradicional com balão opcional — entrada mínima de 10%.',
     periodico: 'Parcelas semestrais ou anuais — entrada mínima varia por prazo.',
@@ -403,7 +413,7 @@
   };
   function errMsg(code) { return ERROR_MSG[code] || 'Dados inválidos para este cálculo.'; }
 
-  var currentMode = MODES[0].id;
+  var currentMode = MODO_INICIAL;
   // BALAO-LIMIT-1: canonical max balloon count for Novos, recovered from
   // the live Secure source (modules/simulador-novos.html #tQtd select,
   // "Escolha até 4 balões" -- Seminovos' own equivalent panel caps at 2,
@@ -598,7 +608,7 @@
   }
 
   function switchMode(id) {
-    currentMode = id;
+    currentMode = modoValido(id);
     balloons = [];
     antBaloes = [];
     document.getElementById('smModeNavRegion').innerHTML = modeNavHtml();
@@ -1291,7 +1301,7 @@
     getCampState: function () { return campState; },
     getCampAuthorityForTest: function () { return campAuthority; },
     render: function (outlet) {
-      currentMode = MODES[0].id;
+      currentMode = MODO_INICIAL;
       balloons = [];
       antBaloes = [];
       subsTaxa = null;

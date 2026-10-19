@@ -538,3 +538,151 @@
 /* ---- Plano Linear: formulário e "Parcela por prazo" com o mesmo topo e a mesma altura ---- */
 .smGrid.smGridEqual { align-items: stretch; }
 .smGrid.smGridEqual > .modPanelForm, .smGrid.smGridEqual > .modPanelResult { height: 100%; box-sizing: border-box; }
+
+/* ---------- Wave 2 (19/10/2026): leitura de balcão, no espírito do Portal antigo.
+   SÓ APARÊNCIA: nenhum valor é calculado aqui. Prazos e parcelas grandes e em
+   negrito (fonte de interface pesada, não o monoespaçado fino), rótulos curtos
+   em maiúsculas pequenas, saldo financiado em destaque, painéis proporcionais.
+   Tamanhos em rem: acompanham o A+ (Normal e Grande). ---------- */
+.smPage .smGrid { grid-template-columns: minmax(300px, 2fr) minmax(0, 3fr); gap: 20px; align-items: stretch; }
+@media (max-width: 900px) { .smPage .smGrid { grid-template-columns: 1fr; } }
+.smPage .smGrid > .modPanelForm, .smPage .smGrid > .modPanelResult { box-sizing: border-box; min-width: 0; }
+.smPage .smGrid.smGridStacked { grid-template-columns: 1fr; }
+.smPage .smModeDesc { font-size: 0.8125rem; color: var(--color-text-secondary); margin: 0 0 var(--space-3); }
+
+/* rótulos curtos em maiúsculas pequenas */
+.smPage .field label, .smPage .kpiLabel, .smPage .smScheduleLabel {
+  font-family: var(--font-ui); font-size: 0.6875rem; font-weight: 800; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--color-text-secondary);
+}
+.smPage .field { margin-bottom: 12px; }
+.smPage .field .hint { font-size: 0.75rem; }
+
+/* campos: número grande e firme */
+.smPage .input, .smPage .select { font-size: 0.9375rem; font-weight: 600; padding: 10px 12px; }
+.smPage .input.mono { font-family: var(--font-ui); font-weight: 700; }
+.smPage .inputAffix .prefix, .smPage .inputAffix .suffix { font-family: var(--font-ui); font-weight: 700; font-size: 0.8125rem; }
+.smPage .inputAffix .input { padding-left: 34px; }
+
+/* saldo financiado: só leitura -- fundo escuro, borda e número em vermelho */
+.smPage .smSaldoField .smSaldoInput {
+  background: var(--color-surface-2); border: 1.5px solid var(--color-accent-primary); color: var(--color-accent-primary);
+  font-size: 1.1875rem; font-weight: 900; cursor: default; pointer-events: none;
+}
+.smPage .smSaldoField .prefix { color: var(--color-accent-primary); }
+
+/* cabeçalho do resultado */
+.smPage .smResultHead { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; margin-bottom: 10px; }
+.smPage .smResultHead .kpiLabel { margin: 0; font-size: 0.75rem; color: var(--color-text-primary); }
+.smPage .smResultHeadNote { margin: 0; font-size: 0.8125rem; font-weight: 600; color: var(--color-text-secondary); }
+
+/* cartões por prazo (estilo do antigo) */
+.smPage .smTermGrid { gap: 10px; background: none; border: 0; border-radius: 0; overflow: visible; margin-top: 12px; }
+.smPage .smTermCard {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px;
+  background: var(--color-surface-2); border: 1px solid var(--color-hairline-strong); border-radius: var(--radius-md);
+  padding: 14px 8px 12px; min-width: 0;
+}
+.smPage .smTermCard .term {
+  font-family: var(--font-ui); font-size: clamp(1.625rem, calc(2.6vw * var(--fs-scale)), 2.25rem); font-weight: 900;
+  line-height: 1; color: var(--color-text-primary); letter-spacing: -.01em; margin: 0;
+}
+.smPage .smTermCard .term::after { content: ''; display: block; width: 34px; height: 3px; border-radius: 2px; background: var(--p-red-1, #ee4b57); margin: 8px auto 6px; }
+.smPage .smTermLbl { font-size: 0.625rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--color-text-muted); }
+.smPage .smTermCard .payment {
+  font-family: var(--font-ui); font-size: clamp(1.0625rem, calc(1.6vw * var(--fs-scale)), 1.375rem); font-weight: 900;
+  font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--color-text-primary);
+}
+.smPage .smTermCard .rate { margin-top: 6px; }
+/* nenhum cartão vem destacado; só o prazo que o vendedor tocar */
+.smPage .smTermCard { cursor: pointer; transition: border-color var(--duration-fast, .12s) ease, background var(--duration-fast, .12s) ease; }
+.smPage .smTermCard.best { background: var(--color-surface-2); }
+.smPage .smTermCard:hover { border-color: rgba(238,75,87,.55); }
+.smPage .smTermCard:focus-visible { outline: 2px solid var(--color-accent-primary); outline-offset: 2px; }
+.smPage .smTermCard.selected { background: linear-gradient(160deg, rgba(200,16,30,.30), rgba(143,10,20,.14)); border-color: var(--color-accent-primary); box-shadow: inset 0 0 0 1px var(--color-accent-primary); }
+.smPage .smTermCard.selected .term::after { background: #fff; }
+
+/* Coparticipado: rebate em 3 colunas iguais + valor final de venda */
+.smPage .smRebateTrio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 16px 0 10px; }
+.smPage .smRebateCard { background: var(--color-surface-2); border: 1px solid var(--color-hairline-strong); border-radius: var(--radius-md); padding: 12px 14px; min-width: 0; }
+.smPage .smRebateCard .kpiLabel { margin: 0 0 4px; }
+.smPage .smRebateValue { margin: 0; font-family: var(--font-ui); font-size: clamp(1rem, calc(1.5vw * var(--fs-scale)), 1.3125rem); font-weight: 900; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.smPage .smRebateNote { margin: 2px 0 0; font-size: 0.6875rem; color: var(--color-text-muted); }
+.smPage .smFinalSale { margin: 0; }
+@media (max-width: 560px) { .smPage .smRebateTrio { grid-template-columns: 1fr; } }
+@media (max-width: 1279px) { :root[data-fonte="grande"] .smPage .smRebateTrio { grid-template-columns: 1fr; } }
+
+/* valores principais: fonte pesada */
+.smPage .resultHero .resultValue { font-family: var(--font-ui); font-weight: 900; letter-spacing: -.015em; }
+.smPage .resultSecondaryGrid { gap: 12px 16px; padding: 14px 0 4px; margin-top: 14px; }
+.smPage .resultSecondaryGrid .val { font-family: var(--font-ui); font-size: 1.125rem; font-weight: 800; }
+.smPage .smEmphasisValue { font-family: var(--font-ui); font-weight: 900; }
+.smPage .smScheduleItem strong, .smPage .smPlanSpecialValue, .smPage .smSubsidiadaCardPrazo, .smPage .smSubsidiadaCardRow strong { font-family: var(--font-ui); font-weight: 800; }
+.smPage .smSubsidiadaCardPrazo { font-size: 1.5rem; font-weight: 900; }
+
+/* Balão: "36x de R$ X + balão de R$ Y no mês 36" */
+.smPage .smPlanRegular { font-size: 1.0625rem; font-weight: 600; }
+.smPage .smPlanRegular .smPlanRegularValue { color: var(--color-text-primary); }
+.smPage .smPlanRegularCount { font-family: var(--font-ui); font-size: clamp(1.625rem, calc(3.4vw * var(--fs-scale)), 2.25rem); font-weight: 900; }
+.smPage .smPlanBalao { margin: 6px 0 0; font-size: 1.0625rem; font-weight: 600; color: var(--color-text-secondary); }
+.smPage .smPlanBalao strong { font-size: 1.375rem; font-weight: 900; color: var(--p-red-1, #ee4b57); white-space: nowrap; }
+.smPage .smPlanSpecials { margin-top: 12px; padding-top: 12px; }
+.smPage .smPlanSpecialRow { justify-content: space-between; align-items: center; }
+.smPage .smPlanSpecialRow .kpiLabel { margin: 0; }
+
+@media (max-width: 480px) {
+  .smPage .smTermCard .term { font-size: 1.5rem; }
+  .smPage .smTermCard .payment { font-size: 1rem; }
+}
+
+.smPage .smBalloonRow { grid-template-columns: 124px minmax(150px, 1fr) auto; }
+@media (max-width: 480px) { .smPage .smBalloonRow { grid-template-columns: 1fr; } }
+.smPage .smEntryPair { grid-template-columns: minmax(0, 1fr) minmax(100px, 34%); }
+.smPage .smEntryPair .inputAffixSuffix .input { padding-left: 8px; padding-right: 24px; }
+
+/* Taxa Subsidiada (Wave 2): taxa escolhida em botões; cartões da taxa no painel da direita, 4 por linha;
+   "Copiar taxa banco" pequeno em cada cartão. */
+.smPage .smTaxaChips { display: flex; flex-wrap: wrap; gap: 6px; }
+.smPage .smTaxaChip {
+  min-width: 64px; padding: 8px 12px; cursor: pointer; font-family: var(--font-ui); font-size: 0.875rem; font-weight: 800;
+  font-variant-numeric: tabular-nums; color: var(--color-text-secondary); background: var(--color-surface-2);
+  border: 1px solid var(--color-hairline-strong); border-radius: var(--radius-sm);
+}
+.smPage .smTaxaChip:hover { border-color: rgba(238,75,87,.55); color: var(--color-text-primary); }
+.smPage .smTaxaChip.active { color: #fff; background: rgba(200,16,30,.28); border-color: var(--color-accent-primary); box-shadow: inset 0 0 0 1px var(--color-accent-primary); }
+.smPage .smTaxaChip:focus-visible { outline: 2px solid var(--color-accent-primary); outline-offset: 2px; }
+.smPage #nSubsTaxa + * { margin-top: 0; }
+.smPage .field:has(#nSubsTaxa) { margin-bottom: 18px; }
+.smPage #smResultRegion { container-type: inline-size; }
+.smPage .smSubsEscolha .t { font-size: 1rem; font-weight: 800; }
+.smPage .smSubsidiadaGroup .smResultHead { align-items: center; }
+.smPage .smSubsidiadaGroup .smSubsidiadaGroupHead { margin: 0; }
+.smPage .smSubsGrid4 { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+@container (max-width: 620px) { .smPage .smSubsGrid4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@container (max-width: 300px) { .smPage .smSubsGrid4 { grid-template-columns: 1fr; } }
+.smPage .smSubsGrid4 .smSubsidiadaCard { padding: 12px; gap: 6px; min-width: 0; }
+.smPage .smSubsGrid4 .smSubsidiadaCardHead { justify-content: center; }
+.smPage .smSubsGrid4 .smSubsidiadaCardPrazo { font-size: clamp(1.5rem, calc(2.2vw * var(--fs-scale)), 2rem); line-height: 1; }
+.smPage .smSubsGrid4 .smSubsidiadaCardTaxa { display: none; }
+.smPage .smSubsGrid4 .smSubsidiadaCardPill { text-align: center; margin: 0; }
+.smPage .smSubsGrid4 .smSubsidiadaCardRow { flex-direction: column; align-items: flex-start; gap: 2px; padding-top: 6px; }
+.smPage .smSubsGrid4 .smSubsidiadaCardRow strong { text-align: left; font-size: 1rem; white-space: nowrap; }
+.smPage .smSubsGrid4 .smSubsidiadaCardValueStack { align-items: flex-start; }
+.smPage .smSubsGrid4 .smSubsidiadaCardRow .kpiLabel { margin: 0; font-size: 0.625rem; }
+.smPage .smSubsGrid4 .smSubsidiadaCard { position: relative; }
+.smPage .smCopyTaxaIcon {
+  position: absolute; top: 6px; right: 6px; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;
+  padding: 0; cursor: pointer; color: var(--color-text-muted); background: transparent;
+  border: 1px solid var(--color-hairline-strong); border-radius: var(--radius-sm);
+}
+.smPage .smCopyTaxaIcon:hover { color: var(--color-text-primary); border-color: var(--color-accent-primary); }
+.smPage .smCopyTaxaIcon:focus-visible { outline: 2px solid var(--color-accent-primary); outline-offset: 2px; }
+/* aviso curto ("Taxa copiada"), no rodapé da tela */
+.smToast {
+  position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 12px); z-index: 1000; max-width: calc(100vw - 32px);
+  padding: 10px 16px; border-radius: var(--radius-sm); background: var(--color-elevated-surface, #222); color: var(--color-text-primary);
+  border: 1px solid var(--color-accent-primary); font-family: var(--font-ui); font-size: 0.875rem; font-weight: 700;
+  box-shadow: 0 6px 24px rgba(0,0,0,.45); opacity: 0; pointer-events: none; transition: opacity .18s ease, transform .18s ease;
+}
+.smToast.show { opacity: 1; transform: translate(-50%, 0); }
+@media (prefers-reduced-motion: reduce) { .smToast { transition: none; } }

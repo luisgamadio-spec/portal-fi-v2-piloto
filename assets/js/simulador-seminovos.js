@@ -454,7 +454,7 @@
   function wireResultTermGrid(itemCount) {
     var grid = document.querySelector('#smResultRegion .smTermGrid');
     if (!grid) return;
-    var ro = UI.wireTermResultGrid(grid, 132, itemCount);
+    var ro = UI.wireTermResultGrid(grid, 130, itemCount);
     if (ro) termGridObservers.push(ro);
   }
 
@@ -466,6 +466,7 @@
         return UI.moneyField('sBem', 'Valor do bem', 'R$ 80.000,00') +
           UI.entryField('sEntrada', 'Entrada', 'R$ 16.000,00', 'sBem') +
           '<span class="hint smBalaoLimite" id="sBalaoLimite" aria-live="polite" hidden></span>' +
+          UI.balanceField('sSaldo', 'sBem', 'sEntrada') +
           UI.numberField('sAno', 'Ano do veículo', 2022, { min: 1900, max: 2099, hint: 'Tabelas cadastradas para 2017–2024 e 2025–2099.' }) +
           termGridFieldHtml('sPrazo', 'Prazo', TRAD_TERMS, 24) +
           '<div class="field"><label>Balões</label><div class="smBalloonList" id="sBaloesList"></div>' +
@@ -478,6 +479,7 @@
         return UI.numberField('sAnoRT', 'Ano do veículo', 2020, { min: 2007, max: 2099, hint: 'Tabela cadastrada para 2007–2099.' }) +
           UI.moneyField('sValorRT', 'Valor do veículo', 'R$ 80.000,00') +
           UI.entryField('sEntradaRT', 'Entrada', 'R$ 0,00', 'sValorRT', 'Entrada permitida a partir de 0%.') +
+          UI.balanceField('sSaldo', 'sValorRT', 'sEntradaRT') +
           '<button type="button" class="btn btn-primary" id="sCalc" style="width:100%;margin-top:6px">Calcular</button>';
       case 'descobridor':
         return UI.moneyField('sFinanciado', 'Valor financiado', 'R$ 70.000,00') +
@@ -645,16 +647,17 @@
   }
   function renderBalloonStory(prazo, parcela, validBaloes) {
     var s = balloonScheduleSummary(prazo, parcela, validBaloes);
-    var html = '<div class="resultHero"><p class="kpiLabel">Plano simulado</p>';
-    if (s.regularCount > 0) {
-      html += '<p class="smPlanRegular"><span class="smPlanRegularCount">' + s.regularCount + 'x</span> de <span class="resultValue smPlanRegularValue">' + UI.brl(s.regularValue) + '</span></p>';
-    }
+    // Texto do vendedor: "36x de R$ X + balão de R$ Y no mês 36" (todas as
+    // parcelas do prazo; o balão é pago junto com a parcela daquele mês).
+    var html = '<div class="resultHero"><p class="kpiLabel">Plano simulado</p>' +
+      '<p class="smPlanRegular"><span class="smPlanRegularCount">' + prazo + 'x</span> de <span class="resultValue smPlanRegularValue">' + UI.brl(parcela) + '</span></p>';
+    html += s.specials.map(function (sp) {
+      return '<p class="smPlanBalao">+ balão de <strong>' + UI.brl(sp.balao) + '</strong> no mês ' + sp.mes + '</p>';
+    }).join('');
     html += '</div>';
     html += '<div class="smPlanSpecials">' + s.specials.map(function (sp) {
-      return '<div class="smPlanSpecialRow"><span class="kpiLabel">Parcela ' + sp.mes + '</span><span class="smPlanSpecialValue">' + UI.brl(sp.total) + '</span>' +
-        '<span class="smPlanSpecialBreakdown">' + UI.brl(parcela) + ' (parcela) + ' + UI.brl(sp.balao) + ' (balão)</span></div>';
+      return '<div class="smPlanSpecialRow"><span class="kpiLabel">Mês ' + sp.mes + ' (parcela + balão)</span><span class="smPlanSpecialValue">' + UI.brl(sp.total) + '</span></div>';
     }).join('') + '</div>';
-    html += '<p class="smFootnote">Total de parcelas do plano: ' + prazo + '. Os meses com balão substituem o valor da parcela regular naquele mês por um valor especial (parcela + balão) — não são parcelas adicionais.</p>';
     return html;
   }
 
@@ -716,8 +719,8 @@
     var r = SN.calcularLinearRateTable({ ano: UI.numVal('sAnoRT'), valor: UI.moneyVal('sValorRT'), entrada: UI.moneyVal('sEntradaRT'), rateTable: linearRTAuthority.getAuthority() });
     if (r.invalid) { setResult(UI.errorBlock('Verifique o ano do veículo e a entrada informada (entrada não pode ser maior que o valor do veículo, nem o percentual maior que 100%).')); return; }
     var html = UI.termGrid(r.terms.map(function (t) { return { prazo: t.prazo, payment: t.payment, rate: t.rate, best: false }; }));
-    setResult('<p class="kpiLabel" style="margin-bottom:12px">Parcela por prazo — faixa ' + (r.band || '—') + ' · entrada ' + r.eBand + '%</p>' + html +
-      '<p class="smFootnote">Financiado: ' + UI.brl(r.financiado) + '</p>');
+    setResult('<div class="smResultHead"><p class="kpiLabel">Parcela por prazo</p>' +
+      '<p class="smResultHeadNote">Ano ' + UI.esc(r.band || '—') + ' · taxa da faixa de entrada a partir de ' + r.eBand + '%</p></div>' + html);
     wireResultTermGrid(r.terms.length);
   }
   function calcDescobridor() {
@@ -784,7 +787,7 @@
       outlet.innerHTML =
         '<div class="smPage">' +
         '<span class="smProductBadge">Simulador · Seminovos</span>' +
-        '<div class="modPageHeader"><div class="modHeaderMain"><h1 class="modTitle">Simulador de Financiamento — Seminovos</h1><p class="modSubtitle">Motores extraídos e verificados (PORTAL-NEXT-08) — 0 recálculo de fórmula nesta interface.</p></div>' + analystCtaHtml('simulador_seminovos') + '</div>' +
+        '<div class="modPageHeader"><div class="modHeaderMain"><h1 class="modTitle">Simulador de Financiamento — Seminovos</h1><p class="modSubtitle">Escolha a modalidade, informe o valor e a entrada e veja as parcelas.</p></div>' + analystCtaHtml('simulador_seminovos') + '</div>' +
         '<div id="smModeNavRegion">' + modeNavHtml() + '</div>' +
         '<p class="smModeDesc" id="smModeDesc"></p>' +
         '<div class="smGrid" id="smMainGrid"><div class="modPanelForm" id="smFormRegion"></div><div class="modPanelResult" id="smResultRegion" aria-live="polite" aria-atomic="true"></div></div>' +

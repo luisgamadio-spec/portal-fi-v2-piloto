@@ -257,47 +257,60 @@
      Taxa" button on the SAME Taxas Subsidiadas screen, backed by
      simulador_get_taxa_botao (confirmed live, granted to
      `authenticated`), distinct from tabelaRebates/subsidiadasAuthority.
-     Independent widget region (#nBankRateWidgetRegion, rendered inside
-     the 'subsidiadas' form) with its OWN loading/error/ready state —
-     never blocks Taxas Subsidiadas' own Calcular. Only the formatted
+     Own loading/error/ready state (taxaBotaoAuthority) — never blocks
+     Taxas Subsidiadas' own Calcular. Only the formatted
      rate is ever shown/copied — no raw RPC payload exposed. */
-  function bankRateWidgetHtml() {
-    var st = taxaBotaoAuthority.getState();
-    if (st === 'ERROR') {
-      return '<div class="smBankRateWidget"><p class="kpiLabel">Copiar Taxa Banco</p>' +
-        UI.errorBlock(RATE_FAIL_MSG) +
-        '<button type="button" class="btn btn-secondary btn-sm" id="nBankRateRetry">Tentar novamente</button></div>';
-    }
-    if (st !== 'READY') {
-      return '<div class="smBankRateWidget"><p class="kpiLabel">Copiar Taxa Banco</p>' + UI.emptyBlock('Carregando taxas...') + '</div>';
-    }
-    var mapa = taxaBotaoAuthority.getAuthority() || {};
-    var prazos = Object.keys(mapa).map(Number).sort(function (a, b) { return a - b; });
-    return '<div class="smBankRateWidget"><p class="kpiLabel">Copiar Taxa Banco</p>' +
-      UI.selectField('nBankRatePrazo', 'Prazo', prazos.map(function (p) { return { value: p, label: p + 'x' }; }), prazos[0]) +
-      '<button type="button" class="btn btn-secondary" id="nBankRateCopyBtn" style="width:100%;margin-top:6px">Copiar Taxa</button>' +
-      '<span class="hint" id="nBankRateMsg" role="status" aria-live="polite"></span></div>';
+  // Wave 2 (19/10/2026): o "Copiar taxa banco" é um ícone pequeno no canto
+  // superior direito de cada cartão de prazo da Taxa Subsidiada (mesma
+  // tabela simulador_get_taxa_botao, mesmo texto copiado), visível só para
+  // Analista e Master (mesma regra ANALISTA_OR_MASTER do auth-core). Só
+  // aparece quando a tabela carregou e tem taxa para aquele prazo.
+  function podeCopiarTaxa() {
+    var ctx = (window.NX_AUTH_CORE && typeof window.NX_AUTH_CORE.getContext === 'function') ? window.NX_AUTH_CORE.getContext() : null;
+    var p = String((ctx && ctx.perfil) || '').trim().toUpperCase();
+    return !!ctx && (ctx.isMaster === true || p === 'MASTER' || p === 'ANALISTA');
   }
-  function refreshBankRateWidget() {
-    if (currentMode !== 'subsidiadas') return;
-    var el = document.getElementById('nBankRateWidgetRegion');
-    if (!el) return;
-    el.innerHTML = bankRateWidgetHtml();
-    wireBankRateWidget();
+  var ICONE_COPIAR = '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M10.5 3.5v-.5A1.5 1.5 0 0 0 9 1.5H4A1.5 1.5 0 0 0 2.5 3v5A1.5 1.5 0 0 0 4 9.5h.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
+  function bankRateButtonHtml(prazo) {
+    if (!podeCopiarTaxa() || taxaBotaoAuthority.getState() !== 'READY') return '';
+    var mapa = taxaBotaoAuthority.getAuthority() || {};
+    if (mapa[prazo] == null) return '';
+    return '<button type="button" class="smCopyTaxaIcon" data-copy-prazo="' + prazo + '" title="Copiar taxa banco" aria-label="Copiar taxa banco do prazo ' + prazo + 'x">' + ICONE_COPIAR + '</button>';
+  }
+  // Aviso curto no rodapé da tela, some sozinho.
+  var avisoTimer = null;
+  function avisoCurto(texto) {
+    var el = document.getElementById('smToast');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'smToast'; el.className = 'smToast'; el.setAttribute('role', 'status'); el.setAttribute('aria-live', 'polite');
+      document.body.appendChild(el);
+    }
+    el.textContent = texto;
+    el.classList.add('show');
+    clearTimeout(avisoTimer);
+    avisoTimer = setTimeout(function () { el.classList.remove('show'); }, 2200);
   }
   function formatTaxaBancoCopy(v) {
     return (v * 100).toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 }) + '%';
   }
-  function copiarTaxaBanco() {
-    var select = document.getElementById('nBankRatePrazo');
-    var msg = document.getElementById('nBankRateMsg');
-    if (!select) return;
+  if (!window.__nxSimCopiaTaxa) {
+    window.__nxSimCopiaTaxa = true;
+    document.addEventListener('click', function (ev) {
+      var btn = ev.target && ev.target.closest && ev.target.closest('[data-copy-prazo]');
+      if (!btn) return;
+      ev.stopPropagation();
+      copiarTaxaBanco(btn.getAttribute('data-copy-prazo'));
+    });
+  }
+  function copiarTaxaBanco(prazo) {
+    if (!podeCopiarTaxa()) return;
     var mapa = taxaBotaoAuthority.getAuthority() || {};
-    var taxa = mapa[Number(select.value)];
-    if (taxa == null) { if (msg) msg.textContent = 'Selecione um prazo válido.'; return; }
+    var taxa = mapa[Number(prazo)];
+    if (taxa == null) { avisoCurto('Taxa do banco indisponível para este prazo.'); return; }
     var texto = formatTaxaBancoCopy(taxa);
-    var done = function () { if (msg) msg.textContent = 'Taxa ' + texto + ' copiada com sucesso!'; };
-    var fail = function () { if (msg) msg.textContent = 'Não foi possível copiar automaticamente. Taxa: ' + texto; };
+    var done = function () { avisoCurto('Taxa copiada'); };
+    var fail = function () { avisoCurto('Não foi possível copiar. Taxa: ' + texto); };
     try {
       if (navigator.clipboard && window.isSecureContext) {
         navigator.clipboard.writeText(texto).then(done, fail);
@@ -314,20 +327,26 @@
       }
     } catch (e) { fail(); }
   }
-  function wireBankRateWidget() {
-    var st = taxaBotaoAuthority.getState();
-    if (st === 'IDLE') { taxaBotaoAuthority.ensure().then(refreshBankRateWidget, refreshBankRateWidget); return; }
-    if (st === 'ERROR') {
-      var retryBtn = document.getElementById('nBankRateRetry');
-      if (retryBtn) retryBtn.addEventListener('click', function () { taxaBotaoAuthority.ensure().then(refreshBankRateWidget, refreshBankRateWidget); });
-      return;
-    }
-    if (st !== 'READY') return;
-    var copyBtn = document.getElementById('nBankRateCopyBtn');
-    if (copyBtn) copyBtn.addEventListener('click', copiarTaxaBanco);
-    var prazoSel = document.getElementById('nBankRatePrazo');
-    if (prazoSel) prazoSel.addEventListener('change', function () { var msg = document.getElementById('nBankRateMsg'); if (msg) msg.textContent = ''; });
+  // Carrega a tabela do "Copiar taxa banco" em segundo plano; quando chega,
+  // redesenha os cartões já abertos para mostrar os botões.
+  function ensureBankRates() {
+    if (!podeCopiarTaxa() || taxaBotaoAuthority.getState() !== 'IDLE') return;
+    var redesenha = function () {
+      if (currentMode === 'subsidiadas' && document.querySelector('#smResultRegion .smSubsidiadaCard')) calcSubsidiadas();
+    };
+    taxaBotaoAuthority.ensure().then(redesenha, redesenha);
   }
+  // Taxas da tabela vigente (sem repetição, em ordem) para os botões de escolha.
+  function subsidiadasTaxas() {
+    var tabela = subsidiadasAuthority.getAuthority() || [];
+    var vistas = {};
+    tabela.forEach(function (x) { vistas[String(x.taxa)] = Number(x.taxa); });
+    return Object.keys(vistas).map(function (k) { return vistas[k]; }).sort(function (a, b) { return a - b; });
+  }
+  function taxaChipLabel(t) {
+    return Math.abs(t) < 1e-9 ? '0%' : (t * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
+  }
+  var SUBS_ESCOLHA = '<div class="emptyState smSubsEscolha"><div class="t">Escolha a taxa para ver os prazos</div>Informe o valor do bem e a entrada e toque em uma taxa.</div>';
 
   var MODES = [
     { id: 'tradicional', group: 'Financiamento', label: 'Tradicional (Balão)' },
@@ -391,6 +410,7 @@
   // a proven, documented divergence, not a guess).
   var MAX_BALOES = 4;
   var balloons = []; // {mes, valor} for Tradicional
+  var subsTaxa = null; // Taxa Subsidiada: taxa escolhida nos botões (só filtra o que é mostrado)
   // ANTECIPACAO-BALAO-1: restores Secure parity for the Antecipação
   // simulator's OWN, separate balloon feature (modules/simulador-
   // novos.html #aTemBalao/#aQtdBaloes, "Limite máximo: 8 balões.") --
@@ -596,12 +616,14 @@
     // never gets this class, since it never sets currentMode to
     // 'subsidiadas' -- that mode doesn't exist in its own MODES list).
     var mainGrid = document.getElementById('smMainGrid');
-    if (mainGrid) mainGrid.classList.toggle('smGridStacked', currentMode === 'subsidiadas');
+    // Wave 2: Taxa Subsidiada volta ao formato de dois painéis (cartões
+    // da taxa escolhida no painel da direita), sem o modo empilhado.
+    if (mainGrid) mainGrid.classList.remove('smGridStacked');
     if (mainGrid) mainGrid.classList.toggle('smGridEqual', currentMode === 'linear');
     var formRegion = document.getElementById('smFormRegion');
     var resultRegion = document.getElementById('smResultRegion');
     formRegion.innerHTML = formHtml(currentMode);
-    resultRegion.innerHTML = UI.emptyBlock('Preencha os campos e clique em Calcular.');
+    resultRegion.innerHTML = currentMode === 'subsidiadas' ? SUBS_ESCOLHA : UI.emptyBlock('Preencha os campos e clique em Calcular.');
     wireForm(currentMode);
     UI.syncEntries(formRegion);
   }
@@ -664,7 +686,7 @@
   function wireResultTermGrid(itemCount) {
     var grid = document.querySelector('#smResultRegion .smTermGrid');
     if (!grid) return;
-    var ro = UI.wireTermResultGrid(grid, 132, itemCount);
+    var ro = UI.wireTermResultGrid(grid, 130, itemCount);
     if (ro) termGridObservers.push(ro);
   }
 
@@ -678,6 +700,7 @@
         return UI.moneyField('nBem', 'Valor do bem', 'R$ 100.000,00') +
           UI.entryField('nEntrada', 'Entrada', 'R$ 20.000,00', 'nBem') +
           '<span class="hint smBalaoLimite" id="nBalaoLimite" aria-live="polite" hidden></span>' +
+          UI.balanceField('nSaldo', 'nBem', 'nEntrada') +
           termGridFieldHtml('nPrazo', 'Prazo', TRAD_TERMS, 48) +
           '<div class="field"><label>Balões</label>' +
           '<div class="smBalloonList" id="nBaloesList"></div>' +
@@ -690,6 +713,7 @@
         if (tradPeriodAuthority.getState() !== 'READY') return authorityGateHtml(tradPeriodAuthority);
         return UI.moneyField('nBem', 'Valor do bem', 'R$ 100.000,00') +
           UI.entryField('nEntrada', 'Entrada', 'R$ 20.000,00', 'nBem') +
+          UI.balanceField('nSaldo', 'nBem', 'nEntrada') +
           termGridFieldHtml('nPrazo', 'Prazo', PERIOD_TERMS, 48) +
           UI.segmentedField('nTipo', 'Periodicidade', [{ value: 'semestral', label: 'Semestral' }, { value: 'anual', label: 'Anual' }], 'semestral') +
           '<button type="button" class="btn btn-primary" id="nCalc" style="width:100%;margin-top:6px">Calcular</button>';
@@ -699,12 +723,14 @@
         // permanently hardcoded even in V1. Untouched.
         return UI.moneyField('nBem', 'Valor do bem', 'R$ 100.000,00') +
           UI.entryField('nEntrada', 'Entrada', 'R$ 50.000,00', 'nBem') +
+          UI.balanceField('nSaldo', 'nBem', 'nEntrada') +
           '<button type="button" class="btn btn-primary" id="nCalc" style="width:100%;margin-top:6px">Calcular</button>';
       case 'linear':
         // SIMLIVE1: gated on linearAuthority (simulador_get_linear_zerokm).
         if (linearAuthority.getState() !== 'READY') return authorityGateHtml(linearAuthority);
         return UI.moneyField('nBem', 'Valor do bem', 'R$ 100.000,00') +
-          UI.entryField('nEntrada', 'Entrada', 'R$ 20.000,00', 'nBem', 'Recalcula automaticamente, sem botão Calcular (comportamento original).');
+          UI.entryField('nEntrada', 'Entrada', 'R$ 20.000,00', 'nBem') +
+          UI.balanceField('nSaldo', 'nBem', 'nEntrada');
       case 'campanha':
         // Governed-authority gated: no form/Calcular exists unless
         // campState === 'READY' -- see the module-level comment above
@@ -720,18 +746,24 @@
         return UI.selectField('nModelo', 'Modelo', campAuthority.modelNames.map(function (name) { return { value: name, label: name }; }), campAuthority.modelNames[0]) +
           UI.moneyField('nSale', 'Valor de venda', 'R$ 200.000,00') +
           UI.entryField('nEntry', 'Entrada', 'R$ 120.000,00', 'nSale') +
+          UI.balanceField('nSaldo', 'nSale', 'nEntry') +
           '<button type="button" class="btn btn-primary" id="nCalc" style="width:100%;margin-top:6px">Calcular</button>';
       case 'subsidiadas':
         // SIMLIVE1: gated on subsidiadasAuthority (simulador_get_taxas_subsidiadas).
         // The "Copiar Taxa Banco" widget (Phase 7) below is a SEPARATE,
         // independent authority (taxaBotaoAuthority) -- it never blocks
-        // this screen's own Calcular; see bankRateWidgetHtml().
+        // this screen's own Calcular; see bankRateButtonHtml().
         if (subsidiadasAuthority.getState() !== 'READY') return authorityGateHtml(subsidiadasAuthority);
         return UI.moneyField('nBem', 'Valor do bem', 'R$ 100.000,00') +
           UI.entryField('nEntrada', 'Entrada', 'R$ 50.000,00', 'nBem') +
+          UI.balanceField('nSaldo', 'nBem', 'nEntrada') +
           UI.moneyField('nMinVenda', 'Valor mínimo de venda (opcional)', '') +
-          '<button type="button" class="btn btn-primary" id="nCalc" style="width:100%;margin-top:6px">Calcular</button>' +
-          '<div id="nBankRateWidgetRegion">' + bankRateWidgetHtml() + '</div>';
+          '<div class="field"><label>Taxa</label><div class="smTaxaChips" id="nSubsTaxa" role="group" aria-label="Taxa">' +
+          subsidiadasTaxas().map(function (t) {
+            var ativa = subsTaxa != null && Math.abs(subsTaxa - t) < 1e-9;
+            return '<button type="button" class="smTaxaChip' + (Math.abs(t) < 1e-9 ? ' smTaxaChipZero' : '') + (ativa ? ' active' : '') + '" data-taxa="' + t + '" aria-pressed="' + ativa + '">' + taxaChipLabel(t) + '</button>';
+          }).join('') + '</div></div>' +
+          '<button type="button" class="btn btn-primary" id="nCalc" style="width:100%;margin-top:6px">Calcular</button>';
       case 'triton':
         // SIMLIVE1: gated on tritonAuthority (simulador_get_semestral_
         // triton_outlander). Model <select> options come EXCLUSIVELY from
@@ -898,7 +930,14 @@
     } else if (mode === 'subsidiadas') {
       if (!wireAuthorityGate(subsidiadasAuthority, mode)) return;
       document.getElementById('nCalc').addEventListener('click', calcSubsidiadas);
-      wireBankRateWidget();
+      document.querySelectorAll('#nSubsTaxa .smTaxaChip').forEach(function (b) {
+        b.addEventListener('click', function () {
+          subsTaxa = Number(b.getAttribute('data-taxa'));
+          document.querySelectorAll('#nSubsTaxa .smTaxaChip').forEach(function (x) { x.classList.toggle('active', x === b); x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+          calcSubsidiadas();
+        });
+      });
+      ensureBankRates();
     } else if (mode === 'triton') {
       if (!wireAuthorityGate(tritonAuthority, mode)) return;
       document.getElementById('nCalc').addEventListener('click', calcTriton);
@@ -941,16 +980,17 @@
   }
   function renderBalloonStory(prazo, parcela, validBaloes) {
     var s = balloonScheduleSummary(prazo, parcela, validBaloes);
-    var html = '<div class="resultHero"><p class="kpiLabel">Plano simulado</p>';
-    if (s.regularCount > 0) {
-      html += '<p class="smPlanRegular"><span class="smPlanRegularCount">' + s.regularCount + 'x</span> de <span class="resultValue smPlanRegularValue">' + UI.brl(s.regularValue) + '</span></p>';
-    }
+    // Texto do vendedor: "36x de R$ X + balão de R$ Y no mês 36" (todas as
+    // parcelas do prazo; o balão é pago junto com a parcela daquele mês).
+    var html = '<div class="resultHero"><p class="kpiLabel">Plano simulado</p>' +
+      '<p class="smPlanRegular"><span class="smPlanRegularCount">' + prazo + 'x</span> de <span class="resultValue smPlanRegularValue">' + UI.brl(parcela) + '</span></p>';
+    html += s.specials.map(function (sp) {
+      return '<p class="smPlanBalao">+ balão de <strong>' + UI.brl(sp.balao) + '</strong> no mês ' + sp.mes + '</p>';
+    }).join('');
     html += '</div>';
     html += '<div class="smPlanSpecials">' + s.specials.map(function (sp) {
-      return '<div class="smPlanSpecialRow"><span class="kpiLabel">Parcela ' + sp.mes + '</span><span class="smPlanSpecialValue">' + UI.brl(sp.total) + '</span>' +
-        '<span class="smPlanSpecialBreakdown">' + UI.brl(parcela) + ' (parcela) + ' + UI.brl(sp.balao) + ' (balão)</span></div>';
+      return '<div class="smPlanSpecialRow"><span class="kpiLabel">Mês ' + sp.mes + ' (parcela + balão)</span><span class="smPlanSpecialValue">' + UI.brl(sp.total) + '</span></div>';
     }).join('') + '</div>';
-    html += '<p class="smFootnote">Total de parcelas do plano: ' + prazo + '. Os meses com balão substituem o valor da parcela regular naquele mês por um valor especial (parcela + balão) — não são parcelas adicionais.</p>';
     return html;
   }
 
@@ -1063,7 +1103,7 @@
     // percentage, never claiming a monthly/annual period for this
     // specific flat-coefficient plan -- verified from source, not
     // guessed (Gate 13).
-    html += UI.secondaryGrid([{ label: 'Entrada', value: UI.pct1(r.pe) }, { label: 'Financiado', value: UI.brl(r.fin) }, { label: 'Taxa da tabela', value: UI.pct2(r.taxa) }]);
+    html += UI.secondaryGrid([{ label: 'Entrada', value: UI.pct1(r.pe) }, { label: 'Taxa da tabela', value: UI.pct2(r.taxa) }]);
     // Gate 8: explicit prazo total + single special month, derived
     // from r.plano.prazo (the engine's own authoritative value) --
     // never hardcoded.
@@ -1074,10 +1114,9 @@
     var r = N.calcularLinear({ bem: UI.moneyVal('nBem'), entrada: UI.moneyVal('nEntrada'), tabelaLinear: linearAuthority.getAuthority() });
     if (r.empty) { setResult(UI.emptyBlock('Preencha o valor do bem e a entrada para visualizar todos os prazos.')); return; }
     if (r.error) { setResult(UI.errorBlock(errMsg(r.error))); return; }
-    var valid = r.itens.filter(function (x) { return x.parcela > 0; });
-    var menor = valid.length ? Math.min.apply(null, valid.map(function (x) { return x.parcela; })) : null;
-    var html = UI.termGrid(r.itens.map(function (x) { return { prazo: x.prazo, payment: x.parcela, rate: null, best: menor != null && x.parcela != null && Math.abs(x.parcela - menor) < 0.01 }; }));
-    setResult('<p class="kpiLabel" style="margin-bottom:12px">Parcela por prazo — faixa de entrada ' + UI.pct1(r.faixa) + '</p>' + html);
+    var html = UI.termGrid(r.itens.map(function (x) { return { prazo: x.prazo, payment: x.parcela, rate: null, best: false }; }));
+    setResult('<div class="smResultHead"><p class="kpiLabel">Parcela por prazo</p>' +
+      '<p class="smResultHeadNote">Taxa da faixa de entrada a partir de ' + UI.fmtEntryPct(r.faixa) + '%</p></div>' + html);
     wireResultTermGrid(r.itens.length);
   }
   function calcCampanha() {
@@ -1098,17 +1137,16 @@
     // parcela-per-prazo is supporting context first, then Rebate
     // Brabus + Valor Final de Venda get a dedicated emphasized block
     // (visual only; the values themselves are untouched engine output).
-    var html = '<p class="kpiLabel" style="margin-bottom:12px">Parcela por prazo</p>' +
+    // Wave 2: rebate em 3 colunas iguais (total, HPE, Brabus) e o valor
+    // final de venda em destaque logo abaixo -- os valores são os do motor.
+    var html = '<div class="smResultHead"><p class="kpiLabel">Parcela por prazo</p></div>' +
       UI.termGrid(r.terms.map(function (t) { return { prazo: t.prazo, payment: t.payment, rate: t.rate, best: false }; }));
-    html += '<div class="smEmphasisPair">' +
-      '<div class="smEmphasisCard"><p class="kpiLabel">Rebate Brabus</p><p class="smEmphasisValue">' + UI.brl(r.rebateBrabus) + '</p></div>' +
-      '<div class="smEmphasisCard smEmphasisCardPrimary"><p class="kpiLabel">Valor final de venda</p><p class="smEmphasisValue smEmphasisValuePrimary">' + UI.brl(r.finalSale) + '</p></div>' +
+    html += '<div class="smRebateTrio">' +
+      '<div class="smRebateCard"><p class="kpiLabel">Rebate total</p><p class="smRebateValue">' + UI.brl(r.rebateTotal) + '</p><p class="smRebateNote">custo comercial da taxa</p></div>' +
+      '<div class="smRebateCard"><p class="kpiLabel">Rebate HPE</p><p class="smRebateValue">' + UI.brl(r.rebateHpe) + '</p></div>' +
+      '<div class="smRebateCard"><p class="kpiLabel">Rebate Brabus</p><p class="smRebateValue">' + UI.brl(r.rebateBrabus) + '</p></div>' +
       '</div>';
-    html += UI.secondaryGrid([
-      { label: 'Financiado', value: UI.brl(r.financed) },
-      { label: 'Rebate total — custo comercial da taxa', value: UI.brl(r.rebateTotal) },
-      { label: 'Rebate HPE', value: UI.brl(r.rebateHpe) }
-    ]);
+    html += '<div class="smEmphasisCard smEmphasisCardPrimary smFinalSale"><p class="kpiLabel">Valor final de venda</p><p class="smEmphasisValue smEmphasisValuePrimary">' + UI.brl(r.finalSale) + '</p></div>';
     setResult(html);
     wireResultTermGrid(r.terms.length);
   }
@@ -1116,6 +1154,9 @@
     var r = N.calcularSubsidiadas({ bem: UI.moneyVal('nBem'), entrada: UI.moneyVal('nEntrada'), minVenda: UI.moneyVal('nMinVenda'), tabelaRebates: subsidiadasAuthority.getAuthority() });
     if (r.empty) { setResult(UI.emptyBlock('Preencha os campos e clique em Calcular.')); return; }
     if (r.error) { setResult(UI.errorBlock(errMsg(r.error))); return; }
+    // Wave 2: o vendedor escolhe a taxa nos botões; aqui só se FILTRA o
+    // r.rows do motor para a taxa escolhida (nenhum valor recalculado).
+    if (subsTaxa == null) { setResult(SUBS_ESCOLHA); return; }
     // PORTAL-NEXT-08.3 Change 5 (Gates 16-22): replaced the large
     // vertically-stacked rows with a compact comparison card grid.
     // PRESENTATION ONLY (Gate 27) -- every card uses the exact frozen
@@ -1124,7 +1165,7 @@
     // extraction of production's own montaDadosSubsidiadas ranking),
     // not a badge invented in this Wave (Gate 19).
     var byTaxa = {};
-    r.rows.forEach(function (row) { (byTaxa[row.taxa] = byTaxa[row.taxa] || []).push(row); });
+    r.rows.forEach(function (row) { if (Math.abs(Number(row.taxa) - subsTaxa) < 1e-9) (byTaxa[row.taxa] = byTaxa[row.taxa] || []).push(row); });
     var groupsHtml = Object.keys(byTaxa).sort(function (a, b) { return Number(a) - Number(b); }).map(function (taxa) {
       var cards = byTaxa[taxa].sort(function (a, b) { return a.prazo - b.prazo; }).map(function (row) {
         // Gate 20: "Simulado" (shown identically on every card when no
@@ -1136,7 +1177,7 @@
         if (row.melhor) pill = '<span class="smPill excellent">Melhor opção</span>';
         else if (r.minVenda > 0) pill = '<span class="smPill ' + (row.viavel ? 'good' : 'bad') + '">' + (row.viavel ? 'Dentro do mínimo' : 'Abaixo do mínimo') + '</span>';
         return '<div class="smSubsidiadaCard' + (row.melhor ? ' best' : '') + '">' +
-          '<div class="smSubsidiadaCardHead"><span class="smSubsidiadaCardPrazo">' + row.prazo + 'x</span><span class="smSubsidiadaCardTaxa">' + UI.rateBadge(row.taxa) + '</span></div>' +
+          '<div class="smSubsidiadaCardHead"><span class="smSubsidiadaCardPrazo">' + row.prazo + 'x</span><span class="smSubsidiadaCardTaxa">' + UI.rateBadge(row.taxa) + '</span>' + bankRateButtonHtml(row.prazo) + '</div>' +
           (pill ? '<div class="smSubsidiadaCardPill">' + pill + '</div>' : '') +
           '<div class="smSubsidiadaCardRow"><span class="kpiLabel">Parcela</span><strong>' + UI.brl(row.parcela) + '</strong></div>' +
           // Gate 1-3 (PORTAL-NEXT-08.4): row.rebate is the engine's own
@@ -1150,8 +1191,9 @@
           '<div class="smSubsidiadaCardRow smSubsidiadaCardRowEmphasis"><span class="kpiLabel">Valor final de venda</span><strong>' + UI.brl(row.valorFinalVenda) + '</strong></div>' +
           '</div>';
       }).join('');
-      return '<div class="smSubsidiadaGroup"><p class="smSubsidiadaGroupHead">' + UI.rateBadge(Number(taxa), true) + '</p><div class="smSubsidiadaGrid">' + cards + '</div></div>';
+      return '<div class="smSubsidiadaGroup"><div class="smResultHead"><p class="kpiLabel">Prazos</p><p class="smSubsidiadaGroupHead">' + UI.rateBadge(Number(taxa), true) + '</p></div><div class="smSubsidiadaGrid smSubsGrid4">' + cards + '</div></div>';
     }).join('');
+    if (!groupsHtml) { setResult(SUBS_ESCOLHA); return; }
     setResult('<div class="smSubsidiadaGroups">' + groupsHtml + '</div>' +
       '<p class="smFootnote">Rebate é o custo comercial da taxa subsidiada — nunca um desconto concedido ao cliente. Valor final de venda já considera o valor líquido para a loja.</p>');
   }
@@ -1163,7 +1205,7 @@
       UI.resultHero('Parcela (4x semestrais)', r.parcela);
     html += UI.secondaryGrid([
       { label: 'Entrada fixa (' + UI.pct1(r.entradaPct != null ? r.entradaPct : 0.6) + ')', value: UI.brl(r.entrada) },
-      { label: 'Financiado', value: UI.brl(r.financiado) },
+      { label: 'Saldo financiado', value: UI.brl(r.financiado) },
       { label: 'Rebate total — custo comercial', value: UI.brl(r.rebateTotal) },
       { label: 'Rebate Brabus', value: UI.brl(r.rebateBrabus) },
       { label: 'Rebate HPE', value: UI.brl(r.rebateHpe) },
@@ -1250,11 +1292,12 @@
       currentMode = MODES[0].id;
       balloons = [];
       antBaloes = [];
+      subsTaxa = null;
       openCategory = null; // SIM-NAV-4 / F.2: all categories collapsed on entry
       outlet.innerHTML =
         '<div class="smPage">' +
         '<span class="smProductBadge">Simulador · Novos</span>' +
-        '<div class="modPageHeader"><div class="modHeaderMain"><h1 class="modTitle">Simulador de Financiamento — Novos</h1><p class="modSubtitle">Motores extraídos e verificados (PORTAL-NEXT-08) — 0 recálculo de fórmula nesta interface.</p></div>' + analystCtaHtml('simulador_novos') + '</div>' +
+        '<div class="modPageHeader"><div class="modHeaderMain"><h1 class="modTitle">Simulador de Financiamento — Novos</h1><p class="modSubtitle">Escolha a modalidade, informe o valor e a entrada e veja as parcelas.</p></div>' + analystCtaHtml('simulador_novos') + '</div>' +
         '<div id="smModeNavRegion">' + modeNavHtml() + '</div>' +
         '<p class="smModeDesc" id="smModeDesc"></p>' +
         '<div class="smGrid" id="smMainGrid"><div class="modPanelForm smFormCard" id="smFormRegion"></div><div class="modPanelResult" id="smResultRegion" aria-live="polite" aria-atomic="true"></div></div>' +

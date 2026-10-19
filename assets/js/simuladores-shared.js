@@ -115,15 +115,34 @@
   }
   function syncEntries(root) {
     (root || document).querySelectorAll('input[data-entry-money]').forEach(entryPctFromMoney);
+    syncSaldos(root);
+  }
+  /* Saldo financiado (como no Portal antigo): campo só de leitura logo abaixo
+     da entrada, = valor do bem − entrada (nunca negativo). Só apresentação:
+     nenhum motor lê este campo; o resultado mostra o financiado do próprio motor. */
+  function balanceField(id, bemId, entradaId) {
+    return '<div class="field smSaldoField"><label for="' + id + '">Saldo financiado</label>' +
+      '<div class="inputAffix"><span class="prefix">R$</span>' +
+      '<input class="input mono smSaldoInput" id="' + id + '" readonly tabindex="-1" aria-readonly="true" data-saldo-bem="' + esc(bemId) + '" data-saldo-ent="' + esc(entradaId) + '" value=""></div></div>';
+  }
+  function syncSaldos(root) {
+    (root || document).querySelectorAll('input[data-saldo-bem]').forEach(function (el) {
+      var bemEl = document.getElementById(el.getAttribute('data-saldo-bem'));
+      var entEl = document.getElementById(el.getAttribute('data-saldo-ent'));
+      var bem = bemEl ? S.parseBRL(bemEl.value) : 0;
+      var ent = entEl ? S.parseBRL(entEl.value) : 0;
+      el.value = bem > 0 ? brlDigits(Math.max(0, bem - (ent > 0 ? ent : 0))) : '';
+    });
   }
   if (!window.__nxSimEntrada) {
     window.__nxSimEntrada = true;
     document.addEventListener('input', function (ev) {
       var t = ev.target;
       if (!t || t.tagName !== 'INPUT') return;
-      if (t.hasAttribute('data-entry-pct')) { entryMoneyFromPct(t); return; }
-      if (t.hasAttribute('data-entry-money')) { entryPctFromMoney(t); return; }
+      if (t.hasAttribute('data-entry-pct')) { entryMoneyFromPct(t); syncSaldos(); return; }
+      if (t.hasAttribute('data-entry-money')) { entryPctFromMoney(t); syncSaldos(); return; }
       if (t.id) document.querySelectorAll('input[data-entry-money][data-entry-bem="' + t.id + '"]').forEach(entryPctFromMoney);
+      syncSaldos();
     });
     // a máscara de R$ reformata no blur; o % acompanha o valor final
     document.addEventListener('blur', function (ev) {
@@ -131,6 +150,7 @@
       if (!t || t.tagName !== 'INPUT') return;
       if (t.hasAttribute('data-entry-money')) entryPctFromMoney(t);
       else if (t.id) document.querySelectorAll('input[data-entry-money][data-entry-bem="' + t.id + '"]').forEach(entryPctFromMoney);
+      syncSaldos();
     }, true);
   }
 
@@ -279,11 +299,34 @@
   }
   function termGrid(items) {
     // items: [{prazo, payment (number|null), rate (number|null), best (bool)}]
+    // Cartão no estilo do Portal antigo: prazo grande, filete vermelho,
+    // rótulo "PARCELA" e o valor em negrito. Nenhum cartão vem destacado:
+    // o destaque é só o do prazo que o vendedor tocar (.selected).
     return '<div class="smTermGrid">' + items.map(function (it) {
-      return '<div class="smTermCard' + (it.best ? ' best' : '') + '"><div class="term">' + it.prazo + 'x</div>' +
-        (it.payment != null ? '<div class="payment">' + esc(brl(it.payment)) + '</div>' + (it.rate != null ? '<div class="rate">' + rateBadge(it.rate) + '</div>' : '') : '<div class="unavailable">—</div>') +
+      return '<div class="smTermCard' + (it.best ? ' best' : '') + '" role="button" tabindex="0" aria-pressed="false"><div class="term">' + it.prazo + 'x</div>' +
+        (it.payment != null ? '<div class="smTermLbl">Parcela</div><div class="payment">' + esc(brl(it.payment)) + '</div>' + (it.rate != null ? '<div class="rate">' + rateBadge(it.rate) + '</div>' : '') : '<div class="unavailable">—</div>') +
         '</div>';
     }).join('') + '</div>';
+  }
+
+  // Tocar um cartão de prazo destaca só ele (tocar de novo tira o destaque).
+  function selecionaPrazo(card) {
+    var grid = card.parentElement;
+    var ligar = !card.classList.contains('selected');
+    grid.querySelectorAll('.smTermCard').forEach(function (c) { c.classList.remove('selected'); c.setAttribute('aria-pressed', 'false'); });
+    if (ligar) { card.classList.add('selected'); card.setAttribute('aria-pressed', 'true'); }
+  }
+  if (!window.__nxSimPrazo) {
+    window.__nxSimPrazo = true;
+    document.addEventListener('click', function (ev) {
+      var card = ev.target && ev.target.closest && ev.target.closest('.smTermGrid > .smTermCard');
+      if (card) selecionaPrazo(card);
+    });
+    document.addEventListener('keydown', function (ev) {
+      if (ev.key !== 'Enter' && ev.key !== ' ') return;
+      var card = ev.target && ev.target.closest && ev.target.closest('.smTermGrid > .smTermCard');
+      if (card) { ev.preventDefault(); selecionaPrazo(card); }
+    });
   }
 
   /* ---------- V2_SIMULATOR_INSTALLMENT_GRID_VISUAL_FIX ----------
@@ -335,7 +378,9 @@
     if (!gridEl) return null;
     function recompute() {
       var w = gridEl.clientWidth || (gridEl.parentElement && gridEl.parentElement.clientWidth) || 0;
-      gridEl.style.setProperty('--term-grid-cols', String(balancedColumnsExact(w, itemMinWidth, n)));
+      // largura mínima acompanha o A+ (o rem cresce no nível Grande)
+      var escala = (parseFloat(getComputedStyle(document.documentElement).fontSize) || 16) / 16;
+      gridEl.style.setProperty('--term-grid-cols', String(balancedColumnsExact(w, itemMinWidth * escala, n)));
     }
     recompute();
     if (window.ResizeObserver) {
@@ -359,7 +404,7 @@
   window.NX_SIM_UI = {
     esc: esc, brl: brl, brlDigits: brlDigits, pct1: pct1, pct2: pct2,
     moneyField: moneyField, numberField: numberField, percentField: percentField, dateField: dateField,
-    entryField: entryField, syncEntries: syncEntries, parsePctBR: parsePctBR, fmtEntryPct: fmtEntryPct,
+    entryField: entryField, syncEntries: syncEntries, balanceField: balanceField, syncSaldos: syncSaldos, parsePctBR: parsePctBR, fmtEntryPct: fmtEntryPct,
     segmentedField: segmentedField, selectField: selectField,
     getSegmentedValue: getSegmentedValue, wireSegmented: wireSegmented, wireMoneyMask: wireMoneyMask,
     formatMoneyTyping: formatMoneyTyping, formatPercentTyping: formatPercentTyping,

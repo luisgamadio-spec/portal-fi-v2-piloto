@@ -348,3 +348,19 @@ body.nav-drawer-open .pNavBackdrop{display:block}
 @media(max-width:340px){
   .pUserNameText{display:none}
 }
+
+/* ---- Landing sem a barra lateral (19/10/2026, pedido do Luis) ----
+   Só na Landing (body.landing-active): a barra lateral repetia as categorias e
+   duplicava o logo; fica um logo só, o do topo. Dentro dos módulos nada muda. */
+body.landing-active .pGlobalNav,body.landing-active .pNavTrigger,body.landing-active .pNavBackdrop{display:none!important}
+/* Categorias: cada uma em uma linha, fonte acompanhando a largura da coluna;
+   todos os nomes começam no mesmo ponto (o Living Core da Brabus Intelligence
+   ocupa a coluna dos números). */
+@media(min-width:769px){
+  .fNavCol{container-type:inline-size}
+  .fNavItem .label{white-space:nowrap;font-size:min(2.8125rem,6.8cqi)}
+  .fNavItemIntel .idx{opacity:1;display:flex;align-items:center;align-self:center}
+}
+@media(max-width:768px){
+  .fNavItemIntel .idx{display:flex;align-items:center;align-self:center;width:auto}
+}

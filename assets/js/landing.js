@@ -289,7 +289,9 @@
         ? '<span class="fNavLivingCore" aria-hidden="true"><span class="fNavCoreRing"></span><span class="fNavCoreNucleus"></span></span>'
         : '';
       return '<button type="button" class="fNavItem' + (isIntel ? ' fNavItemIntel' : '') + (i === 0 ? ' active' : '') + '" id="fNavTab' + i + '" role="tab" aria-selected="' + (i === 0 ? 'true' : 'false') + '" aria-controls="landingModuleDetail" data-idx="' + i + '">' +
-        '<span class="idx">' + String(i + 1).padStart(2, '0') + '</span>' + coreHtml + '<span class="label">' + esc(g.label) + '</span></button>';
+        // 19/10/2026: o Living Core fica na coluna dos números (no lugar do
+        // número), para todos os nomes começarem no mesmo ponto.
+        '<span class="idx">' + (isIntel ? coreHtml : String(i + 1).padStart(2, '0')) + '</span><span class="label">' + esc(g.label) + '</span></button>';
     }).join('');
     return '<div class="fShell" id="landingShell">' +
       '<div class="contextBeam" id="landingBeam"></div>' +

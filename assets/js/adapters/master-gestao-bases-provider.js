@@ -79,7 +79,11 @@
     master_operational_import_sales: true,
     master_operational_import_finance: true,
     master_operational_import_sellers: true,
-    master_operational_finalize_import: true
+    master_operational_finalize_import: true,
+    // Fase 3 (19/10/2026): Base 03 em partes + consolidação, e o registro de duração -- simulados fora da produção
+    master_operational_import_spf: true,
+    master_operational_base03_consolidar: true,
+    master_operational_registrar_duracao: true
   };
   function gbIsBlockedWrite(name, params) {
     if (GB_WRITE_RPC_NAMES[name]) return true;
@@ -99,7 +103,12 @@
       case 'master_operational_import_sales':
       case 'master_operational_import_finance':
       case 'master_operational_import_sellers':
+      case 'master_operational_import_spf':
         return Array.isArray(params && params.p_rows) ? params.p_rows.length : 0;
+      case 'master_operational_base03_consolidar':
+        return { dry_run: false, simulated: true, spf_batch_id: params && params.p_spf_batch_id };
+      case 'master_operational_registrar_duracao':
+        return { alerta: false, simulated: true, limite_ms: 5000 };
       case 'master_operational_finalize_import':
         return true;
       case 'master_operational_apply_base03':
@@ -216,6 +225,27 @@
     }, params.signal);
   }
 
+  // ---------- Base 03 em partes (Fase 3, 19/10/2026) ----------
+  function importSpf(batchId, rows, params) {
+    params = params || {};
+    return callRpc('master_operational_import_spf', { p_batch_id: batchId, p_rows: rows }, params.signal);
+  }
+  function consolidarBase03(spfBatchId, financeRows, params) {
+    params = params || {};
+    return callRpc('master_operational_base03_consolidar', { p_spf_batch_id: spfBatchId, p_finance_rows: financeRows }, params.signal);
+  }
+  // ---------- duração das importações ----------
+  function registrarDuracao(dados, params) {
+    params = params || {};
+    return callRpc('master_operational_registrar_duracao', { p_dados: dados }, params.signal);
+  }
+  function listDuracoes(limite, params) {
+    params = params || {};
+    return callRpc('master_operational_list_duracoes', { p_limite: limite || 12 }, params.signal).then(function (data) {
+      return Array.isArray(data) ? data : [];
+    });
+  }
+
   // ---------- read/status ----------
   function hasValidBatchesShape(data) {
     return Array.isArray(data);
@@ -258,6 +288,10 @@
     importSellers: importSellers,
     finalizeImport: finalizeImport,
     applyBase03: applyBase03,
+    importSpf: importSpf,
+    consolidarBase03: consolidarBase03,
+    registrarDuracao: registrarDuracao,
+    listDuracoes: listDuracoes,
     listBatches: listBatches,
     listSellers: listSellers,
     listSpfExtraBase02: listSpfExtraBase02,

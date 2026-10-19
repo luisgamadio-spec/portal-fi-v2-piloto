@@ -1927,6 +1927,8 @@
         gbState.loading = false;
         gbState.loaded = true;
         renderPanel();
+        // Fase 3/4: duração das últimas importações (só leitura; se falhar, a tela segue sem a tabela)
+        GB_PROVIDER.listDuracoes(12).then(function (d) { gbState.duracoes = d; if (currentSection === 'gestaoBases') renderPanel(); }, function () { gbState.duracoes = null; });
       },
       function (err) {
         gbState.loading = false;
@@ -1990,6 +1992,7 @@
       html += '<div class="gbGrid">' + GB_VM.SOURCE_ORDER.map(function (src) {
         return gbCardHtml(src, gbState.officialBatches[src]);
       }).join('') + '</div>';
+      html += gbDuracoesHtml();
     }
     html += '<input type="file" id="gbFileInput" accept=".xlsx,.xls" hidden>';
     return html;
@@ -2150,22 +2153,89 @@
   }
   function gbErrorBodyHtml(m) {
     return '<p class="gbErrText">' + esc(m.message || 'Falha ao processar o arquivo.') + '</p>' +
-      '<p class="note">A base oficial anterior não foi alterada.</p>' +
+      (/base oficial anterior/i.test(m.message || '') ? '' : '<p class="note">A base oficial anterior não foi alterada.</p>') +
       '<div class="adminModalActions"><button type="button" class="modBtn" id="gbErrorCloseBtn">Fechar</button></div>';
   }
 
-  function gbSetProgress(done, total) {
+  function gbSetProgress(done, total, texto) {
     var pct = total ? Math.round((done / total) * 100) : 0;
     var bar = document.getElementById('gbProgressBar');
     var txt = document.getElementById('gbProgressText');
     if (bar) bar.style.width = pct + '%';
-    if (txt) txt.textContent = GB_VM.gbFmtNum(done) + ' / ' + GB_VM.gbFmtNum(total) + ' registros (' + pct + '%)';
+    if (txt) txt.textContent = texto || (GB_VM.gbFmtNum(done) + ' / ' + GB_VM.gbFmtNum(total) + ' registros (' + pct + '%)');
+  }
+
+  // ---------- Fase 3/4 (19/10/2026): medição de cada chamada, mensagens de falha e registro da duração ----------
+  var GB_LIMITE_AVISO_MS = 5000; // o banco corta cada chamada em 8 s; acima de 5 s já é aviso
+  function gbNovoMedidor(sourceType, arquivo, linhas) {
+    return { sourceType: sourceType, arquivo: arquivo, linhas: linhas, inicio: Date.now(), etapas: [], partes: 0, batchId: null };
+  }
+  function gbMedir(med, etapa, fn) {
+    var t0 = Date.now();
+    return fn().then(function (r) {
+      if (med) med.etapas.push({ etapa: etapa, ms: Date.now() - t0 });
+      return r;
+    }, function (e) {
+      if (med) med.etapas.push({ etapa: etapa, ms: Date.now() - t0, erro: true });
+      return Promise.reject(e);
+    });
+  }
+  function gbMaiorChamada(med) {
+    return (med && med.etapas.length) ? Math.max.apply(null, med.etapas.map(function (e) { return e.ms; })) : 0;
+  }
+  function gbSegundos(ms) { return (Math.round(ms / 100) / 10).toLocaleString('pt-BR') + ' s'; }
+  function gbRegistrarDuracao(med, resultado, erro) {
+    if (!med) return Promise.resolve(null);
+    var dados = {
+      source_type: med.sourceType, arquivo: med.arquivo, linhas: med.linhas, partes: med.partes, batch_id: med.batchId,
+      total_ms: med.etapas.reduce(function (s, e) { return s + e.ms; }, 0), maior_chamada_ms: gbMaiorChamada(med),
+      etapas: med.etapas.slice(0, 60), resultado: resultado, erro: erro || null
+    };
+    return GB_PROVIDER.registrarDuracao(dados).then(function (r) { return r; }, function () { return null; });
+  }
+  function gbAvisoDuracao(med) {
+    var maior = gbMaiorChamada(med);
+    if (maior <= GB_LIMITE_AVISO_MS) return '';
+    return '⚠️ A importação deu certo, mas a chamada mais lenta levou ' + gbSegundos(maior) + ' (o banco corta em 8 s). O aviso foi registrado na Auditoria do Painel Master.';
+  }
+  // Mensagem de falha em português: o que aconteceu, em que parte, e que é seguro tentar de novo.
+  function gbMensagemFalha(e, contexto) {
+    var bruta = String((e && (e.message || e.original && e.original.message)) || '');
+    var codigo = e && (e.codigo || (e.original && e.original.codigo));
+    var onde = (e && e.parte) ? ' (parte ' + e.parte + ' de ' + e.totalPartes + ')' : (contexto ? ' (' + contexto + ')' : '');
+    var oQue;
+    if (/já foi importado e confirmado/i.test(bruta)) return bruta + ' Se precisar reimportar, use o arquivo do dia mais recente.';
+    if (codigo === '57014' || /statement timeout|canceling statement/i.test(bruta) || (e && e.state === 'TIMEOUT')) {
+      oQue = 'O banco demorou demais para responder' + onde + '.';
+    } else if (e && e.state === 'NETWORK_ERROR') {
+      oQue = 'A conexão caiu durante o envio' + onde + '.';
+    } else if (e && e.state === 'SESSION_EXPIRED') {
+      return 'Sua sessão expirou' + onde + '. Entre de novo e envie o mesmo arquivo. A base oficial anterior não foi alterada.';
+    } else if (/IMPORTAÇÃO BLOQUEADA|rejeitado/i.test(bruta)) {
+      return bruta + ' A base oficial anterior não foi alterada.';
+    } else {
+      oQue = 'A importação não terminou' + onde + ': ' + (bruta || 'erro desconhecido') + '.';
+    }
+    return oQue + ' A base oficial anterior continua valendo. É seguro tentar de novo: envie o mesmo arquivo.';
+  }
+  function gbDuracoesHtml() {
+    var d = gbState.duracoes;
+    if (!d || !d.length) return '';
+    var rotulo = { SALES_CURRENT: 'Base 01', FINANCE_CURRENT: 'Base 02', SPF_CURRENT: 'Base 03', COLABORADORES: 'Colaboradores' };
+    var res = { SUCESSO: 'Concluída', FALHA: 'Falhou', BLOQUEADA: 'Bloqueada' };
+    return '<h3 class="gbDurTitulo">Duração das últimas importações</h3><div class="gbDurWrap"><table class="gbDurTabela"><thead><tr>' +
+      '<th>Quando</th><th>Base</th><th>Resultado</th><th>Total</th><th>Chamada mais lenta</th></tr></thead><tbody>' +
+      d.map(function (x) {
+        return '<tr' + (x.alerta ? ' class="gbDurAlerta"' : '') + '><td>' + esc(GB_VM.gbFmtDateTime(x.criado_em)) + '</td><td>' + esc(rotulo[x.source_type] || x.source_type) + '</td>' +
+          '<td>' + esc(res[x.resultado] || x.resultado) + (x.alerta ? ' ⚠️' : '') + '</td><td>' + esc(gbSegundos(x.total_ms)) + '</td><td>' + esc(gbSegundos(x.maior_chamada_ms)) + '</td></tr>';
+      }).join('') + '</tbody></table></div><p class="note">⚠️ = alguma chamada passou de ' + gbSegundos(GB_LIMITE_AVISO_MS) + ' (o banco corta em 8 s) ou a importação falhou. O aviso também vai para a Auditoria.</p>';
   }
   function gbShowProgress(titulo) {
     gbState.modal = { kind: 'progress', titulo: titulo };
     renderGbModalRoot();
   }
   function gbShowDiagnostic(opts) {
+    inFlight.gbImport = false;
     gbState.modal = {
       kind: 'diagnostic', titulo: opts.titulo, arquivo: opts.arquivo, linhasLidas: opts.linhasLidas,
       aceitas: opts.aceitas, rejeitadas: opts.rejeitadas, avisos: opts.avisos || [],
@@ -2175,25 +2245,32 @@
     renderGbModalRoot();
   }
   function gbShowSuccess(titulo, arquivo, registros, notaExtra) {
+    inFlight.gbImport = false;
     gbState.modal = { kind: 'success', titulo: titulo, arquivo: arquivo, registros: registros, notaExtra: notaExtra };
     renderGbModalRoot();
   }
   function gbShowError(message) {
+    inFlight.gbImport = false;
     gbState.modal = { kind: 'error', message: message };
     renderGbModalRoot();
   }
 
-  function gbImportChunked(rpcFn, batchId, rows) {
+  function gbImportChunked(rpcFn, batchId, rows, med) {
     var chunks = GB_VM.gbChunk(rows, GB_VM.CHUNK_SIZE);
     var accepted = 0;
     var i = 0;
+    if (med) med.partes = chunks.length;
+    function texto(n) { return 'Enviando parte ' + n + ' de ' + chunks.length + '… (' + GB_VM.gbFmtNum(Math.min(n * GB_VM.CHUNK_SIZE, rows.length)) + ' de ' + GB_VM.gbFmtNum(rows.length) + ' registros)'; }
     function next() {
       if (i >= chunks.length) return Promise.resolve(accepted);
-      return rpcFn(batchId, chunks[i]).then(function (count) {
+      gbSetProgress(Math.min(i * GB_VM.CHUNK_SIZE, rows.length), rows.length, texto(i + 1));
+      return gbMedir(med, 'parte ' + (i + 1), function () { return rpcFn(batchId, chunks[i]); }).then(function (count) {
         accepted += Number(count) || 0;
         i++;
-        gbSetProgress(Math.min(i * GB_VM.CHUNK_SIZE, rows.length), rows.length);
+        gbSetProgress(Math.min(i * GB_VM.CHUNK_SIZE, rows.length), rows.length, i < chunks.length ? texto(i + 1) : 'Partes enviadas. Conferindo…');
         return next();
+      }, function (e) {
+        return Promise.reject({ parte: i + 1, totalPartes: chunks.length, original: e, message: e && e.message, codigo: e && e.codigo, state: e && e.state });
       });
     }
     return next();
@@ -2202,6 +2279,7 @@
   function gbAnchorFor(sourceType) { return GB_VM.HEADER_ANCHORS[sourceType]; }
 
   window.gbOnAtualizarClick = function (sourceType) {
+    if (inFlight.gbImport) return; // Fase 3: uma importação por vez
     gbState.pendingSourceType = sourceType;
     var input = document.getElementById('gbFileInput');
     if (input) input.click();
@@ -2209,7 +2287,8 @@
 
   function gbOnFileChosen(file) {
     var sourceType = gbState.pendingSourceType;
-    if (!file || !sourceType) return;
+    if (!file || !sourceType || inFlight.gbImport) return;
+    inFlight.gbImport = true;
     gbShowProgress('Lendo ' + file.name + '...');
     GB_VM.gbReadSheet(file, gbAnchorFor(sourceType)).then(function (sheet) {
       if (!sheet.rows.length) return Promise.reject({ message: 'Arquivo vazio ou sem linhas de dados reconhecíveis.' });
@@ -2221,7 +2300,7 @@
         return Promise.reject({ message: 'Tipo de base desconhecido.' });
       });
     }).catch(function (e) {
-      gbShowError(String((e && e.message) || e));
+      gbShowError(e && (e.parte || e.state || e.codigo) ? gbMensagemFalha(e) : String((e && e.message) || e));
     });
   }
 
@@ -2246,8 +2325,10 @@
       if (docGuard.block) return Promise.reject({ message: 'IMPORTAÇÃO BLOQUEADA — ' + docGuard.motivo });
 
       gbSetProgress(0, rowsToSend.length);
-      return GB_PROVIDER.beginImport('SALES_CURRENT', file.name, sha256, rowsToSend.length).then(function (batchId) {
-        return gbImportChunked(GB_PROVIDER.importSales, batchId, rowsToSend).then(function (accepted) {
+      var med = gbNovoMedidor('SALES_CURRENT', file.name, rowsToSend.length);
+      return gbMedir(med, 'abrir lote', function () { return GB_PROVIDER.beginImport('SALES_CURRENT', file.name, sha256, rowsToSend.length); }).then(function (batchId) {
+        med.batchId = batchId;
+        return gbImportChunked(GB_PROVIDER.importSales, batchId, rowsToSend, med).then(function (accepted) {
           var rejected = rowsToSend.length - accepted;
           var avisos = [];
           if (semDepartamento) avisos.push(semDepartamento + ' registro(s) com departamento não reconhecido — foram enviados mesmo assim e podem ter sido rejeitados pela validação do servidor.');
@@ -2258,12 +2339,12 @@
             titulo: 'BASE 01 — VENDAS', arquivo: file.name, linhasLidas: rowsToSend.length,
             aceitas: accepted, rejeitadas: rejected, avisos: avisos, listaPendente: missingList,
             onConfirmar: function () {
-              return GB_PROVIDER.finalizeImport(batchId, accepted, rejected, 'Gestão de Bases: ' + accepted + ' aceitas, ' + rejected + ' rejeitadas.')
-                .then(function () { gbShowSuccess('BASE 01 — VENDAS', file.name, accepted); });
+              return gbMedir(med, 'confirmar', function () { return GB_PROVIDER.finalizeImport(batchId, accepted, rejected, 'Gestão de Bases: ' + accepted + ' aceitas, ' + rejected + ' rejeitadas.'); })
+                .then(function () { gbRegistrarDuracao(med, 'SUCESSO'); gbShowSuccess('BASE 01 — VENDAS', file.name, accepted, gbAvisoDuracao(med)); });
             }
           });
         });
-      });
+      }).catch(function (e) { gbRegistrarDuracao(med, 'FALHA', e && e.message); return Promise.reject(e); });
     });
   }
 
@@ -2279,8 +2360,10 @@
       var missingList = Object.keys(missingByNbs).map(function (k) { return missingByNbs[k]; });
 
       gbSetProgress(0, rowsToSend.length);
-      return GB_PROVIDER.beginImport('FINANCE_CURRENT', file.name, sha256, rowsToSend.length).then(function (batchId) {
-        return gbImportChunked(GB_PROVIDER.importFinance, batchId, rowsToSend).then(function (accepted) {
+      var med = gbNovoMedidor('FINANCE_CURRENT', file.name, rowsToSend.length);
+      return gbMedir(med, 'abrir lote', function () { return GB_PROVIDER.beginImport('FINANCE_CURRENT', file.name, sha256, rowsToSend.length); }).then(function (batchId) {
+        med.batchId = batchId;
+        return gbImportChunked(GB_PROVIDER.importFinance, batchId, rowsToSend, med).then(function (accepted) {
           var rejected = rowsToSend.length - accepted;
           gbState.sessionFinanceBatch = {
             batchId: batchId,
@@ -2296,15 +2379,16 @@
             listaPendente: missingList,
             extraHtml: '<p class="note">Este lote permanece em validação até você confirmar. A Base 03 pode ser atualizada a qualquer momento, mesmo depois de confirmar esta Base 02 — ela localiza a versão oficial automaticamente.</p>',
             onConfirmar: function () {
-              return GB_PROVIDER.finalizeImport(batchId, accepted, rejected, 'Gestão de Bases: ' + accepted + ' aceitas, ' + rejected + ' rejeitadas.')
+              return gbMedir(med, 'confirmar', function () { return GB_PROVIDER.finalizeImport(batchId, accepted, rejected, 'Gestão de Bases: ' + accepted + ' aceitas, ' + rejected + ' rejeitadas.'); })
                 .then(function () {
                   gbState.sessionFinanceBatch = null;
-                  gbShowSuccess('BASE 02 — FINANCIAMENTOS', file.name, accepted);
+                  gbRegistrarDuracao(med, 'SUCESSO');
+                  gbShowSuccess('BASE 02 — FINANCIAMENTOS', file.name, accepted, gbAvisoDuracao(med));
                 });
             }
           });
         });
-      });
+      }).catch(function (e) { gbRegistrarDuracao(med, 'FALHA', e && e.message); return Promise.reject(e); });
     });
   }
 
@@ -2313,8 +2397,10 @@
     var cls = GB_VM.gbClassifyBase03Rows(rawRows, date1904);
     var financeRows = GB_VM.gbBuildBase03FinanceRows(rawRows);
 
-    gbSetProgress(0, 1);
-    return GB_PROVIDER.applyBase03(file.name, sha256, financeRows, cls.allRows, true).then(function (preview) {
+    gbSetProgress(0, 1, 'Calculando a prévia…');
+    var med = gbNovoMedidor('SPF_CURRENT', file.name, cls.allRows.length);
+    // Prévia: a contagem de SPF é da própria tela; o servidor só calcula o enriquecimento (não precisa das linhas de SPF).
+    return gbMedir(med, 'prévia', function () { return GB_PROVIDER.applyBase03(file.name, sha256, financeRows, [], true); }).then(function (preview) {
       gbSetProgress(1, 1);
       // Trava (incidente 07/10/2026): 0 financiamentos completados, ou bem
       // menos que a última importação normal, bloqueia a confirmação.
@@ -2329,7 +2415,7 @@
         '<div class="gbRow"><span>Linhas operacionais principais</span><b>' + esc(GB_VM.gbFmtNum(cls.principalRows.length)) + '</b></div>' +
         '<div class="gbRow"><span>Linhas SPF Extra (complementares)</span><b>' + esc(GB_VM.gbFmtNum(cls.spfRows.length)) + '</b></div>' +
         (cls.discardedTotalRows ? '<div class="gbRow"><span>Linhas descartadas (subtotais/lixo de planilha)</span><b>' + esc(GB_VM.gbFmtNum(cls.discardedTotalRows)) + '</b></div>' : '') +
-        '<p class="note">A confirmação aplica tudo em uma única operação no banco: ou os dados financeiros e o SPF (principais + complementares) são atualizados juntos, ou nada é alterado.</p>' +
+        '<p class="note">Ao confirmar, o SPF é enviado em partes e, no fim, uma consolidação única atualiza juntos os dados financeiros e o SPF (principais + complementares): ou entra tudo, ou nada é alterado.</p>' +
         (gbHomolog() ? '<p class="note gbWarn">🧪 MODO HOMOLOGAÇÃO: ao confirmar, nenhuma escrita real ocorrerá — os números acima já vêm de uma consulta real (p_dry_run=true), só a gravação final é simulada.</p>' : '');
 
       gbShowDiagnostic({
@@ -2339,23 +2425,31 @@
         extraHtml: extraHtml,
         onConfirmar: function () {
           if (guard.block) return Promise.reject({ message: guard.motivo });
-          // Em homologação, o resultado é montado a partir dos números já
-          // comprovados pelo próprio dry_run acima (uma consulta real) --
-          // nunca inventa dado novo, só não grava. O gate da provider
-          // também bloquearia a chamada real aqui (defesa em profundidade),
-          // mas essa rota genérica devolveria zeros -- V1's own precedent
-          // (master-gestao-bases.js's gbProcessarBase03) always prefers
-          // the real dry-run numbers for the homologation success screen.
-          var resultPromise = gbHomolog()
-            ? Promise.resolve({
-                dry_run: false, simulated: true,
-                finance_batch_id: preview.finance_batch_id, finance_rows_matched: preview.finance_rows_matched,
-                spf_rows_received: cls.allRows.length, spf_accepted: cls.allLikelyAccepted, spf_rejected: cls.allLikelyRejected
-              })
-            : GB_PROVIDER.applyBase03(file.name, sha256, financeRows, cls.allRows, false);
-          return resultPromise.then(function (result) {
-            gbShowSuccess('BASE 03 — COMPLEMENTAR / F&I', file.name, result.spf_accepted || 0,
-              GB_VM.gbFmtNum(result.finance_rows_matched) + ' financiamento(s) da Base 02 oficial completado(s) com parcelas, balão e plano.');
+          // Fase 3 (19/10/2026): nada de gravação em chamada única. O SPF vai em partes para um lote em validação
+          // (invisível) e a consolidação final -- uma operação atômica no banco -- enriquece os financiamentos,
+          // confere as travas de novo e confirma o lote. Se algo falhar, a base oficial anterior continua valendo.
+          inFlight.gbImport = true;
+          gbShowProgress('BASE 03 — COMPLEMENTAR / F&I');
+          gbSetProgress(0, cls.allRows.length, 'Abrindo o lote…');
+          return gbMedir(med, 'abrir lote', function () { return GB_PROVIDER.beginImport('SPF_CURRENT', file.name, sha256, cls.allRows.length); }).then(function (spfBatchId) {
+            med.batchId = spfBatchId;
+            return gbImportChunked(GB_PROVIDER.importSpf, spfBatchId, cls.allRows, med).then(function () {
+              gbSetProgress(cls.allRows.length, cls.allRows.length, 'Consolidando: completando os financiamentos e confirmando a base…');
+              return gbMedir(med, 'consolidar', function () { return GB_PROVIDER.consolidarBase03(spfBatchId, financeRows); });
+            });
+          }).then(function (result) {
+            // Em homologação a consolidação é simulada: mostra os números já comprovados pela prévia real.
+            var r = (result && result.simulated)
+              ? { finance_rows_matched: preview.finance_rows_matched, spf_accepted: cls.allLikelyAccepted }
+              : result;
+            gbRegistrarDuracao(med, 'SUCESSO');
+            gbShowSuccess('BASE 03 — COMPLEMENTAR / F&I', file.name, r.spf_accepted || 0,
+              GB_VM.gbFmtNum(r.finance_rows_matched) + ' financiamento(s) da Base 02 oficial completado(s) com parcelas, balão e plano.' +
+              (gbAvisoDuracao(med) ? ' ' + gbAvisoDuracao(med) : ''));
+          }, function (e) {
+            var bloqueada = /IMPORTAÇÃO BLOQUEADA|rejeitado/i.test(String(e && e.message || ''));
+            gbRegistrarDuracao(med, bloqueada ? 'BLOQUEADA' : 'FALHA', e && e.message);
+            gbShowError(gbMensagemFalha(e, 'consolidação'));
           });
         }
       });

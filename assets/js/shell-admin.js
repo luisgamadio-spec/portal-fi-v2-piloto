@@ -2184,6 +2184,12 @@
     return (med && med.etapas.length) ? Math.max.apply(null, med.etapas.map(function (e) { return e.ms; })) : 0;
   }
   function gbSegundos(ms) { return (Math.round(ms / 100) / 10).toLocaleString('pt-BR') + ' s'; }
+  // Recusa por regra (arquivo já confirmado, travas de enriquecimento/SPF) não é falha: registra como BLOQUEADA,
+  // sem aviso na Auditoria. FALHA fica só para o que deu errado de verdade (tempo, rede, erro do banco).
+  function gbResultadoDaFalha(e) {
+    var m = String((e && (e.message || (e.original && e.original.message))) || '');
+    return /já foi importado e confirmado|IMPORTAÇÃO BLOQUEADA|rejeitado/i.test(m) ? 'BLOQUEADA' : 'FALHA';
+  }
   function gbRegistrarDuracao(med, resultado, erro) {
     if (!med) return Promise.resolve(null);
     var dados = {
@@ -2344,7 +2350,7 @@
             }
           });
         });
-      }).catch(function (e) { gbRegistrarDuracao(med, 'FALHA', e && e.message); return Promise.reject(e); });
+      }).catch(function (e) { gbRegistrarDuracao(med, gbResultadoDaFalha(e), e && e.message); return Promise.reject(e); });
     });
   }
 
@@ -2388,7 +2394,7 @@
             }
           });
         });
-      }).catch(function (e) { gbRegistrarDuracao(med, 'FALHA', e && e.message); return Promise.reject(e); });
+      }).catch(function (e) { gbRegistrarDuracao(med, gbResultadoDaFalha(e), e && e.message); return Promise.reject(e); });
     });
   }
 
@@ -2447,8 +2453,7 @@
               GB_VM.gbFmtNum(r.finance_rows_matched) + ' financiamento(s) da Base 02 oficial completado(s) com parcelas, balão e plano.' +
               (gbAvisoDuracao(med) ? ' ' + gbAvisoDuracao(med) : ''));
           }, function (e) {
-            var bloqueada = /IMPORTAÇÃO BLOQUEADA|rejeitado/i.test(String(e && e.message || ''));
-            gbRegistrarDuracao(med, bloqueada ? 'BLOQUEADA' : 'FALHA', e && e.message);
+            gbRegistrarDuracao(med, gbResultadoDaFalha(e), e && e.message);
             gbShowError(gbMensagemFalha(e, 'consolidação'));
           });
         }

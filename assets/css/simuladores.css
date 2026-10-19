@@ -686,3 +686,21 @@
 }
 .smToast.show { opacity: 1; transform: translate(-50%, 0); }
 @media (prefers-reduced-motion: reduce) { .smToast { transition: none; } }
+
+/* Taxa Subsidiada: rebate em vermelho com barrinha do % do financiado, filete sob o prazo, entrada suave dos cartões */
+.smPage .smSubsGrid4 .smSubsRebateRow strong { color: var(--color-accent-primary); }
+.smPage .smSubsGrid4 .smSubsidiadaCardValueStack { width: 100%; }
+.smPage .smRebateBar { display: block; width: 100%; height: 4px; margin: 5px 0 3px; border-radius: 2px; background: var(--color-hairline-strong); overflow: hidden; }
+.smPage .smRebateBar > span { display: block; height: 100%; border-radius: 2px; background: var(--color-accent-primary); }
+.smPage .smSubsGrid4 .smSubsidiadaCardPrazo { display: flex; flex-direction: column; align-items: center; }
+.smPage .smSubsGrid4 .smSubsidiadaCardPrazo::after { content: ''; display: block; width: 34px; height: 3px; border-radius: 2px; background: var(--p-red-1, #ee4b57); margin: 8px auto 2px; }
+@keyframes smCardEntra { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.smPage .smSubsGrid4 .smSubsidiadaCard { animation: smCardEntra .28s ease-out both; }
+.smPage .smSubsGrid4 .smSubsidiadaCard:nth-child(2) { animation-delay: .03s; }
+.smPage .smSubsGrid4 .smSubsidiadaCard:nth-child(3) { animation-delay: .06s; }
+.smPage .smSubsGrid4 .smSubsidiadaCard:nth-child(4) { animation-delay: .09s; }
+.smPage .smSubsGrid4 .smSubsidiadaCard:nth-child(5) { animation-delay: .12s; }
+.smPage .smSubsGrid4 .smSubsidiadaCard:nth-child(6) { animation-delay: .15s; }
+.smPage .smSubsGrid4 .smSubsidiadaCard:nth-child(7) { animation-delay: .18s; }
+.smPage .smSubsGrid4 .smSubsidiadaCard:nth-child(n+8) { animation-delay: .21s; }
+@media (prefers-reduced-motion: reduce) { .smPage .smSubsGrid4 .smSubsidiadaCard { animation: none; } }

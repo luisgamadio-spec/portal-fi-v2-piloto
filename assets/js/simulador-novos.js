@@ -1185,8 +1185,10 @@
           // proven by rebateValor === financiado * row.rebate -- so the
           // denominator is "financiado" (bem - entrada), NOT "valor do bem".
           // Displayed as-is, no derivation, no new precision invented.
-          '<div class="smSubsidiadaCardRow smSubsidiadaCardRowEmphasis"><span class="kpiLabel">Rebate — custo comercial</span>' +
+          // Wave 2: barrinha = o próprio row.rebate do motor (% do valor financiado), só desenhada.
+          '<div class="smSubsidiadaCardRow smSubsidiadaCardRowEmphasis smSubsRebateRow"><span class="kpiLabel">Rebate — custo comercial</span>' +
           '<span class="smSubsidiadaCardValueStack"><strong>' + UI.brl(row.rebateValor) + '</strong>' +
+          '<span class="smRebateBar" aria-hidden="true"><span style="width:' + Math.max(0, Math.min(100, row.rebate * 100)).toFixed(2) + '%"></span></span>' +
           '<span class="smSubsidiadaCardRebatePct">' + UI.pct2(row.rebate) + ' do valor financiado</span></span></div>' +
           '<div class="smSubsidiadaCardRow smSubsidiadaCardRowEmphasis"><span class="kpiLabel">Valor final de venda</span><strong>' + UI.brl(row.valorFinalVenda) + '</strong></div>' +
           '</div>';

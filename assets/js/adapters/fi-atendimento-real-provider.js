@@ -64,7 +64,8 @@
         return resp.json().catch(function () { return null; }).then(function (respBody) {
           if (!resp.ok) {
             var code = respBody && respBody.code;
-            return Promise.reject({ state: classifyError(code, resp.status), message: (respBody && respBody.message) || 'Falha ao comunicar com o servidor.' });
+            // hint: AGUARDE_CHAMAR_ANALISTA (1 minuto entre chamadas) / PERFIL_SEM_SIMULADOR, ambos de chamar_analista_fi
+            return Promise.reject({ state: classifyError(code, resp.status), code: code, hint: respBody && respBody.hint, message: (respBody && respBody.message) || 'Falha ao comunicar com o servidor.' });
           }
           return respBody;
         });

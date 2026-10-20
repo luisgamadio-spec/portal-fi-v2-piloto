@@ -73,8 +73,15 @@
         window.open('https://wa.me/' + telefone + '?text=' + mensagem, '_blank', 'noopener');
       }, 800);
     }, function (error) {
+      // O servidor aceita uma chamada atendida por minuto por usuário (chamar_analista_fi).
+      if (error && error.hint === 'AGUARDE_CHAMAR_ANALISTA') {
+        mostrarStatusAnalista('Aguarde um instante para chamar de novo.');
+        return;
+      }
       console.error('Falha ao solicitar atendimento F&I:', error);
-      var msg = (error && error.state === 'SESSION_EXPIRED') ? 'Sessão expirada. Faça login novamente.' : 'Não foi possível localizar um analista agora.';
+      var msg = (error && error.state === 'SESSION_EXPIRED') ? 'Sessão expirada. Faça login novamente.'
+        : (error && error.hint === 'PERFIL_SEM_SIMULADOR') ? 'Seu perfil não tem acesso ao atendimento do Simulador.'
+        : 'Não foi possível localizar um analista agora.';
       mostrarStatusAnalista(msg);
     });
   }

@@ -194,7 +194,15 @@
     });
 
     let vendidas = 0, financiadas = 0, producao = 0, retorno = 0, spf = 0, comissaoPrevista = 0;
-    linhas.forEach(l => { vendidas += +(l.m.vendidas || 0); financiadas += +(l.m.financiadas || 0); producao += +(l.m.producao || 0); retorno += +(l.m.retorno || 0); spf += +(l.m.spf || 0); comissaoPrevista += +(l.comissao || 0); });
+    // 22/10/2026 (decisão do Luis): os indicadores do Resumo (vendidas, financiadas, produção,
+    // retorno, SPF) são os TOTAIS DO GRUPO -- só as linhas de VENDEDOR, cada venda uma vez (igual à
+    // linha do Gestor F&I). Somar todas as linhas contava a mesma venda no vendedor, no gerente, no
+    // analista e no gestor. A comissão prevista continua sendo a soma de TODAS as linhas.
+    linhas.forEach(l => {
+      comissaoPrevista += +(l.comissao || 0);
+      if (String(l.perfil || '').toUpperCase() !== 'VENDEDOR') return;
+      vendidas += +(l.m.vendidas || 0); financiadas += +(l.m.financiadas || 0); producao += +(l.m.producao || 0); retorno += +(l.m.retorno || 0); spf += +(l.m.spf || 0);
+    });
     comissaoPrevista = centavos(comissaoPrevista);
     return { linhas, vendidas, financiadas, producao, retorno, spf, comissaoPrevista };
   }

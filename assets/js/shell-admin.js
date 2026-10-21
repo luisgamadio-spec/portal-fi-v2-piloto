@@ -4732,14 +4732,22 @@
     }, 0);
     return Math.round(exata * 100) / 100;
   }
-  function resumoExecutivoFromClosing(closing, normalizedRows) {
-    var obs = HC_VM.parseObservacao(closing.observacao);
-    if (obs && (obs.qtd_vendida !== undefined || obs.qtd_financiada !== undefined || obs.producao_total !== undefined)) {
+  // 22/10/2026 (decisão do Luis): o Resumo mostra os TOTAIS DO GRUPO -- cada venda conta uma vez
+  // (soma das linhas de VENDEDOR do snapshot congelado, igual à linha do Gestor F&I). Os
+  // indicadores gravados em observacao (qtd_vendida, producao_total...) somavam vendedores +
+  // gerentes + analistas + gestor e contavam a mesma venda 3-4 vezes (1.420 vendidas x 314 reais
+  // em 22/09-20/10); ficam no banco como foram gravados, mas não são mais exibidos. Só se o snapshot
+  // não tiver nenhuma linha de VENDEDOR (fechamento antigo atípico) cai para o gravado.
+  function resumoExecutivoFromClosing(closing, rawRows) {
+    var vend = (rawRows || []).filter(function (r) { return String((r && r.perfil) || '').trim().toUpperCase() === 'VENDEDOR'; });
+    if (!vend.length) {
+      var obs = HC_VM.parseObservacao(closing.observacao) || {};
       return { vendidas: Number(obs.qtd_vendida) || 0, financiadas: Number(obs.qtd_financiada) || 0, producao: Number(obs.producao_total) || 0, retorno: Number(obs.retorno_total) || 0, spf_extra: Number(obs.spf_total) || 0 };
     }
-    return normalizedRows.filter(function (r) { return String(r.perfil || '').toUpperCase() === 'VENDEDOR'; })
-      .reduce(function (a, r) { a.vendidas += r.vendidas; a.financiadas += r.financiadas; a.producao += r.producao; a.retorno += r.retorno; a.spf_extra += r.spf_extra; return a; },
-        { vendidas: 0, financiadas: 0, producao: 0, retorno: 0, spf_extra: 0 });
+    return vend.reduce(function (a, r) {
+      a.vendidas += Number(r.vendidas) || 0; a.financiadas += Number(r.financiadas) || 0; a.producao += Number(r.producao) || 0;
+      a.retorno += Number(r.retorno) || 0; a.spf_extra += Number(r.spf_extra) || 0; return a;
+    }, { vendidas: 0, financiadas: 0, producao: 0, retorno: 0, spf_extra: 0 });
   }
   function historyExportRhDp(closingId) {
     if (historyState.rhdpExportingId) return; // double-submit guard (Gate 32)
@@ -4805,7 +4813,7 @@
         if (typeof XLSX === 'undefined' || !window.NX_XLSX_EXPORT_HELPER) {
           return Promise.reject({ state: 'RPC_ERROR', message: 'Biblioteca de planilhas indisponível neste ambiente. Recarregue a página e tente novamente.' });
         }
-        var executivo = resumoExecutivoFromClosing(closing, normalizedRows);
+        var executivo = resumoExecutivoFromClosing(closing, rawSnapshotRows);
         ['producao', 'retorno', 'spf_extra'].forEach(function (k) { executivo[k] = Math.round((Number(executivo[k]) || 0) * 100) / 100; });
         var comissaoTotal = rhdpComissaoTotalOficial(closing, rawSnapshotRows);
         var sheet1 = RHDP_ENGINE.buildSheet1Resumo(closing, normalizedRows, executivo, comissaoTotal, new Date());

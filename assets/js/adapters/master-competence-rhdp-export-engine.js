@@ -102,13 +102,9 @@
   }
 
   // ---------- ABA 1 -- Resumo Principal ----------
-  // executivo: {vendidas, financiadas, producao, retorno, spf_extra} --
-  // caller resolves this from the closing's own observacao JSON
-  // (HC_VM.parseObservacao, same qtd_vendida/qtd_financiada/producao_
-  // total/retorno_total/spf_total schema already reconciled PM-5J/5H),
-  // falling back to summing VENDEDOR snapshot rows -- verbatim mirror of
-  // resumoExecutivoOficialExcel()'s own two-tier resolution (never
-  // recalculated from live commission-engine data, Gate 12/34).
+  // executivo: {vendidas, financiadas, producao, retorno, spf_extra} -- desde 22/10/2026 o
+  // chamador soma só as linhas de VENDEDOR do snapshot congelado (totais do grupo, cada venda uma
+  // vez; ver resumoExecutivoFromClosing em shell-admin.js). Nunca recalculado a partir de dado vivo.
   // Cada linha: [rótulo, valor, tipo] -- tipo diz ao montador da planilha como formatar o valor
   // (money = R$ com milhar, int = inteiro, date = dd/mm/aaaa, datetime = dd/mm/aaaa hh:mm em
   // Brasília, titulo/secao/cabecalho = só estilo). `header` (rótulo, valor) segue igual para
@@ -133,7 +129,8 @@
       ['Gerado em', geradoEm || new Date(), 'datetime'],
       ['Origem', 'Resumo Executivo oficial do Portal + Snapshot congelado para lançamento', 'text'],
       [null, null, 'vazio'],
-      ['RESUMO EXECUTIVO OFICIAL', null, 'secao'],
+      ['RESUMO EXECUTIVO OFICIAL — TOTAIS DO GRUPO', null, 'secao'],
+      ['Base dos totais', 'Soma dos vendedores do snapshot congelado (cada venda conta uma vez)', 'text'],
       ['Indicador', 'Valor', 'cabecalho'],
       ['Linhas de Comissão', (snapshotRows || []).length, 'int'],
       ['Quantidade Vendida', num(executivo.vendidas), 'int'],

@@ -222,6 +222,10 @@
       if (!data || !Array.isArray(data.rows)) {
         return Promise.reject({ state: 'MALFORMED_RESPONSE', message: 'Resposta inesperada do servidor.' });
       }
+      // 21/10/2026 (decisão do Luis): o Exportar RH/DP do Painel Master (perfil Master) leva o CPF
+      // gravado pelo fechamento -- só quem pede explicitamente (params.manterCpf) recebe o campo.
+      // Todos os outros consumidores (Salários & Comissões, Exportar XLSX, PDF) continuam sem CPF.
+      if (params.manterCpf === true) return data.rows;
       try {
         return stripCpf(data.rows);
       } catch (e) {

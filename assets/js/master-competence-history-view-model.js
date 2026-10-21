@@ -45,15 +45,24 @@
     return m[3] + '/' + m[2] + '/' + m[1];
   }
 
-  // Full timestamp (fechado_em/reaberto_em/criado_em) -- pure string
-  // slicing of the ISO-8601 value the RPC already returns, same
-  // date-safety discipline as fmtDateBR (never a Date object/
-  // toISOString, never a timezone conversion).
+  // Data/hora em horário de Brasília (America/Sao_Paulo), independente do fuso do computador.
+  // Recebe o ISO do banco (timestamptz vem em UTC, ex. "2026-10-21T17:19:38+00:00") ou um Date.
+  // Antes recortava o texto sem converter e mostrava a hora UTC (17:19 em vez de 14:19).
+  // Devolve {ano, mes, dia, hora, min, seg} ou null.
+  function partesBrasilia(valor) {
+    var d = valor instanceof Date ? valor : new Date(valor);
+    if (isNaN(d.getTime())) return null;
+    var p = {};
+    new Intl.DateTimeFormat('en-GB', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' })
+      .formatToParts(d).forEach(function (x) { p[x.type] = x.value; });
+    return { ano: p.year, mes: p.month, dia: p.day, hora: p.hour, min: p.minute, seg: p.second };
+  }
   function fmtDateTimeBR(iso) {
-    if (!iso || typeof iso !== 'string') return '-';
-    var m = iso.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/);
-    if (!m) return fmtDateBR(iso);
-    return m[3] + '/' + m[2] + '/' + m[1] + ' ' + m[4] + ':' + m[5];
+    if (!iso || (typeof iso !== 'string' && !(iso instanceof Date))) return '-';
+    if (typeof iso === 'string' && !/[T ]\d{2}:\d{2}/.test(iso)) return fmtDateBR(iso);
+    var p = partesBrasilia(iso);
+    if (!p) return typeof iso === 'string' ? fmtDateBR(iso) : '-';
+    return p.dia + '/' + p.mes + '/' + p.ano + ' ' + p.hora + ':' + p.min;
   }
 
   function fmtMoney(n) {
@@ -175,11 +184,26 @@
     var t = commissionTotals(r);
     return {
       loja: r.loja || '', perfil: r.perfil || '', nome: r.nome || '', departamento: r.departamento || '',
+      cpf: r.cpf || '',
       vendidas: Number(r.vendidas) || 0, financiadas: Number(r.financiadas) || 0, share: Number(r.share) || 0,
       producao: round2(r.producao), retorno: round2(r.retorno), spf_extra: round2(r.spf_extra),
       spf_liquido: round2(r.spf_liquido), rentabilidade_total: round2(r.rentabilidade_total), faixa: Number(r.faixa) || 0,
       comissao_principal: t.principal, comissao_spf: t.spf, comissao_total: t.total
     };
+  }
+
+  // Exportar RH/DP: mesma linha, mas com as comissões EXATAS do snapshot (sem arredondar
+  // linha a linha). O Excel mostra em centavos e a soma das colunas fecha com o total
+  // oficial do fechamento (arredondar cada linha antes de somar acumulava 2 centavos em 22/09-20/10).
+  function normalizeSnapshotRowExato(r) {
+    var n = normalizeSnapshotRow(r);
+    var d = (r && r.detalhes) || {};
+    var total = Number(d.comissao_total != null ? d.comissao_total : r.comissao) || 0;
+    var spf = Number(d.comissao_spf != null ? d.comissao_spf : 0) || 0;
+    n.comissao_total = total;
+    n.comissao_spf = spf;
+    n.comissao_principal = Number(d.comissao_principal != null ? d.comissao_principal : (total - spf)) || 0;
+    return n;
   }
 
   // Plain arithmetic SUM of already-persisted snapshot fields -- same
@@ -223,6 +247,7 @@
   window.NX_MASTER_COMPETENCE_HISTORY_VM = {
     fmtDateBR: fmtDateBR,
     fmtDateTimeBR: fmtDateTimeBR,
+    partesBrasilia: partesBrasilia,
     fmtMoney: fmtMoney,
     parseObservacao: parseObservacao,
     commissionTotals: commissionTotals,
@@ -233,6 +258,7 @@
     sortSnapshotRows: sortSnapshotRows,
     xlsxRows: xlsxRows,
     normalizeSnapshotRow: normalizeSnapshotRow,
+    normalizeSnapshotRowExato: normalizeSnapshotRowExato,
     aggregateSnapshotRows: aggregateSnapshotRows,
     buildPrintHtml: buildPrintHtml
   };

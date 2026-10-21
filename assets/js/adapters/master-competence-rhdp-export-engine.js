@@ -39,6 +39,29 @@
 
   function num(v) { var n = Number(v); return isFinite(n) ? n : 0; }
   function upperTrim(v) { return String(v || '').trim().toUpperCase(); }
+  // O snapshot guarda o share na escala 0-100 (100 = 100%) em todos os fechamentos; a célula
+  // de % do Excel espera fração (1 = 100%). Só apresentação: o valor gravado não muda.
+  function shareFracao(v) { return num(v) / 100; }
+  // CPF gravado pelo fechamento (a partir de 21/10/2026, pelo identificador da pessoa no
+  // cadastro). Fechamentos anteriores não têm CPF: a célula fica vazia.
+  function fmtCpf(v) {
+    var d = String(v || '').replace(/\D/g, '');
+    return d.length === 11 ? d.slice(0, 3) + '.' + d.slice(3, 6) + '.' + d.slice(6, 9) + '-' + d.slice(9) : '';
+  }
+  // Auditoria SPF: true/false gravado pelo fechamento (R$ 1,00 = marcador NBS, fora da comissão).
+  // Fechamentos anteriores a 21/10/2026 não têm a informação: célula vazia.
+  function simNao(v) { return v === true ? 'Sim' : (v === false ? 'Não' : ''); }
+  // Ordenação campo a campo (Loja, Departamento, Nome...), em português e sem diferenciar
+  // maiúsculas/acentos -- concatenar os campos misturava "Loja A"+"Novos" com "Loja AB".
+  function porCampos(campos) {
+    return function (a, b) {
+      for (var i = 0; i < campos.length; i++) {
+        var c = String(a[campos[i]] == null ? '' : a[campos[i]]).localeCompare(String(b[campos[i]] == null ? '' : b[campos[i]]), 'pt-BR', { sensitivity: 'base' });
+        if (c !== 0) return c;
+      }
+      return 0;
+    };
+  }
 
   // ---------- Fail-closed reconciliation (Sheets 5/6 gate) ----------
   // Verbatim port of buscarDetalheOperacionalParaFechamento's own
@@ -86,7 +109,11 @@
   // falling back to summing VENDEDOR snapshot rows -- verbatim mirror of
   // resumoExecutivoOficialExcel()'s own two-tier resolution (never
   // recalculated from live commission-engine data, Gate 12/34).
-  function buildSheet1Resumo(closing, snapshotRows, executivo, comissaoTotal) {
+  // Cada linha: [rótulo, valor, tipo] -- tipo diz ao montador da planilha como formatar o valor
+  // (money = R$ com milhar, int = inteiro, date = dd/mm/aaaa, datetime = dd/mm/aaaa hh:mm em
+  // Brasília, titulo/secao/cabecalho = só estilo). `header` (rótulo, valor) segue igual para
+  // quem só precisa do texto. geradoEm: Date do momento da exportação.
+  function buildSheet1Resumo(closing, snapshotRows, executivo, comissaoTotal, geradoEm) {
     var composicao = { vendedores: 0, gerentes: 0, analistas: 0, gestor: 0 };
     (snapshotRows || []).forEach(function (r) {
       var p = upperTrim(r.perfil);
@@ -95,57 +122,63 @@
       else if (p === 'ANALISTA') composicao.analistas++;
       else if (p.indexOf('GESTOR') !== -1) composicao.gestor++;
     });
+    var linhas = [
+      ['RELATÓRIO DE COMISSÕES RH/DP', null, 'titulo'],
+      ['Grupo Brabus Mitsubishi', null, 'subtitulo'],
+      ['Status', 'Snapshot congelado (competência fechada)', 'text'],
+      ['Período', closing.nome_periodo || '', 'text'],
+      ['Início', closing.data_inicio || '', 'date'],
+      ['Fim', closing.data_fim || '', 'date'],
+      ['Fechado em', closing.fechado_em || '', 'datetime'],
+      ['Gerado em', geradoEm || new Date(), 'datetime'],
+      ['Origem', 'Resumo Executivo oficial do Portal + Snapshot congelado para lançamento', 'text'],
+      [null, null, 'vazio'],
+      ['RESUMO EXECUTIVO OFICIAL', null, 'secao'],
+      ['Indicador', 'Valor', 'cabecalho'],
+      ['Linhas de Comissão', (snapshotRows || []).length, 'int'],
+      ['Quantidade Vendida', num(executivo.vendidas), 'int'],
+      ['Quantidade Financiada', num(executivo.financiadas), 'int'],
+      ['Produção Total', num(executivo.producao), 'money'],
+      ['Retorno Total', num(executivo.retorno), 'money'],
+      ['SPF Extra', num(executivo.spf_extra), 'money'],
+      ['Comissão Total', num(comissaoTotal), 'money'],
+      [null, null, 'vazio'],
+      ['COMPOSIÇÃO DO SNAPSHOT', null, 'secao'],
+      ['Vendedores', composicao.vendedores, 'int'],
+      ['Gerentes', composicao.gerentes, 'int'],
+      ['Analistas', composicao.analistas, 'int'],
+      ['Gestor F&I', composicao.gestor, 'int']
+    ];
     return {
-      header: [
-        ['RELATÓRIO DE COMISSÕES RH/DP'],
-        ['Grupo Brabus Mitsubishi'],
-        ['Status', 'Snapshot congelado (competência fechada)'],
-        ['Período', closing.nome_periodo || ''],
-        ['Origem', 'Resumo Executivo oficial do Portal + Snapshot congelado para lançamento'],
-        ['Gerado em', new Date().toLocaleString('pt-BR')],
-        [],
-        ['RESUMO EXECUTIVO OFICIAL'],
-        ['Indicador', 'Valor'],
-        ['Linhas de Comissão', (snapshotRows || []).length],
-        ['Qtd Vendida', num(executivo.vendidas)],
-        ['Qtd Financiada', num(executivo.financiadas)],
-        ['Produção Total', num(executivo.producao)],
-        ['Retorno Total', num(executivo.retorno)],
-        ['SPF Extra', num(executivo.spf_extra)],
-        ['Comissão Total', num(comissaoTotal)],
-        [],
-        ['COMPOSIÇÃO DO SNAPSHOT'],
-        ['Vendedores', composicao.vendedores],
-        ['Gerentes', composicao.gerentes],
-        ['Analistas', composicao.analistas],
-        ['Gestor F&I', composicao.gestor]
-      ]
+      linhas: linhas,
+      header: linhas.map(function (l) { return l[0] === null ? [] : (l[1] === null ? [l[0]] : [l[0], l[1]]); })
     };
   }
 
   // ---------- ABA 2 -- Vendedores / ABA 4 -- Gerentes (mesmo shape) ----------
-  // CPF sempre vazio nesta linha por padrão -- ver nota de proveniência no
-  // topo do arquivo (comportamento real do V1 em modo seguro, não uma
-  // omissão do V2).
+  // CPF: a partir de 21/10/2026 o fechamento grava o CPF do cadastro (pelo identificador
+  // da pessoa). Fechamentos anteriores não têm CPF no snapshot -- a célula fica vazia
+  // (ver nota de proveniência no topo do arquivo).
   function linhaPadrao(r) {
     return {
-      'Nome': r.nome || '', 'CPF': '', 'Loja': r.loja || '', 'Departamento': r.departamento || '',
-      'Vendas': num(r.vendidas), 'Financiamentos': num(r.financiadas), 'Share': num(r.share),
+      'Nome': r.nome || '', 'CPF': fmtCpf(r.cpf), 'Loja': r.loja || '', 'Departamento': r.departamento || '',
+      'Vendas': num(r.vendidas), 'Financiamentos': num(r.financiadas), 'Share': shareFracao(r.share),
       'Retorno': num(r.retorno), '70% SPF': num(r.spf_liquido), 'Retorno + 70% SPF': num(r.rentabilidade_total),
-      'Faixa de Comissão': num(r.faixa), 'Comissao_Total': num(r.comissao_total)
+      'Faixa de Comissão': num(r.faixa), 'Comissão Total': num(r.comissao_total)
     };
   }
+  var ORDEM_PESSOA = porCampos(['Loja', 'Departamento', 'Nome']);
   function buildSheet2Vendedores(snapshotRows) {
     return (snapshotRows || [])
       .filter(function (r) { return upperTrim(r.perfil) === 'VENDEDOR'; })
       .map(linhaPadrao)
-      .sort(function (a, b) { return (a.Loja + a.Departamento + a.Nome).localeCompare(b.Loja + b.Departamento + b.Nome); });
+      .sort(ORDEM_PESSOA);
   }
   function buildSheet4Gerentes(snapshotRows) {
     return (snapshotRows || [])
       .filter(function (r) { return upperTrim(r.perfil) === 'GERENTE'; })
       .map(linhaPadrao)
-      .sort(function (a, b) { return (a.Loja + a.Departamento + a.Nome).localeCompare(b.Loja + b.Departamento + b.Nome); });
+      .sort(ORDEM_PESSOA);
   }
 
   // ---------- ABA 3 -- Analistas + Gestor F&I ----------
@@ -157,14 +190,14 @@
         var qtdSpf = isGestor ? 0 : Math.round(num(r.comissao_spf) / 150);
         var valorUnitario = isGestor ? 0 : 150;
         return {
-          'Nome': r.nome || '', 'CPF': '', 'Cargo': r.perfil || '', 'Loja': r.loja || '', 'Departamento': r.departamento || '',
-          'Vendas': num(r.vendidas), 'Financiamentos': num(r.financiadas), 'Share': num(r.share),
+          'Nome': r.nome || '', 'CPF': fmtCpf(r.cpf), 'Cargo': r.perfil || '', 'Loja': r.loja || '', 'Departamento': r.departamento || '',
+          'Vendas': num(r.vendidas), 'Financiamentos': num(r.financiadas), 'Share': shareFracao(r.share),
           'Retorno': num(r.retorno), '70% SPF': num(r.spf_liquido), 'Retorno + 70% SPF': num(r.rentabilidade_total),
           'Faixa de Comissão': num(r.faixa), 'Quantidade de SPF': qtdSpf, 'Valor Unitário SPF': valorUnitario,
-          'Comissão SPF': num(r.comissao_spf), 'Comissão Principal': num(r.comissao_principal), 'Comissao_Total': num(r.comissao_total)
+          'Comissão SPF': num(r.comissao_spf), 'Comissão Principal': num(r.comissao_principal), 'Comissão Total': num(r.comissao_total)
         };
       })
-      .sort(function (a, b) { return (a.Loja + a.Cargo + a.Nome).localeCompare(b.Loja + b.Cargo + b.Nome); });
+      .sort(ORDEM_PESSOA);
   }
 
   // ---------- ABA 5/6 -- Chassis ----------
@@ -183,30 +216,29 @@
       'Valor Financiado/Serviço': num(row.financed_value), 'Retorno': num(row.return_considered)
     };
   }
+  var ORDEM_CHASSI = porCampos(['store', 'department', 'seller_name', 'date', 'chassis_masked']);
   function buildSheet6TodosChassis(chassisRows) {
     var incluidos = (chassisRows || []).filter(function (r) { return r.included_in_commission; });
     if (!incluidos.length) return [{ 'Aviso': 'Nenhuma operação registrada para o período desta competência.' }];
-    return incluidos.slice().sort(function (a, b) {
-      return (a.store + a.department + a.seller_name + a.date + a.chassis_masked).localeCompare(b.store + b.department + b.seller_name + b.date + b.chassis_masked);
-    }).map(chassisRowAba6);
+    return incluidos.slice().sort(ORDEM_CHASSI).map(chassisRowAba6);
   }
   function buildSheet5ChassisFinanciados(chassisRows) {
     var financiados = (chassisRows || []).filter(function (r) { return r.included_in_commission && r.financed; });
     if (!financiados.length) return [{ 'Aviso': 'Nenhuma operação financiada no período desta competência.' }];
-    return financiados.slice().sort(function (a, b) {
-      return (a.store + a.department + a.seller_name + a.date + a.chassis_masked).localeCompare(b.store + b.department + b.seller_name + b.date + b.chassis_masked);
-    }).map(chassisRowAba5);
+    return financiados.slice().sort(ORDEM_CHASSI).map(chassisRowAba5);
   }
 
   // ---------- ABA 7 -- Auditoria SPF ----------
+  var ORDEM_SPF = porCampos(['store', 'department', 'seller_name', 'operation_date', 'chassis_masked']);
   function buildSheet7AuditoriaSpf(spfRows) {
     if (!spfRows || !spfRows.length) return [{ 'Aviso': 'Nenhuma operação de SPF encontrada para esta competência no período.' }];
-    return spfRows.map(function (r) {
+    return spfRows.slice().sort(ORDEM_SPF).map(function (r) {
       return {
         'Loja': r.store || '', 'Vendedor': r.seller_name || '', 'Departamento': r.department || '',
-        'Data': r.operation_date || '', 'Chassi': r.chassis_masked || '', 'Codigo_Operacao': r.operation_code || '',
-        'Banco': r.bank || '', 'Plano_Financeiro': r.finance_code || '', 'Opcional': r.optional_name || '',
-        'Valor_SPF_Bruto': num(r.spf_bruto), 'Valor_SPF_70pct': num(r.spf_liquido)
+        'Data': r.operation_date || '', 'Chassi': r.chassis_masked || '', 'Código da Operação': r.operation_code || '',
+        'Banco': r.bank || '', 'Plano Financeiro': r.finance_code || '', 'Opcional': r.optional_name || '',
+        'Valor SPF Bruto': num(r.spf_bruto), 'Valor SPF 70%': num(r.spf_liquido),
+        'Conta na comissão': simNao(r.conta_na_comissao)
       };
     });
   }
@@ -215,13 +247,13 @@
   function buildSheet8Memoria(snapshotRows) {
     return (snapshotRows || []).map(function (r) {
       return {
-        'Loja': r.loja || '', 'Perfil': r.perfil || '', 'Nome': r.nome || '', 'Status': r.departamento || '',
-        'Vendidas': num(r.vendidas), 'Financiadas': num(r.financiadas), 'Share': num(r.share),
-        'Producao': num(r.producao), 'Retorno': num(r.retorno), 'SPF_Extra': num(r.spf_extra), 'SPF_Liquido': num(r.spf_liquido),
-        'Rentabilidade_Total': num(r.rentabilidade_total), 'Faixa': num(r.faixa), 'Comissao_Principal': num(r.comissao_principal),
-        'Comissao_SPF': num(r.comissao_spf), 'Comissao_Total': num(r.comissao_total), 'Observacao': ''
+        'Loja': r.loja || '', 'Perfil': r.perfil || '', 'Nome': r.nome || '', 'Departamento': r.departamento || '',
+        'Vendidas': num(r.vendidas), 'Financiadas': num(r.financiadas), 'Share': shareFracao(r.share),
+        'Produção': num(r.producao), 'Retorno': num(r.retorno), 'SPF Extra': num(r.spf_extra), 'SPF Líquido': num(r.spf_liquido),
+        'Rentabilidade Total': num(r.rentabilidade_total), 'Faixa': num(r.faixa), 'Comissão Principal': num(r.comissao_principal),
+        'Comissão SPF': num(r.comissao_spf), 'Comissão Total': num(r.comissao_total), 'Observação': ''
       };
-    });
+    }).sort(ORDEM_PESSOA);
   }
 
   // ---------- Frozen operational detail (PM-6D.3) ----------
@@ -266,7 +298,7 @@
           store: r.store, department: r.department, seller_user_id: r.seller_user_id, seller_name: r.seller_name,
           operation_date: r.operation_date, chassis_masked: r.chassis_masked, operation_code: r.operation_code,
           bank: r.bank, finance_code: r.finance_code, optional_name: r.optional_name,
-          spf_bruto: r.spf_bruto, spf_liquido: r.spf_liquido
+          spf_bruto: r.spf_bruto, spf_liquido: r.spf_liquido, conta_na_comissao: r.conta_na_comissao
         });
       } else {
         ok = false;

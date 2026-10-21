@@ -4612,19 +4612,125 @@
     return { headers: headers, body: body };
   }
   var RHDP_MONEY_COLS = {
-    sheet2or4: ['Retorno', '70% SPF', 'Retorno + 70% SPF', 'Comissao_Total'],
-    sheet3: ['Retorno', '70% SPF', 'Retorno + 70% SPF', 'Valor Unitário SPF', 'Comissão SPF', 'Comissão Principal', 'Comissao_Total'],
+    sheet2or4: ['Retorno', '70% SPF', 'Retorno + 70% SPF', 'Comissão Total'],
+    sheet3: ['Retorno', '70% SPF', 'Retorno + 70% SPF', 'Valor Unitário SPF', 'Comissão SPF', 'Comissão Principal', 'Comissão Total'],
     sheet5: ['Valor Financiado/Serviço', 'Retorno'], sheet6: ['Valor Venda', 'Retorno'],
-    sheet7: ['Valor_SPF_Bruto', 'Valor_SPF_70pct'],
-    sheet8: ['Producao', 'Retorno', 'SPF_Extra', 'SPF_Liquido', 'Rentabilidade_Total', 'Comissao_Principal', 'Comissao_SPF', 'Comissao_Total']
+    sheet7: ['Valor SPF Bruto', 'Valor SPF 70%'],
+    sheet8: ['Produção', 'Retorno', 'SPF Extra', 'SPF Líquido', 'Rentabilidade Total', 'Comissão Principal', 'Comissão SPF', 'Comissão Total']
   };
   var RHDP_PCT_COLS = { sheet2or4: ['Share', 'Faixa de Comissão'], sheet3: ['Share', 'Faixa de Comissão'], sheet8: ['Share', 'Faixa'] };
+  // Quantidades como inteiro e datas como data de verdade (dd/mm/aaaa), em todas as abas.
+  var RHDP_INT_COLS = ['Vendas', 'Financiamentos', 'Vendidas', 'Financiadas', 'Quantidade de SPF'];
+  var RHDP_DATE_COLS = ['Data'];
+  var RHDP_FMT = { money: '"R$" #,##0.00', pct: '0.00%', int: '0', date: 'dd/mm/yyyy', datetime: 'dd/mm/yyyy hh:mm' };
+
+  // Número de série do Excel calculado à mão (dias desde 30/12/1899): a data não passa por
+  // Date local nem por fuso do computador. 'AAAA-MM-DD' vira a data; ISO com hora ou Date
+  // vira data/hora em horário de Brasília.
+  function rhdpSerialData(valor) {
+    var m = typeof valor === 'string' && valor.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (m) return (Date.UTC(+m[1], +m[2] - 1, +m[3]) - Date.UTC(1899, 11, 30)) / 86400000;
+    var p = HC_VM.partesBrasilia(valor);
+    if (!p) return null;
+    return (Date.UTC(+p.ano, +p.mes - 1, +p.dia, +p.hora, +p.min, +p.seg) - Date.UTC(1899, 11, 30)) / 86400000;
+  }
+  // Texto como o Excel vai mostrar -- só para medir a largura da coluna.
+  function rhdpTextoExibido(cell) {
+    if (!cell || cell.v === undefined || cell.v === null) return '';
+    if (typeof cell.v !== 'number') return String(cell.v);
+    if (cell.z === RHDP_FMT.money) return 'R$ ' + cell.v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    if (cell.z === RHDP_FMT.pct) return (cell.v * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
+    if (cell.z === RHDP_FMT.date) return '00/00/0000';
+    if (cell.z === RHDP_FMT.datetime) return '00/00/0000 00:00';
+    return cell.v.toLocaleString('pt-BR');
+  }
+  function rhdpAjustaLarguras(ws, colunas, linhaInicial) {
+    var range = XLSX.utils.decode_range(ws['!ref']);
+    ws['!cols'] = [];
+    for (var c = 0; c <= range.e.c; c++) {
+      var max = String(colunas[c] || '').length;
+      for (var r = linhaInicial; r <= range.e.r; r++) max = Math.max(max, rhdpTextoExibido(ws[XLSX.utils.encode_cell({ r: r, c: c })]).length);
+      ws['!cols'].push({ wch: Math.min(max + 2, 60) });
+    }
+  }
   function rhdpAppendSheet(wb, name, rows, moneyCols, pctCols) {
     var shaped = objectRowsToAoA(rows);
     var ws = window.NX_XLSX_EXPORT_HELPER.buildStyledWorksheet(shaped.headers, shaped.body, name, {
-      moneyCols: new Set(moneyCols || []), pctCols: new Set(pctCols || [])
+      moneyCols: new Set(moneyCols || []), pctCols: new Set(pctCols || []), intCols: new Set(RHDP_INT_COLS)
     });
+    shaped.headers.forEach(function (h, c) {
+      if (RHDP_DATE_COLS.indexOf(h) === -1) return;
+      for (var r = 1; r <= shaped.body.length; r++) {
+        var cell = ws[XLSX.utils.encode_cell({ r: r, c: c })];
+        var serial = cell && rhdpSerialData(cell.v);
+        if (serial !== null && serial !== undefined && serial !== '') { cell.v = serial; cell.t = 'n'; cell.z = RHDP_FMT.date; delete cell.w; }
+      }
+    });
+    rhdpAjustaLarguras(ws, shaped.headers, 1);
     XLSX.utils.book_append_sheet(wb, ws, name.slice(0, 31));
+  }
+  // Aba 1: mesma identidade visual das demais (títulos em destaque, cabeçalho bordô) e cada
+  // valor com o tipo certo (R$ com milhar, inteiro, data, data/hora de Brasília).
+  function rhdpResumoSheet(sheet1) {
+    var aoa = sheet1.linhas.map(function (l) {
+      if (l[2] === 'date' || l[2] === 'datetime') { var s = rhdpSerialData(l[1]); return [l[0], s === null ? '' : s]; }
+      return l[0] === null ? [] : (l[1] === null ? [l[0]] : [l[0], l[1]]);
+    });
+    var ws = XLSX.utils.aoa_to_sheet(aoa);
+    var borda = { style: 'thin', color: { rgb: 'D9D9D9' } };
+    var bordas = { top: borda, bottom: borda, left: borda, right: borda };
+    sheet1.linhas.forEach(function (l, r) {
+      var a = ws[XLSX.utils.encode_cell({ r: r, c: 0 })], b = ws[XLSX.utils.encode_cell({ r: r, c: 1 })];
+      var tipo = l[2];
+      if (tipo === 'titulo' && a) a.s = { font: { bold: true, sz: 14, color: { rgb: '8A0008' } } };
+      else if (tipo === 'subtitulo' && a) a.s = { font: { italic: true, color: { rgb: '595959' } } };
+      else if (tipo === 'secao' && a) a.s = { font: { bold: true, color: { rgb: '8A0008' } } };
+      else if (tipo === 'cabecalho') {
+        [a, b].forEach(function (cel) { if (cel) cel.s = { font: { bold: true, color: { rgb: 'FFFFFF' } }, fill: { patternType: 'solid', fgColor: { rgb: '8A0008' } }, alignment: { horizontal: 'center' } }; });
+      } else if (a && tipo !== 'vazio') {
+        a.s = { font: { bold: true }, border: bordas };
+        if (b) {
+          if (RHDP_FMT[tipo] && typeof b.v === 'number') { b.t = 'n'; b.z = RHDP_FMT[tipo]; delete b.w; }
+          b.s = { border: bordas, alignment: { horizontal: typeof b.v === 'number' ? 'right' : 'left' } };
+        }
+      }
+    });
+    rhdpAjustaLarguras(ws, [], 2);
+    ws['!cols'][0] = { wch: Math.max(ws['!cols'][0].wch, 26) };
+    return ws;
+  }
+  // O xlsx-js-style (SheetJS 0.18.5) não grava congelamento de painéis em nenhuma forma
+  // (!freeze/!views são ignorados -- conferido no XML gerado). Por isso o arquivo é gerado em
+  // memória e cada aba recebe o <pane> congelado (1ª linha) direto no XML, usando o leitor/
+  // gravador de zip que já vem embutido na biblioteca (XLSX.CFB). Sem CFB, baixa sem congelar.
+  function rhdpBaixarComCabecalhoFixo(wb, filename) {
+    if (!XLSX.CFB || typeof TextDecoder === 'undefined') { XLSX.writeFile(wb, filename); return; }
+    var cfb = XLSX.CFB.read(new Uint8Array(XLSX.write(wb, { type: 'array', bookType: 'xlsx' })), { type: 'array' });
+    var PANE = '<sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/><selection pane="bottomLeft" activeCell="A2" sqref="A2"/></sheetView>';
+    cfb.FullPaths.forEach(function (p, i) {
+      if (!/\/xl\/worksheets\/sheet\d+\.xml$/.test(p)) return;
+      var f = cfb.FileIndex[i];
+      var xml = new TextDecoder('utf-8').decode(f.content).replace(/<sheetView workbookViewId="0"\s*\/>/, PANE);
+      f.content = new TextEncoder().encode(xml); f.size = f.content.length;
+    });
+    var blob = new Blob([XLSX.CFB.write(cfb, { fileType: 'zip', type: 'array', compression: true })], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = filename; a.style.display = 'none';
+    document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  }
+  // Comissão Total oficial = a gravada no fechamento (observacao.comissao_total), arredondada
+  // ao centavo -- a mesma que a tela mostra. Sem ela (fechamentos antigos), a soma EXATA das
+  // linhas do snapshot, arredondada só no fim. Somar as linhas já arredondadas uma a uma
+  // acumulava a diferença dos centavos (R$ 217.208,87 x oficial 217.208,85 em 22/09-20/10).
+  function rhdpComissaoTotalOficial(closing, rawRows) {
+    var obs = HC_VM.parseObservacao(closing.observacao);
+    if (obs && typeof obs.comissao_total === 'number') return Math.round(obs.comissao_total * 100) / 100;
+    var exata = (rawRows || []).reduce(function (s, r) {
+      var d = (r && r.detalhes) || {};
+      return s + (Number(d.comissao_total != null ? d.comissao_total : r.comissao) || 0);
+    }, 0);
+    return Math.round(exata * 100) / 100;
   }
   function resumoExecutivoFromClosing(closing, normalizedRows) {
     var obs = HC_VM.parseObservacao(closing.observacao);
@@ -4658,10 +4764,11 @@
     // whole export blocks -- it is NEVER treated as an implicit
     // LEGACY_PARTIAL (Gate 34: "Se não for possível determinar
     // COMPLETE/LEGACY: BLOCK. Não assumir LEGACY.").
-    var normalizedRows, spfRows, chassisRows;
-    HC_PROVIDER.exportSnapshot(closingId, {})
+    var normalizedRows, spfRows, chassisRows, rawSnapshotRows;
+    HC_PROVIDER.exportSnapshot(closingId, { manterCpf: true })
       .then(function (rawRows) {
-        normalizedRows = rawRows.map(HC_VM.normalizeSnapshotRow);
+        rawSnapshotRows = rawRows;
+        normalizedRows = rawRows.map(HC_VM.normalizeSnapshotRowExato);
         return HC_PROVIDER.loadOperationalSnapshot(closingId, {});
       })
       .then(function (opSnapshot) {
@@ -4699,12 +4806,11 @@
           return Promise.reject({ state: 'RPC_ERROR', message: 'Biblioteca de planilhas indisponível neste ambiente. Recarregue a página e tente novamente.' });
         }
         var executivo = resumoExecutivoFromClosing(closing, normalizedRows);
-        var comissaoTotal = HC_VM.aggregateSnapshotRows(normalizedRows).comissao_total;
-        var sheet1 = RHDP_ENGINE.buildSheet1Resumo(closing, normalizedRows, executivo, comissaoTotal);
+        ['producao', 'retorno', 'spf_extra'].forEach(function (k) { executivo[k] = Math.round((Number(executivo[k]) || 0) * 100) / 100; });
+        var comissaoTotal = rhdpComissaoTotalOficial(closing, rawSnapshotRows);
+        var sheet1 = RHDP_ENGINE.buildSheet1Resumo(closing, normalizedRows, executivo, comissaoTotal, new Date());
         var wb = XLSX.utils.book_new();
-        var ws1 = XLSX.utils.aoa_to_sheet(sheet1.header);
-        ws1['!cols'] = [{ wch: 36 }, { wch: 28 }, { wch: 24 }, { wch: 24 }];
-        XLSX.utils.book_append_sheet(wb, ws1, '1_RESUMO_PRINCIPAL');
+        XLSX.utils.book_append_sheet(wb, rhdpResumoSheet(sheet1), '1_RESUMO_PRINCIPAL');
         rhdpAppendSheet(wb, '2_VENDEDORES', RHDP_ENGINE.buildSheet2Vendedores(normalizedRows), RHDP_MONEY_COLS.sheet2or4, RHDP_PCT_COLS.sheet2or4);
         rhdpAppendSheet(wb, '3_ANALISTAS_GESTOR', RHDP_ENGINE.buildSheet3AnalistasGestor(normalizedRows), RHDP_MONEY_COLS.sheet3, RHDP_PCT_COLS.sheet3);
         rhdpAppendSheet(wb, '4_GERENTES', RHDP_ENGINE.buildSheet4Gerentes(normalizedRows), RHDP_MONEY_COLS.sheet2or4, RHDP_PCT_COLS.sheet2or4);
@@ -4712,7 +4818,7 @@
         rhdpAppendSheet(wb, '6_TODOS_CHASSIS_VENDEDOR', RHDP_ENGINE.buildSheet6TodosChassis(chassisRows), RHDP_MONEY_COLS.sheet6, null);
         rhdpAppendSheet(wb, '7_AUDITORIA_SPF', RHDP_ENGINE.buildSheet7AuditoriaSpf(spfRows), RHDP_MONEY_COLS.sheet7, null);
         rhdpAppendSheet(wb, '8_MEMORIA_DE_CALCULO', RHDP_ENGINE.buildSheet8Memoria(normalizedRows), RHDP_MONEY_COLS.sheet8, RHDP_PCT_COLS.sheet8);
-        XLSX.writeFile(wb, RHDP_ENGINE.buildFilename(closing));
+        rhdpBaixarComCabecalhoFixo(wb, RHDP_ENGINE.buildFilename(closing));
         historyState.rhdpExportingId = null;
         renderPanel();
       })
@@ -5193,10 +5299,15 @@
         ? '<div class="modErrorState"><div class="modStateTitle">Fechamento não concluído</div>' + esc(closingState.closeError.message) + '</div>'
         : errorStateHtml(closingState.closeError.state, closingState.closeError.message))
       : '';
+    // 21/10/2026: o fechamento grava quem é cada pessoa pelo identificador do cadastro. Linha sem
+    // identificador (ex.: dois gerentes na mesma loja/departamento) fecha normalmente, com CPF vazio.
+    var semId = p.linhas.filter(function (l) { return !l.usuario_id; }).length;
+    var semIdHtml = semId ? '<p class="note gbWarn">' + semId + ' linha(s) sem identificação no cadastro — o CPF dessas pessoas ficará vazio no RH/DP.</p>' : '';
     return '<div class="gbRow"><span>Competência</span><b>' + esc(periodo.nome_periodo || '-') + '</b></div>' +
       '<div class="gbRow"><span>Período</span><b>' + esc(CL_VM.fmtDateBR(periodo.data_inicio)) + ' → ' + esc(CL_VM.fmtDateBR(periodo.data_fim)) + '</b></div>' +
       '<div class="gbRow"><span>Linhas do snapshot</span><b>' + p.linhas.length + '</b></div>' +
       '<div class="gbRow"><span>Comissão total prevista</span><b>' + esc(CL_VM.fmtMoney(p.comissaoPrevista)) + '</b></div>' +
+      semIdHtml +
       modoTxt +
       '<p class="note">Após confirmar, um snapshot histórico será criado e esta competência será marcada como FECHADO. Uma competência fechada pode ser reaberta depois, na tela Histórico de Competências.</p>' +
       errHtml +

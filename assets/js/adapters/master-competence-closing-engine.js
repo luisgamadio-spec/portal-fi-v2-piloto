@@ -109,7 +109,7 @@
       if (!(m.vendidas > 0 || m.financiadas > 0 || m.retorno > 0 || m.spf > 0)) return;
       const status = row.department || '';
       const c = commissionCalc(status, m, 'seller', cfg);
-      linhas.push({ perfil: 'VENDEDOR', loja: row.store, nome: row.seller_name, status, m, c, comissao: c.comissaoTotal });
+      linhas.push({ perfil: 'VENDEDOR', loja: row.store, nome: row.seller_name, usuario_id: row.seller_id || null, status, m, c, comissao: c.comissaoTotal });
     });
 
     // GERENTE -- sums seller buckets by store+department; a seller with
@@ -137,7 +137,7 @@
       const dir = managerRows.find(r => String(r.store || '').trim().toUpperCase() === String(b.store || '').trim().toUpperCase() && String(r.department || '').toUpperCase() === b.dep);
       const c = commissionCalc('GERENTE ' + b.dep, b.m, 'manager', cfg);
       // (a) GERENTE's own commission uses ONLY comissaoPrincipal -- see file header note (a).
-      linhas.push({ perfil: 'GERENTE', loja: b.store, nome: dir ? dir.manager_name : ('GERENTE ' + b.dep + ' NÃO LOCALIZADO'), status: 'GERENTE ' + b.dep, m: b.m, c, comissao: c.comissaoPrincipal });
+      linhas.push({ perfil: 'GERENTE', loja: b.store, nome: dir ? dir.manager_name : ('GERENTE ' + b.dep + ' NÃO LOCALIZADO'), usuario_id: dir ? (dir.manager_id || null) : null, status: 'GERENTE ' + b.dep, m: b.m, c, comissao: c.comissaoPrincipal });
     });
 
     // ANALISTA -- rows arrive already redistributed for férias/ausências
@@ -154,7 +154,7 @@
       };
       const c = commissionCalc('ANALISTA', m, 'analyst', cfg);
       linhas.push({
-        perfil: 'ANALISTA', loja: row.store, nome: row.analyst_name,
+        perfil: 'ANALISTA', loja: row.store, nome: row.analyst_name, usuario_id: row.analyst_user_id || null,
         status: row.transfer ? 'ANALISTA COBERTURA' : 'ANALISTA',
         m, c, comissao: c.comissaoTotal,
         obs: row.transfer ? ('Cobertura ' + (row.covered_start || '') + ' a ' + (row.covered_end || '') + ' · redistribuído por operational_analyst_commission_metrics_v2') : ''
@@ -170,7 +170,7 @@
       const g = calcGestorFIGrupo(gestorTotals, cfg);
       if (!linhas.some(l => String(l.perfil || '').toUpperCase().includes('GESTOR'))) {
         linhas.push({
-          perfil: 'GESTOR F&I', loja: 'GRUPO', nome: gestorIdentity.nome, cpf: gestorIdentity.cpf, status: 'GESTOR F&I',
+          perfil: 'GESTOR F&I', loja: 'GRUPO', nome: gestorIdentity.nome, cpf: gestorIdentity.cpf, usuario_id: gestorIdentity.id || null, status: 'GESTOR F&I',
           m: { vendidas: g.vendidas || 0, financiadas: g.financiadas || 0, producao: g.producao || 0, retorno: g.retorno || 0, spf: g.spf || 0, spfQty: g.spfQty || 0, items: [] },
           c: { share: g.share || 0, spfLiquido: g.spfLiquido || 0, rentTotal: g.base || 0, faixa: g.faixa || 0, comissaoPrincipal: g.comissaoPrincipal || 0, comissaoSpf: g.bonusSpf || 0, comissaoTotal: g.comissaoFinal || 0 },
           comissao: g.comissaoFinal || 0, obs: 'Comissão Gestor F&I'
@@ -178,9 +178,33 @@
       }
     }
 
+    // 21/10/2026 (decisão do Luis): a comissão de cada pessoa fica em centavos e o total é a
+    // soma das linhas -- a prévia já mostra o valor que será gravado (o servidor arredonda de
+    // novo, como garantia). Meio centavo para cima, como o Excel e o round() do Postgres.
+    // Se principal + SPF não fecharem com o total só por arredondamento, o principal absorve
+    // o centavo; GERENTE: o total continua sendo só o principal.
+    linhas.forEach(l => {
+      const total = centavos(l.comissao);
+      const spfR = centavos(l.c?.comissaoSpf || 0);
+      let principal = centavos(l.c?.comissaoPrincipal || 0);
+      const perfil = String(l.perfil || '').toUpperCase();
+      if (perfil !== 'GERENTE' && Math.abs(principal + spfR - total) > 1e-9 && Math.abs(principal + spfR - total) <= 0.0100001) principal = centavos(total - spfR);
+      l.comissao = total;
+      if (l.c) { l.c = Object.assign({}, l.c, { comissaoPrincipal: principal, comissaoSpf: spfR, comissaoTotal: perfil === 'GERENTE' ? l.c.comissaoTotal : total }); }
+    });
+
     let vendidas = 0, financiadas = 0, producao = 0, retorno = 0, spf = 0, comissaoPrevista = 0;
     linhas.forEach(l => { vendidas += +(l.m.vendidas || 0); financiadas += +(l.m.financiadas || 0); producao += +(l.m.producao || 0); retorno += +(l.m.retorno || 0); spf += +(l.m.spf || 0); comissaoPrevista += +(l.comissao || 0); });
+    comissaoPrevista = centavos(comissaoPrevista);
     return { linhas, vendidas, financiadas, producao, retorno, spf, comissaoPrevista };
+  }
+
+  // Arredonda em centavos, meio centavo para cima (longe do zero), sem o erro de ponto
+  // flutuante de Math.round(x * 100) (ex.: 1778.655 * 100 = 177865.49999...).
+  function centavos(v) {
+    const n = Number(v) || 0;
+    const s = n < 0 ? -1 : 1;
+    return s * Math.round(Number((Math.abs(n) * 100).toPrecision(15))) / 100;
   }
 
   // portal-app.js:4496-4520 (snapshotRowsPayload), verbatim -- explicit
@@ -197,6 +221,8 @@
       loja: l.loja || '',
       perfil: l.perfil || '',
       nome: l.nome || '',
+      // 21/10/2026: identificador da pessoa (o servidor grava usuario_id e o CPF do cadastro).
+      usuario_id: l.usuario_id || null,
       status: l.status || '',
       vendidas: +(l.m?.vendidas || 0),
       financiadas: +(l.m?.financiadas || 0),
@@ -244,6 +270,7 @@
     calcGestorFIGrupo,
     buildPreviewLines,
     buildSnapshotRowsPayload,
-    buildSummaryPayload
+    buildSummaryPayload,
+    centavos
   };
 })();

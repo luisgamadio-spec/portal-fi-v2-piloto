@@ -730,7 +730,7 @@
     { id: 'mudancaLoja', label: 'Mudança de Loja - Vendedores', active: true },
     { id: 'gestaoBases', label: 'Gestão de Bases', active: true },
     { id: 'gestaoSimuladores', label: 'Gestão dos Simuladores', active: true },
-    { id: 'utilizacaoSimuladores', label: 'Utilização dos Simuladores', active: true },
+    { id: 'utilizacaoSimuladores', label: 'Utilização (Simuladores e Brabus IA)', active: true },
     // Cash Conversion: taxas de referência (Selic, CDI, Focus, IR, FGC) que a tela e a Brabus IA usam.
     { id: 'referenciasMercado', label: 'Referências de Mercado', active: true },
     // Painel Master Phase PM-5H: grouped with Períodos de Comissão
@@ -4055,8 +4055,23 @@
   // themselves, confirmed live, never called from this admin screen).
   var SU_PROVIDER = window.NX_MASTER_SIMULATOR_USAGE_PROVIDER;
   var SU_VM = window.NX_MASTER_SIMULATOR_USAGE_VM;
+  // 26/10/2026: a seção Utilização tem duas abas -- Simuladores (esta, sem mudança) e Brabus IA
+  // (master-ia-usage-section.js: só utilização, nunca o texto das perguntas; só Master).
+  var IA_USO = window.NX_MASTER_IA_USAGE_SECTION;
+  var suAba = 'simuladores';
+  function suAbasHtml() {
+    return '<div class="suPresetGroup suAbas" role="tablist">' +
+      [['simuladores', 'Simuladores'], ['ia', 'Brabus IA']].map(function (a) {
+        return '<button type="button" role="tab" aria-selected="' + (suAba === a[0]) + '" class="' + (suAba === a[0] ? 'modBtn' : 'modBtnGhost') + ' suAbaBtn" data-aba="' + a[0] + '">' + a[1] + '</button>';
+      }).join('') + '</div>';
+  }
+  function suIaIniciar() {
+    IA_USO.init({ esc: esc, errorStateHtml: errorStateHtml, renderPanel: renderPanel, renderNxModal: renderNxModal, clearNxModal: clearNxModal,
+      fieldRow: fieldRow, SU_VM: SU_VM, filtroSelectHtml: suFiltroSelectHtml });
+  }
 
   function suEnter() {
+    if (suAba === 'ia' && IA_USO) { suIaIniciar(); IA_USO.enter(); return; }
     if (suState.loaded || suState.loading) { renderPanel(); return; }
     if (!suState.filtros.dtIni) {
       var preset = SU_VM.applyPreset('30d', null);
@@ -4277,7 +4292,8 @@
   }
 
   function renderUtilizacaoSimuladoresSection() {
-    var html = '<h2>Utilização dos Simuladores</h2>' +
+    if (suAba === 'ia' && IA_USO) return '<h2>Utilização</h2>' + suAbasHtml() + IA_USO.html();
+    var html = '<h2>Utilização</h2>' + suAbasHtml() +
       '<p class="note">Dados de uso (acessos, sessões, tempo ativo, simulações realizadas) — nunca conteúdo de simulação. Sem CPF, cliente, chassi ou valores financeiros. Tela somente leitura.</p>';
     if (suState.error) {
       return html + errorStateHtml(suState.error.state, suState.error.message) +
@@ -5537,7 +5553,7 @@
     }
 
     if (currentSection === 'utilizacaoSimuladores') {
-      renderSuDrawerRoot();
+      if (suAba === 'ia' && IA_USO) IA_USO.drawer(); else renderSuDrawerRoot();
       panel.innerHTML = renderUtilizacaoSimuladoresSection();
       wireInteraction();
       return;
@@ -5935,6 +5951,15 @@
       });
     });
 
+    // ---- Utilização: abas Simuladores / Brabus IA (26/10/2026) ----
+    document.querySelectorAll('.suAbaBtn').forEach(function (el) {
+      el.addEventListener('click', function () {
+        var aba = el.getAttribute('data-aba');
+        if (aba === suAba) return;
+        clearNxModal(); suState.drawerUserId = null; suAba = aba; suEnter();
+      });
+    });
+    if (currentSection === 'utilizacaoSimuladores' && suAba === 'ia' && IA_USO) IA_USO.bind();
     // ---- Utilização dos Simuladores (Painel Master Phase PM-5H, read-only) ----
     var suRetry = document.getElementById('suRetryBtn');
     if (suRetry) suRetry.addEventListener('click', suLoad);

@@ -226,9 +226,10 @@
         }).join('') + '</div></div>';
     }).join('');
   }
-  function detailRowHtml(ns, key, colspan, groups) {
+  // extraHtml (opcional, 27/10/2026): conteúdo a mais no fim do painel (listas por loja); quem não passa fica igual.
+  function detailRowHtml(ns, key, colspan, groups, extraHtml) {
     if (!isExpanded(ns, key)) return '';
-    return '<tr id="' + detailDomId(ns, key) + '" class="dbDetailRow"><td colspan="' + colspan + '"><div class="dbDetailPanel">' + detailGroupsHtml(groups) + '</div></td></tr>';
+    return '<tr id="' + detailDomId(ns, key) + '" class="dbDetailRow"><td colspan="' + colspan + '"><div class="dbDetailPanel">' + detailGroupsHtml(groups) + '</div>' + (extraHtml || '') + '</td></tr>';
   }
   // PORTAL-NEXT-07.5 — same detail-panel body, without the <tr>/<td> wrapper,
   // for the KPI grid (a div grid, not a table) — reuses the identical
@@ -236,9 +237,9 @@
   // PORTAL-NEXT-07.6.4 — also reused as-is for every mobile card's own
   // detail panel (idSuffix keeps its DOM id distinct from the desktop
   // row's, since both share the same ns/key toggle state).
-  function kpiDetailPanelHtml(ns, key, groups, idSuffix) {
+  function kpiDetailPanelHtml(ns, key, groups, idSuffix, extraHtml) {
     if (!isExpanded(ns, key)) return '';
-    return '<div id="' + detailDomId(ns, key, idSuffix) + '" class="dbDetailPanel dbKpiDetailPanel">' + detailGroupsHtml(groups) + '</div>';
+    return '<div id="' + detailDomId(ns, key, idSuffix) + '" class="dbDetailPanel dbKpiDetailPanel">' + detailGroupsHtml(groups) + '</div>' + (extraHtml || '');
   }
 
   // PORTAL-NEXT-07.6.4 — human UAT rejected transforming the desktop
@@ -255,13 +256,13 @@
   function dbMobileField(label, valueHtml, extraClass) {
     return '<div class="dbMobileField' + (extraClass ? ' ' + extraClass : '') + '"><div class="dbMobileLabel">' + esc(label) + '</div><div class="dbMobileValue">' + valueHtml + '</div></div>';
   }
-  function dbMobileCard(ns, key, identityText, subText, primaryFieldsHtml, detailGroups) {
+  function dbMobileCard(ns, key, identityText, subText, primaryFieldsHtml, detailGroups, extraHtml) {
     return '<div class="dbMobileCard">' +
       '<div class="dbMobileIdentity">' + esc(identityText) + '</div>' +
       (subText ? '<div class="dbMobileSub">' + esc(subText) + '</div>' : '') +
       '<div class="dbMobileFieldGrid">' + primaryFieldsHtml + '</div>' +
       detailToggleHtml(ns, key, '-m') +
-      kpiDetailPanelHtml(ns, key, detailGroups, '-m') +
+      kpiDetailPanelHtml(ns, key, detailGroups, '-m', extraHtml) +
       '</div>';
   }
   function dbMobileListHtml(cards) {
@@ -418,12 +419,12 @@
   // recomposition (see dashbi.css) for tables carrying the new 5-metric
   // primary hierarchy. Omitted (undefined), every existing caller's markup
   // is byte-identical to before.
-  function expandableRow(ns, key, primaryCells, numericFrom, colspan, detailGroups, headers) {
+  function expandableRow(ns, key, primaryCells, numericFrom, colspan, detailGroups, headers, extraHtml) {
     function th(i) { return headers ? ' data-th="' + esc(headers[i]) + '"' : ''; }
     return '<tr><td' + th(0) + '>' + cellHtml(primaryCells[0]) + '</td>' +
       primaryCells.slice(1).map(function (c, i) { return '<td' + th(i + 1) + (i + 1 >= numericFrom ? ' class="dbNumCol"' : '') + '>' + cellHtml(c) + '</td>'; }).join('') +
       '<td class="dbDetailToggleCell">' + detailToggleHtml(ns, key) + '</td></tr>' +
-      detailRowHtml(ns, key, colspan, detailGroups);
+      detailRowHtml(ns, key, colspan, detailGroups, extraHtml);
   }
 
   function expandableTableHtml(headers, numericFrom, bodyRowsHtml, colCount, colClasses, tableClass) {
@@ -480,7 +481,82 @@
   // disclosed nuance: Ranking shows top 10 by Receita Total, this table
   // showed every seller sorted by Vendas qtd -- same metric set either way).
 
-  function storeTableHtml(A, results, previousResults) {
+  // ---- 27/10/2026 (pedido do Luis): listas no "+ Detalhes" de cada loja ----
+  // NOVOS: "Veículos" (cada modelo e quantos foram vendidos) e "Vendedores"; SEMINOVOS: "Vendedores".
+  // Só quantidade (nunca retorno/receita/comissão), mesmo período e filtros da tela (out já vem filtrado
+  // por período e loja; a escolha Grupo/Novos/Seminovos decide quais blocos aparecem).
+  // - Vendedores: as MESMAS linhas (out.sales) que formam "Vendas" da loja -> o total bate por construção.
+  // - Veículos: operational_model_metrics (out.modelMetricsRows); a soma é conferida contra as vendas da
+  //   loja e, se não bater, a lista mostra um aviso (nunca esconde a diferença).
+  var LISTA_NS = 'storeLists';
+  function ordenaContagem(mapa) {
+    return Object.keys(mapa).map(function (k) { return { nome: k, qtd: mapa[k] }; })
+      .sort(function (a, b) { return (b.qtd - a.qtd) || a.nome.localeCompare(b.nome, 'pt-BR'); });
+  }
+  function vendasLojaDept(listasOut, loja, dept) {
+    return (listasOut.sales || []).filter(function (s) { return s.loja === loja && s.dept === dept; }).length;
+  }
+  function listaVendedores(listasOut, loja, dept) {
+    var mapa = {};
+    (listasOut.sales || []).forEach(function (s) {
+      if (s.loja !== loja || s.dept !== dept) return;
+      // linha "TOTAL DA LOJA" (sem vendedor) não acontece hoje; se vier, entra como uma linha só, para o total bater
+      var nome = s.agregadoLoja ? 'Vendedores sem detalhe (total da loja)' : (s.vendedor || 'Sem vendedor');
+      mapa[nome] = (mapa[nome] || 0) + 1;
+    });
+    return ordenaContagem(mapa);
+  }
+  function listaVeiculos(listasOut, loja) {
+    var mapa = {};
+    (listasOut.modelMetricsRows || []).forEach(function (r) {
+      if (r.store !== loja || String(r.department || '').toUpperCase() !== 'NOVOS' || !(r.sold_count > 0)) return;
+      var nome = r.model || 'Modelo não informado';
+      mapa[nome] = (mapa[nome] || 0) + r.sold_count;
+    });
+    return ordenaContagem(mapa);
+  }
+  // Cabeçalho "Modelo | Qtd" / "Vendedor | Qtd"; cada linha só o número, com uma barrinha proporcional
+  // (a maior linha = barra cheia); Total com o mesmo destaque do cabeçalho.
+  function listaHtml(titulo, colNome, itens, totalLoja) {
+    var total = itens.reduce(function (s, x) { return s + x.qtd; }, 0);
+    var max = itens.reduce(function (m, x) { return Math.max(m, x.qtd); }, 0);
+    var aviso = total !== totalLoja
+      ? '<div class="dbListaAviso">Total diferente das vendas da loja (' + totalLoja + '); conferir a base.</div>' : '';
+    return '<div class="dbLista"><div class="dbListaTitulo">' + esc(titulo) + '</div>' +
+      '<div class="dbListaCab"><span>' + esc(colNome) + '</span><span>Qtd</span></div>' +
+      (itens.length ? '<ol class="dbListaItens">' + itens.map(function (x) {
+        var pct = max ? Math.round(x.qtd / max * 1000) / 10 : 0;
+        return '<li><span class="dbListaNome">' + esc(x.nome) + '</span><span class="dbListaQtd">' + x.qtd + '</span>' +
+          '<span class="dbListaBarra" aria-hidden="true"><span style="width:' + pct + '%"></span></span></li>';
+      }).join('') + '</ol>' : '<p class="dbMuted">Sem vendas no período.</p>') +
+      '<div class="dbListaTotal"><span>Total</span><span class="dbListaQtd">' + total + '</span></div>' + aviso + '</div>';
+  }
+  function listaBtnHtml(chave, rotulo) {
+    var open = isExpanded(LISTA_NS, chave);
+    return '<button type="button" class="dbDetailToggle dbListaBtn' + (open ? ' dbListaBtnAtivo' : '') + '" data-detail-ns="' + LISTA_NS +
+      '" data-detail-key="' + esc(chave) + '" aria-expanded="' + (open ? 'true' : 'false') + '">' + esc(rotulo) + '</button>';
+  }
+  function deptListasHtml(listasOut, loja, dept) {
+    var totalLoja = vendasLojaDept(listasOut, loja, dept);
+    var base = loja + '|' + dept + '|';
+    var botoes = (dept === 'Novos' ? [['veiculos', 'Veículos'], ['vendedores', 'Vendedores']] : [['vendedores', 'Vendedores']]);
+    var html = '<div class="dbListaDept"><div class="dbListaDeptHead"><span class="dbListaDeptNome">' + esc(dept.toUpperCase()) + ' — ' +
+      esc(totalLoja + (totalLoja === 1 ? ' venda' : ' vendas')) + '</span><span class="dbListaBtns">' +
+      botoes.map(function (b) { return listaBtnHtml(base + b[0], b[1]); }).join('') + '</span></div>';
+    var listas = '';
+    if (isExpanded(LISTA_NS, base + 'veiculos') && dept === 'Novos') listas += listaHtml('Veículos vendidos', 'Modelo', listaVeiculos(listasOut, loja), totalLoja);
+    if (isExpanded(LISTA_NS, base + 'vendedores')) listas += listaHtml('Vendedores', 'Vendedor', listaVendedores(listasOut, loja, dept), totalLoja);
+    // lado a lado no computador, um embaixo do outro no celular (.dbListasGrade)
+    return html + (listas ? '<div class="dbListasGrade">' + listas + '</div>' : '') + '</div>';
+  }
+  function storeListsHtml(listasOut, loja) {
+    if (!listasOut) return '';
+    var depts = currentDeptView === 'Grupo' ? ['Novos', 'Seminovos'] : [currentDeptView];
+    return '<div class="dbListasLoja">' + depts.filter(function (d) { return d === 'Novos' || d === 'Seminovos'; })
+      .map(function (d) { return deptListasHtml(listasOut, loja, d); }).join('') + '</div>';
+  }
+
+  function storeTableHtml(A, results, previousResults, listasOut) {
     var A_ = results.aggs;
     var lojas = Object.keys(A_.vendasLoja);
     var finLojaMap = A_.finLoja;
@@ -512,8 +588,9 @@
       var producaoCell = prev ? numCompareCellHtml(A, A.money(f.producao || 0), f.producao || 0, prev.f.producao || 0, A.money(prev.f.producao || 0)) : A.money(f.producao || 0);
       var receitaTotalCell = prev ? numCompareCellHtml(A, A.money(f.receitaTotal || 0), f.receitaTotal || 0, prev.f.receitaTotal || 0, A.money(prev.f.receitaTotal || 0)) : A.money(f.receitaTotal || 0);
       var shareCell = prev ? numCompareCellHtml(A, penetracaoCellHtml(A, share), share, prev.share, A.pct(prev.share)) : penetracaoCellHtml(A, share);
-      desktopRows.push(expandableRow(ns, loja, [loja, { raw: vendasCell }, { raw: finCell }, { raw: shareCell }, { raw: producaoCell }, { raw: receitaTotalCell }], 1, 7, detailGroups, STORE_HEADERS));
-      mobileCards.push(dbMobileCard(ns, loja, loja, null, dbPrimaryMetricFieldsHtml(A, v, f, share, prev), detailGroups));
+      var listas = storeListsHtml(listasOut, loja);
+      desktopRows.push(expandableRow(ns, loja, [loja, { raw: vendasCell }, { raw: finCell }, { raw: shareCell }, { raw: producaoCell }, { raw: receitaTotalCell }], 1, 7, detailGroups, STORE_HEADERS, listas));
+      mobileCards.push(dbMobileCard(ns, loja, loja, null, dbPrimaryMetricFieldsHtml(A, v, f, share, prev), detailGroups, listas));
     });
     return '<div class="dbDesktopOnly">' + expandableTableHtml(STORE_HEADERS, 1, desktopRows, 7, STORE_HEADER_COL_CLASSES, 'dbTableLoja') + '</div>' + dbMobileListHtml(mobileCards);
   }
@@ -1184,7 +1261,7 @@
       // not a global "Exportar" -- Gate 27, this Wave's brief.
       '<div class="dbExportBar"><button type="button" class="dbBtn dbExportResumoBtn" id="dbExportResumoBtn">Exportar Excel</button>' +
       '<span id="dbExportResumoStatus" class="dbMuted dbExportStatus" role="status" aria-live="polite"></span></div>' +
-      storeTableHtml(A, deptOut, deptPreviousOut) +
+      storeTableHtml(A, deptOut, deptPreviousOut, out) +
 
       complementaryHtml +
 

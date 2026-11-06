@@ -363,8 +363,9 @@
   // Plano que abre selecionado (19/10/2026, pedido do Luis): sempre o Linear.
   var MODO_INICIAL = 'linear';
   // Planos ocultos temporariamente -- o código, as tabelas e o banco continuam.
-  // Para trazer o Semestral Triton / Outlander de volta, deixe a lista vazia: [].
-  var MODOS_OCULTOS = ['triton'];
+  // Para trazer o Semestral Triton / Outlander de volta, tire 'triton' da lista.
+  // 'campanha' = Plano Coparticipado: o plano NÃO EXISTE MAIS (06/11/2026, pedido do Luis); o histórico continua no banco.
+  var MODOS_OCULTOS = ['triton', 'campanha'];
   MODES = MODES.filter(function (m) { return MODOS_OCULTOS.indexOf(m.id) === -1; });
   // Qualquer pedido de plano oculto ou inexistente abre o plano inicial.
   function modoValido(id) {

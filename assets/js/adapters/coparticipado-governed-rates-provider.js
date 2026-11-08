@@ -54,7 +54,9 @@
     return window.NX_AUTH.getAccessToken().then(function (token) {
       if (!token) return Promise.reject({ state: 'SESSION_EXPIRED', message: 'Sessão expirada.' });
 
-      return fetch(cfg.supabaseUrl + '/rest/v1/rpc/simulador_get_coparticipado', {
+      // 07/11/2026: o Plano Coparticipado acabou; a original responde "aperte F5" (abas antigas). A tela de
+      // histórico (Gestão de Coparticipados & Subsidiados) usa a cópia de mesmo conteúdo.
+      return fetch(cfg.supabaseUrl + '/rest/v1/rpc/simulador_get_coparticipado_historico', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

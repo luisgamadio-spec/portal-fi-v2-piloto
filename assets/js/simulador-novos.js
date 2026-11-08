@@ -366,6 +366,7 @@
     return Math.abs(t) < 1e-9 ? '0%' : (t * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
   }
   var SUBS_ESCOLHA = '<div class="emptyState smSubsEscolha"><div class="t">Escolha a taxa para ver os prazos</div>Informe o valor do bem e a entrada e toque em uma taxa.</div>';
+  var SUBS_ESCOLHA_AVISO = '<div class="emptyState smSubsEscolha"><div class="t">Leia o aviso para ver os prazos</div>Clique em "Entendi" para mostrar os resultados.</div>';
 
   var MODES = [
     { id: 'tradicional', group: 'Financiamento', label: 'Tradicional (Balão)' },
@@ -442,6 +443,7 @@
   var balloons = []; // {mes, valor} for Tradicional
   var subsTaxa = null; // Taxa Subsidiada: taxa escolhida nos botões (só filtra o que é mostrado)
   var subsModelo = ''; // Taxa Subsidiada: modelo do carro (obrigatório; define a entrada mínima e o subsídio da montadora)
+  var subsAvisoVisto = ''; // modelo para o qual o vendedor já clicou "Entendi" no aviso do trade-in (taxa trocada não repete o aviso)
   // ANTECIPACAO-BALAO-1: restores Secure parity for the Antecipação
   // simulator's OWN, separate balloon feature (modules/simulador-
   // novos.html #aTemBalao/#aQtdBaloes, "Limite máximo: 8 balões.") --
@@ -968,16 +970,16 @@
     } else if (mode === 'subsidiadas') {
       if (!wireAuthorityGate(subsidiadasAuthority, mode)) return;
       if (!wireAuthorityGate(subsidioModelosAuthority, mode)) return;
-      document.getElementById('nCalc').addEventListener('click', calcSubsidiadas);
+      document.getElementById('nCalc').addEventListener('click', function () { pedirCalculoSubsidiadas(true); });
       document.getElementById('nSubsModelo').addEventListener('change', function (e) {
         subsModelo = e.target.value;
-        if (subsTaxa != null || document.querySelector('#smResultRegion .smSubsidiadaCard')) calcSubsidiadas();
+        if (subsTaxa != null || document.querySelector('#smResultRegion .smSubsidiadaCard')) pedirCalculoSubsidiadas(false);
       });
       document.querySelectorAll('#nSubsTaxa .smTaxaChip').forEach(function (b) {
         b.addEventListener('click', function () {
           subsTaxa = Number(b.getAttribute('data-taxa'));
           document.querySelectorAll('#nSubsTaxa .smTaxaChip').forEach(function (x) { x.classList.toggle('active', x === b); x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
-          calcSubsidiadas();
+          pedirCalculoSubsidiadas(false);
         });
       });
       ensureBankRates();
@@ -1193,20 +1195,66 @@
     setResult(html);
     wireResultTermGrid(r.terms.length);
   }
-  // 07/11/2026: mensagem junto da divisão do rebate (pedido do Luis):
-  //  - modelo sem subsídio: "Sem subsídio da montadora — custo da loja: R$ X" (rebate inteiro);
-  //  - rebate maior que o subsídio: "Custo da loja: R$ X", em destaque;
-  //  - rebate menor ou igual ao subsídio: "Usado R$ U do subsídio de R$ S — custo da loja: R$ 0".
-  function subsidioMensagem(row) {
-    if (!(row.subsidioModelo > 0)) return { tipo: 'sem', texto: 'Sem subsídio da montadora — custo da loja: ' + UI.brl(row.parteLoja) };
-    if (row.rebateValor > row.subsidioModelo + 0.005) return { tipo: 'custo', texto: 'Custo da loja: ' + UI.brl(row.parteLoja) };
-    return { tipo: 'parcial', texto: 'Usado ' + UI.brl(row.subsidioUsado) + ' do subsídio de ' + UI.brl(row.subsidioModelo) + ' — custo da loja: ' + UI.brl(0) };
+  // 08/11/2026 (Luis): divisão do rebate no card, uma linha por informação (rótulo à esquerda, valor à direita):
+  //   Montadora pode pagar = limite do modelo; Usando do limite = menor entre rebate total e limite;
+  //   rebate > limite: "Falta (custo da loja)" em vermelho; rebate < limite: "Sobra do limite" em verde (custo da loja R$ 0);
+  //   igual: "Usa o limite inteiro — custo da loja: R$ 0"; modelo sem subsídio: limite R$ 0 e falta = rebate inteiro.
+  function subsLinha(rotulo, valor, cls, tipo) {
+    return '<div class="smSubsidiadaCardRow smSubsLinha' + (cls ? ' ' + cls : '') + '"' + (tipo ? ' data-subs-msg="' + tipo + '"' : '') +
+      '><span class="kpiLabel">' + rotulo + '</span><strong>' + valor + '</strong></div>';
   }
   function subsidioDivisaoHtml(row) {
-    var msg = subsidioMensagem(row);
-    return '<div class="smSubsidiadaCardRow smSubsDivRow"><span class="kpiLabel">Subsídio da montadora</span><strong>' + UI.brl(row.subsidioUsado) + '</strong></div>' +
-      '<div class="smSubsidiadaCardRow smSubsDivRow"><span class="kpiLabel">Parte da loja</span><strong>' + UI.brl(row.parteLoja) + '</strong></div>' +
-      '<p class="smSubsMsg smSubsMsg-' + msg.tipo + '" data-subs-msg="' + msg.tipo + '">' + UI.esc(msg.texto) + '</p>';
+    var limite = row.subsidioModelo || 0;
+    if (!(limite > 0)) {
+      return subsLinha('Montadora pode pagar', UI.brl(0)) +
+        subsLinha('Falta (custo da loja)', UI.brl(row.parteLoja), 'smSubsFalta', 'sem');
+    }
+    var html = subsLinha('Montadora pode pagar', UI.brl(limite)) + subsLinha('Usando do limite', UI.brl(row.subsidioUsado));
+    if (row.rebateValor > limite + 0.005) return html + subsLinha('Falta (custo da loja)', UI.brl(row.parteLoja), 'smSubsFalta', 'falta');
+    if (row.rebateValor < limite - 0.005) {
+      return html + subsLinha('Sobra do limite', UI.brl(limite - row.subsidioUsado), 'smSubsSobra', 'sobra') +
+        '<p class="smSubsNota">Custo da loja: ' + UI.brl(0) + '</p>';
+    }
+    return html + '<p class="smSubsIgual" data-subs-msg="igual">Usa o limite inteiro — custo da loja: ' + UI.brl(0) + '</p>';
+  }
+  // Aviso antes dos resultados (08/11/2026): só para modelo com subsídio da montadora > 0. "Entendi" fecha e mostra.
+  var AVISO_TRADEIN = 'O rebate pode ser absorvido pela montadora, mas, se utilizado, o bônus de trade-in será perdido.';
+  function avisoSubsidioAberto() { return !!document.getElementById('smAvisoSubs'); }
+  function abrirAvisoSubsidio(depois) {
+    if (avisoSubsidioAberto()) return;
+    var volta = document.activeElement;
+    var scrim = document.createElement('div');
+    scrim.className = 'smAvisoScrim'; scrim.id = 'smAvisoSubs';
+    scrim.innerHTML = '<div class="smAvisoDialog" role="alertdialog" aria-modal="true" aria-labelledby="smAvisoTitulo" aria-describedby="smAvisoTexto">' +
+      '<p class="smAvisoTitulo" id="smAvisoTitulo">Atenção</p><p class="smAvisoTexto" id="smAvisoTexto">' + UI.esc(AVISO_TRADEIN) + '</p>' +
+      '<button type="button" class="btn btn-primary smAvisoOk" id="smAvisoOk">Entendi</button></div>';
+    document.body.appendChild(scrim);
+    var ok = document.getElementById('smAvisoOk');
+    function fechar() {
+      document.removeEventListener('keydown', tecla, true);
+      scrim.remove();
+      if (volta && volta.focus && document.body.contains(volta)) volta.focus({ preventScroll: true });
+      depois();
+    }
+    function tecla(ev) {
+      if (ev.key === 'Escape' || ev.key === 'Enter') { ev.preventDefault(); fechar(); }
+      else if (ev.key === 'Tab') { ev.preventDefault(); ok.focus(); }   // um só botão: o foco fica nele
+    }
+    ok.addEventListener('click', fechar);
+    document.addEventListener('keydown', tecla, true);
+    ok.focus();
+  }
+  // Pedido do vendedor (Calcular, troca de taxa ou de modelo): com subsídio > 0 e resultado a mostrar, o aviso vem antes.
+  // "Calcular" mostra o aviso sempre; trocar a taxa ou o modelo só mostra se ainda não houve "Entendi" para este modelo.
+  function pedirCalculoSubsidiadas(peloBotao) {
+    var modelos = subsidioModelosAuthority.getAuthority();
+    var modelo = modelos && subsModelo ? modelos.modelos[subsModelo] : null;
+    if (!modelo || !(modelo.subsidio > 0) || subsTaxa == null || (!peloBotao && subsAvisoVisto === subsModelo)) { calcSubsidiadas(); return; }
+    var pre = N.calcularSubsidiadas({ bem: UI.moneyVal('nBem'), entrada: UI.moneyVal('nEntrada'), minVenda: UI.moneyVal('nMinVenda'), tabelaRebates: subsidiadasAuthority.getAuthority(),
+      subsidioMontadora: modelo.subsidio, entradaMinimaModelo: modelo.entradaMinima });
+    if (pre.empty || pre.error) { calcSubsidiadas(); return; }   // erro de preenchimento: mostra o erro, sem aviso
+    setResult(SUBS_ESCOLHA_AVISO);
+    abrirAvisoSubsidio(function () { subsAvisoVisto = subsModelo; calcSubsidiadas(); });
   }
   function calcSubsidiadas() {
     var modelos = subsidioModelosAuthority.getAuthority();
@@ -1249,10 +1297,9 @@
           // denominator is "financiado" (bem - entrada), NOT "valor do bem".
           // Displayed as-is, no derivation, no new precision invented.
           // Wave 2: barrinha = o próprio row.rebate do motor (% do valor financiado), só desenhada.
-          '<div class="smSubsidiadaCardRow smSubsidiadaCardRowEmphasis smSubsRebateRow"><span class="kpiLabel">Rebate total</span>' +
-          '<span class="smSubsidiadaCardValueStack"><strong>' + UI.brl(row.rebateValor) + '</strong>' +
-          '<span class="smRebateBar" aria-hidden="true"><span style="width:' + Math.max(0, Math.min(100, row.rebate * 100)).toFixed(2) + '%"></span></span>' +
-          '<span class="smSubsidiadaCardRebatePct">' + UI.pct2(row.rebate) + ' do valor financiado</span></span></div>' +
+          '<div class="smSubsidiadaCardRow smSubsidiadaCardRowEmphasis smSubsRebateRow smSubsLinha"><span class="kpiLabel">Rebate total</span><strong>' + UI.brl(row.rebateValor) + '</strong></div>' +
+          '<div class="smSubsRebateExtra"><span class="smRebateBar" aria-hidden="true"><span style="width:' + Math.max(0, Math.min(100, row.rebate * 100)).toFixed(2) + '%"></span></span>' +
+          '<span class="smSubsidiadaCardRebatePct">' + UI.pct2(row.rebate) + ' do valor financiado</span></div>' +
           subsidioDivisaoHtml(row) +
           '<div class="smSubsidiadaCardRow smSubsidiadaCardRowEmphasis"><span class="kpiLabel">Valor final de venda</span><strong>' + UI.brl(row.valorFinalVenda) + '</strong></div>' +
           '</div>';
@@ -1362,6 +1409,7 @@
       antBaloes = [];
       subsTaxa = null;
       subsModelo = '';
+      subsAvisoVisto = '';
       openCategory = null; // SIM-NAV-4 / F.2: all categories collapsed on entry
       outlet.innerHTML =
         '<div class="smPage">' +

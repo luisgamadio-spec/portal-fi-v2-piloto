@@ -147,7 +147,8 @@
     loading: false, loaded: false, error: null,
     statusByTipo: {},
     pendingUid: null,
-    modal: null // null | {kind:'diagnostic'|'success'|'error', ...}
+    subs: { linhas: [], erro: null }, // 07/11/2026: modelos da Taxa Subsidiada (simulador_get_subsidio_modelos)
+    modal: null // null | {kind:'diagnostic'|'success'|'error'|'subsForm'|'subsRemover'|'subsOk', ...}
   };
 
   // Painel Master Phase PM-5E -- Configurações section state. Own
@@ -2042,6 +2043,15 @@
     if (gsSuccessClose) gsSuccessClose.addEventListener('click', gsCloseModalAndRefresh);
     var gsErrorClose = document.getElementById('gsErrorCloseBtn');
     if (gsErrorClose) gsErrorClose.addEventListener('click', gsCloseModal);
+    var gsSubsForm = document.getElementById('gsSubsForm');
+    if (gsSubsForm) {
+      gsSubsForm.addEventListener('submit', gsSubsSalvar);
+      gsSubsForm.querySelectorAll('input').forEach(function (i) { i.addEventListener('input', gsSubsLimparErro); });
+    }
+    var gsSubsCancelar = document.getElementById('gsSubsCancelarBtn');
+    if (gsSubsCancelar) gsSubsCancelar.addEventListener('click', gsCancelar);
+    var gsSubsRem = document.getElementById('gsSubsRemoverBtn');
+    if (gsSubsRem) gsSubsRem.addEventListener('click', gsSubsRemover);
   }
 
   function wireCfgModalInteraction() {
@@ -2557,6 +2567,14 @@
     gsState.loading = true;
     gsState.error = null;
     renderPanel();
+    gsState.subs = { linhas: [], erro: null };
+    GS_PROVIDER.listarSubsidioModelos({}).then(function (linhas) {
+      gsState.subs = { linhas: linhas, erro: null };
+      if (gsState.loaded && currentSection === 'gestaoSimuladores') renderPanel();
+    }, function (err) {
+      gsState.subs = { linhas: [], erro: err || { state: 'RPC_ERROR' } };
+      if (gsState.loaded && currentSection === 'gestaoSimuladores') renderPanel();
+    });
     GS_PROVIDER.listarBases({}).then(
       function (bases) {
         var byTipo = {};
@@ -2575,7 +2593,126 @@
     );
   }
 
+  // 07/11/2026: Taxa Subsidiada — modelos do carro (entrada mínima + subsídio da montadora), no lugar do bloco do Coparticipado.
+  function gsBrl(v) { return Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+  function gsPct(v) { return (Number(v || 0) * 100).toLocaleString('pt-BR', { maximumFractionDigits: 2 }) + '%'; }
+  function gsSubsCardHtml(def) {
+    var s = gsState.subs, corpo;
+    if (s.erro) corpo = '<p class="gbErrText">Não foi possível carregar os modelos. ' + esc(s.erro.message || '') + '</p>' +
+      '<button type="button" class="modBtnGhost" id="gsSubsRetryBtn">Tentar novamente</button>';
+    else if (!s.linhas.length) corpo = '<p class="note">Carregando modelos...</p>';
+    else corpo = '<div class="gsTableWrap"><table class="gsTable gsSubsTable"><thead><tr><th>Modelo do carro</th><th>Entrada mínima</th><th>Subsídio da montadora</th><th aria-label="Ações"></th></tr></thead><tbody>' +
+      s.linhas.map(function (m) {
+        return '<tr><td data-label="Modelo do carro">' + esc(m.modelo) + '</td><td data-label="Entrada mínima">' + esc(gsPct(m.entrada_minima)) + '</td>' +
+          '<td data-label="Subsídio da montadora">' + esc(gsBrl(m.subsidio_montadora)) + '</td>' +
+          '<td class="gsSubsAcoes"><button type="button" class="modBtnGhost gsSubsEditBtn" data-modelo="' + esc(m.modelo) + '">Editar</button>' +
+          '<button type="button" class="modBtnGhost gsSubsRemBtn" data-modelo="' + esc(m.modelo) + '">Remover</button></td></tr>';
+      }).join('') + '</tbody></table></div><p class="note">' + esc(String(s.linhas.length)) + ' modelo(s).</p>';
+    return '<div class="gbCard gsSubsCard">' +
+      '<h3>' + esc(def.label) + '</h3>' + corpo +
+      '<p class="note gsNotaExtra">' + esc(def.nota) + '</p>' +
+      '<div class="gsSubsBotoes"><button type="button" class="modBtn" id="gsSubsNovoBtn">INCLUIR MODELO</button>' +
+      '<button type="button" class="modBtnGhost gsUpdateBtn" data-uid="' + esc(def.uid) + '"' + (inFlight.gsImport ? ' disabled' : '') + '>IMPORTAR PLANILHA</button></div>' +
+      '</div>';
+  }
+  function gsSubsAchar(modelo) { return gsState.subs.linhas.filter(function (m) { return m.modelo === modelo; })[0] || null; }
+  function gsSubsAbrirForm(modelo) {
+    var m = modelo ? gsSubsAchar(modelo) : null;
+    gsState.modal = { kind: 'subsForm', original: m ? m.modelo : null, modelo: m ? m.modelo : '',
+      entrada: m ? String(Math.round(m.entrada_minima * 10000) / 100).replace('.', ',') : '50',
+      subsidio: m ? String(m.subsidio_montadora).replace('.', ',') : '', erro: null, erroCampo: null, salvando: false };
+    renderGsModalRoot();
+  }
+  // Erro por campo: a mensagem fica embaixo do campo com problema (aria-invalid) e some assim que o usuário digita.
+  // Erro do servidor (ex.: modelo repetido) aponta o campo do modelo; erro de conexão fica no fim do formulário.
+  function gsSubsCampoHtml(m, campo, id, rotulo, valor, extra) {
+    var comErro = m.erro && m.erroCampo === campo;
+    return '<div class="modField"><label for="' + id + '">' + rotulo + '</label>' +
+      '<input id="' + id + '" type="text" autocomplete="off"' + (extra || '') + ' value="' + esc(valor) + '"' +
+      (comErro ? ' class="gsSubsInvalido" aria-invalid="true" aria-describedby="gsSubsErro"' : '') + '>' +
+      (comErro ? '<p class="maFieldError" role="alert" id="gsSubsErro" data-campo="' + campo + '">' + esc(m.erro) + '</p>' : '') + '</div>';
+  }
+  function gsSubsFormHtml(m) {
+    return '<form id="gsSubsForm" novalidate>' +
+      gsSubsCampoHtml(m, 'modelo', 'gsSubsModelo', 'Modelo do carro', m.modelo) +
+      gsSubsCampoHtml(m, 'entrada', 'gsSubsEntrada', 'Entrada mínima (%)', m.entrada, ' inputmode="decimal"') +
+      gsSubsCampoHtml(m, 'subsidio', 'gsSubsSubsidio', 'Subsídio da montadora (R$)', m.subsidio, ' inputmode="decimal" placeholder="7.500,00"') +
+      '<p class="note">Na Taxa Subsidiada vale a maior entrada entre 50% e a do modelo. O subsídio aceita 7.500,00, 7.500 ou 7500.</p>' +
+      (m.erro && !m.erroCampo ? '<p class="maFieldError" role="alert" id="gsSubsErro" data-campo="">' + esc(m.erro) + '</p>' : '') +
+      '<div class="maDetailActions"><button type="submit" class="modBtn" id="gsSubsSalvarBtn"' + (m.salvando ? ' disabled' : '') + '>Salvar</button>' +
+      '<button type="button" class="modBtnGhost" id="gsSubsCancelarBtn">Cancelar</button></div></form>';
+  }
+  function gsSubsNumero(v) {
+    var t = String(v == null ? '' : v).replace(/R\$/i, '').replace(/%/g, '').replace(/\s/g, '');
+    if (t === '') return null;
+    if (t.indexOf(',') !== -1) t = t.replace(/\./g, '').replace(',', '.');
+    else if (/^\d{1,3}(\.\d{3})+$/.test(t)) t = t.replace(/\./g, '');   // 11.000 = onze mil
+    var n = Number(t);
+    return isFinite(n) ? n : null;
+  }
+  function gsSubsSalvar(ev) {
+    if (ev) ev.preventDefault();
+    var m = gsState.modal; if (!m || m.kind !== 'subsForm' || m.salvando) return;
+    m.modelo = document.getElementById('gsSubsModelo').value; m.entrada = document.getElementById('gsSubsEntrada').value;
+    m.subsidio = document.getElementById('gsSubsSubsidio').value;
+    var modelo = m.modelo.trim().toUpperCase(), ent = gsSubsNumero(m.entrada), sub = gsSubsNumero(m.subsidio);
+    m.erro = null; m.erroCampo = null;
+    if (!modelo) { m.erro = 'Informe o modelo do carro.'; m.erroCampo = 'modelo'; }
+    else if (ent === null || ent < 0 || ent >= 100) { m.erro = 'Entrada mínima inválida: use de 0 a 99 (ex.: 50).'; m.erroCampo = 'entrada'; }
+    else if (sub === null || sub < 0) { m.erro = 'Subsídio inválido: use um valor em reais, como 7.500,00, 7.500 ou 7500.'; m.erroCampo = 'subsidio'; }
+    if (m.erro) { renderGsModalRoot(); gsSubsFocarErro(); return; }
+    var args = { p_modelo_original: m.original, p_modelo: modelo, p_entrada_minima: Math.round(ent * 100) / 10000, p_subsidio_montadora: Math.round(sub * 100) / 100 };
+    m.salvando = true; renderGsModalRoot();
+    // primeiro a validação do servidor (não grava); depois a gravação (fora de produção, só simulada)
+    GS_PROVIDER.salvarSubsidioModelo(Object.assign({}, args, { p_dry_run: true })).then(function () {
+      return GS_PROVIDER.salvarSubsidioModelo(Object.assign({}, args, { p_dry_run: false }));
+    }).then(function (res) {
+      gsState.modal = { kind: 'subsOk', simulado: !!(res && res.simulated), texto: (m.original ? 'Modelo ' + modelo + ' editado' : 'Modelo ' + modelo + ' incluído') +
+        ': entrada mínima ' + gsPct(args.p_entrada_minima) + ', subsídio da montadora ' + gsBrl(args.p_subsidio_montadora) + '.' };
+      renderGsModalRoot();
+    }, function (err) {
+      m.salvando = false; m.erro = (err && err.message) || 'Não foi possível salvar.';
+      var txtErro = String(m.erro);
+      m.erroCampo = (err && (err.codigo === '23505' || err.codigo === 'P0002')) ? 'modelo'
+        : (err && err.codigo === '22023') ? (/entrada/i.test(txtErro) ? 'entrada' : /subs[ií]dio/i.test(txtErro) ? 'subsidio' : /modelo/i.test(txtErro) ? 'modelo' : null)
+        : null;
+      renderGsModalRoot(); gsSubsFocarErro();
+    });
+  }
+  function gsSubsFocarErro() {
+    var campo = document.querySelector('#gsSubsForm .gsSubsInvalido');
+    if (campo) campo.focus();
+  }
+  // Ao digitar, o erro daquele formulário some (sem redesenhar o modal, para não perder o foco).
+  function gsSubsLimparErro() {
+    var m = gsState.modal; if (!m || m.kind !== 'subsForm' || !m.erro) return;
+    m.erro = null; m.erroCampo = null;
+    var e = document.getElementById('gsSubsErro'); if (e) e.remove();
+    document.querySelectorAll('#gsSubsForm .gsSubsInvalido').forEach(function (i) { i.classList.remove('gsSubsInvalido'); i.removeAttribute('aria-invalid'); i.removeAttribute('aria-describedby'); });
+  }
+  function gsSubsRemover() {
+    var m = gsState.modal; if (!m || m.kind !== 'subsRemover' || m.salvando) return;
+    m.salvando = true; renderGsModalRoot();
+    GS_PROVIDER.removerSubsidioModelo({ p_modelo: m.modelo, p_dry_run: true }).then(function () {
+      return GS_PROVIDER.removerSubsidioModelo({ p_modelo: m.modelo, p_dry_run: false });
+    }).then(function (res) {
+      gsState.modal = { kind: 'subsOk', simulado: !!(res && res.simulated), texto: 'Modelo ' + m.modelo + ' removido.' };
+      renderGsModalRoot();
+    }, function (err) { m.salvando = false; m.erro = (err && err.message) || 'Não foi possível remover.'; renderGsModalRoot(); });
+  }
+  function gsSubsRemoverHtml(m) {
+    return '<p>Remover o modelo <b>' + esc(m.modelo) + '</b> da Taxa Subsidiada? Ele deixa de aparecer no campo "Modelo do carro" do simulador.</p>' +
+      (m.erro ? '<p class="maFieldError" role="alert">' + esc(m.erro) + '</p>' : '') +
+      '<div class="adminModalActions"><button type="button" class="modBtnGhost" id="gsSubsCancelarBtn">Cancelar</button>' +
+      '<button type="button" class="modBtn" id="gsSubsRemoverBtn"' + (m.salvando ? ' disabled' : '') + '>Remover</button></div>';
+  }
+  function gsSubsOkHtml(m) {
+    return (m.simulado ? '<p class="gbSimNote"><b>🧪 SIMULAÇÃO CONCLUÍDA — nenhuma alteração foi realizada no banco</b></p>' : '<p><b>Alteração salva.</b></p>') +
+      '<p>' + esc(m.texto) + '</p><div class="adminModalActions"><button type="button" class="modBtn" id="gsSuccessCloseBtn">Fechar</button></div>';
+  }
+
   function gsCardHtml(def) {
+    if (def.modelosSubsidio) return gsSubsCardHtml(def);
     var info = gsState.statusByTipo[def.tipoBase];
     var sharedBadge = def.compartilhada ? '<span class="gsSharedBadge" title="Mesma base ACTIVE usada por ZeroKM e Seminovos">BASE COMPARTILHADA</span>' : '';
     var bootstrapBadge = (info && info.bootstrap) ? '<span class="gsBootstrapBadge">BASE INICIAL / BOOTSTRAP</span>' : '';
@@ -2614,7 +2751,7 @@
     } else {
       html += GS_GROUPS.map(function (g) {
         var grupo = g[0], rotulo = g[1];
-        var itens = GS_VM.GS_BASE_DEFS.filter(function (d) { return d.grupo === grupo; });
+        var itens = GS_VM.GS_BASE_DEFS.filter(function (d) { return d.grupo === grupo; });   // grupo 'OCULTO' (Coparticipado) não aparece
         return '<h3 class="gsGroupTitle">' + esc(rotulo) + '</h3><div class="gbGrid">' + itens.map(gsCardHtml).join('') + '</div>';
       }).join('');
     }
@@ -2630,6 +2767,9 @@
     else if (m.kind === 'diagnostic') renderNxModal(m.titulo + ' — PRÉVIA (DRY-RUN, nada foi gravado)', gsDiagnosticBodyHtml(m), gsCancelar);
     else if (m.kind === 'success') renderNxModal((gsHomolog() ? '🧪 ' : '✅ ') + m.titulo, gsSuccessBodyHtml(m), gsCloseModalAndRefresh);
     else if (m.kind === 'error') renderNxModal('Arquivo rejeitado', gsErrorBodyHtml(m), gsCloseModal);
+    else if (m.kind === 'subsForm') renderNxModal(m.original ? 'Editar modelo — Taxa Subsidiada' : 'Incluir modelo — Taxa Subsidiada', gsSubsFormHtml(m), gsCancelar);
+    else if (m.kind === 'subsRemover') renderNxModal('Remover modelo — Taxa Subsidiada', gsSubsRemoverHtml(m), gsCancelar);
+    else if (m.kind === 'subsOk') renderNxModal((gsHomolog() ? '🧪 ' : '✅ ') + 'Taxa Subsidiada — modelos', gsSubsOkHtml(m), gsCloseModalAndRefresh);
     wireGsModalInteraction();
   }
   function gsHomolog() { return GS_PROVIDER.isHomologationMode(); }
@@ -2660,6 +2800,7 @@
     if (dry.aviso_tabela_geral) avisosExtras.push(dry.aviso_tabela_geral);
     if (dry.base_compartilhada) avisosExtras.push(dry.base_compartilhada);
     if (Array.isArray(m.argsBase.p_avisos)) m.argsBase.p_avisos.forEach(function (a) { avisosExtras.push(a); });
+    if (comp.detalhe_removidos && comp.detalhe_removidos.length) avisosExtras.push('Serão removidos (não estão no arquivo): ' + comp.detalhe_removidos.join(', '));
     if (dry.linhas_coeficiente) avisosExtras.push(dry.linhas_coeficiente + ' linha(s) para a tabela de coeficiente (prazo/taxa→coeficiente) também presentes — comparação separada, não exibida nesta prévia resumida.');
     var avisosHtml = avisosExtras.length ? '<div class="gbWarn">' + avisosExtras.map(function (a) { return '<div>⚠️ ' + esc(a) + '</div>'; }).join('') + '</div>' : '';
 
@@ -5736,6 +5877,18 @@
     if (gsRetry) gsRetry.addEventListener('click', gsLoad);
     document.querySelectorAll('.gsUpdateBtn').forEach(function (el) {
       el.addEventListener('click', function () { window.gsOnAtualizarClick(el.getAttribute('data-uid')); });
+    });
+    var gsSubsRetry = document.getElementById('gsSubsRetryBtn');
+    if (gsSubsRetry) gsSubsRetry.addEventListener('click', gsLoad);
+    var gsSubsNovo = document.getElementById('gsSubsNovoBtn');
+    if (gsSubsNovo) gsSubsNovo.addEventListener('click', function () { gsSubsAbrirForm(null); });
+    document.querySelectorAll('.gsSubsEditBtn').forEach(function (el) {
+      el.addEventListener('click', function () { gsSubsAbrirForm(el.getAttribute('data-modelo')); });
+    });
+    document.querySelectorAll('.gsSubsRemBtn').forEach(function (el) {
+      el.addEventListener('click', function () {
+        gsState.modal = { kind: 'subsRemover', modelo: el.getAttribute('data-modelo'), erro: null, salvando: false }; renderGsModalRoot();
+      });
     });
 
     // ---- Configurações (Painel Master Phase PM-5E) ----

@@ -61,7 +61,11 @@
     master_simulador_commit_financiamento_seminovo: true,
     master_simulador_commit_coparticipado: true,
     master_simulador_commit_semestral_triton_outlander: true,
-    master_simulador_commit_coeficientes_coparticipado: true
+    master_simulador_commit_coeficientes_coparticipado: true,
+    // 07/11/2026: modelos da Taxa Subsidiada (homolog e produção usam o mesmo banco: fora de produção só simula)
+    master_simulador_importar_subsidio_modelos: true,
+    master_subsidio_modelo_salvar: true,
+    master_subsidio_modelo_remover: true
   };
   // dry-run (read, never writes) stays allowed even in homologation --
   // only a real write (p_dry_run !== true) is intercepted.
@@ -169,6 +173,14 @@
   function commitSemestralTritonOutlander(args, params) { params = params || {}; return callRpc('master_simulador_commit_semestral_triton_outlander', args, params.signal); }
   function commitCoeficientesCoparticipado(args, params) { params = params || {}; return callRpc('master_simulador_commit_coeficientes_coparticipado', args, params.signal); }
 
+  function commitSubsidioModelos(args, params) { params = params || {}; return callRpc('master_simulador_importar_subsidio_modelos', args, params.signal); }
+  function listarSubsidioModelos(params) {
+    params = params || {};
+    return callRpc('simulador_get_subsidio_modelos', {}, params.signal).then(function (body) { return (body && body.linhas) || []; });
+  }
+  function salvarSubsidioModelo(args) { return callRpc('master_subsidio_modelo_salvar', args); }
+  function removerSubsidioModelo(args) { return callRpc('master_subsidio_modelo_remover', args); }
+
   var RPC_BY_NAME = {
     master_simulador_commit_linear: commitLinear,
     master_simulador_commit_taxas_subsidiadas: commitTaxasSubsidiadas,
@@ -179,7 +191,8 @@
     master_simulador_commit_financiamento_seminovo: commitFinanciamentoSeminovo,
     master_simulador_commit_coparticipado: commitCoparticipado,
     master_simulador_commit_semestral_triton_outlander: commitSemestralTritonOutlander,
-    master_simulador_commit_coeficientes_coparticipado: commitCoeficientesCoparticipado
+    master_simulador_commit_coeficientes_coparticipado: commitCoeficientesCoparticipado,
+    master_simulador_importar_subsidio_modelos: commitSubsidioModelos
   };
   // Generic dispatch by RPC name (the view-model's catalog names the RPC
   // per family; this avoids a second, parallel name->function map living
@@ -193,6 +206,9 @@
   window.NX_MASTER_GESTAO_SIMULADORES_PROVIDER = {
     listarBases: listarBases,
     commit: commit,
+    listarSubsidioModelos: listarSubsidioModelos,
+    salvarSubsidioModelo: salvarSubsidioModelo,
+    removerSubsidioModelo: removerSubsidioModelo,
     isHomologationMode: function () { return !gsIsProductionEnvironment(); }
   };
 })();

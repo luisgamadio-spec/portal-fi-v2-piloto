@@ -190,6 +190,25 @@
     var t = linhas.map(function (x) { return { prazo: x.prazo, taxa: x.taxa, coef: x.coeficiente, rebate: x.rebate }; });
     return t.length ? t : null;
   }, N._internal.tabelaRebates_FALLBACK);
+  // 07/11/2026 (Luis): o antigo Coparticipado fica embutido na Taxa Subsidiada. Por modelo do carro: entrada mínima e
+  // subsídio da montadora (R$), mantidos pelo Master em Gestão de Simuladores (simulador_subsidio_modelos).
+  // O _FALLBACK abaixo só vale sem credenciais reais (AUTH_NOT_CONFIGURED), como as outras bases.
+  var SUBSIDIO_MODELOS_FALLBACK = [
+    ['TRITON GLS AT', 0.5, 0], ['TRITON TARMAC', 0.5, 0], ['TRITON HPE', 0.5, 20000], ['TRITON HPE-S', 0.5, 20000],
+    ['TRITON KATANA', 0.5, 20000], ['TRITON SAVANA', 0.5, 20000], ['TRITON SERTOES', 0.5, 20000],
+    ['ECLIPSE CROSS RUSH', 0.5, 0], ['ECLIPSE CROSS HPE', 0.5, 10000], ['ECLIPSE CROSS TARMAC', 0.5, 10000],
+    ['ECLIPSE CROSS HPE-S', 0.5, 10000], ['ECLIPSE CROSS HPE-S S-AWC', 0.5, 12000], ['ECLIPSE CROSS HPE-S S-AWC BLACK', 0.5, 12000],
+    ['OUTLANDER HPE-S', 0.5, 0], ['OUTLANDER SIGNATURE', 0.5, 0]
+  ];
+  function montaSubsidioModelos(linhas) {
+    var mapa = {};
+    linhas.forEach(function (x) { mapa[x.modelo] = { entradaMinima: x.entrada_minima, subsidio: x.subsidio_montadora }; });
+    var nomes = Object.keys(mapa).sort();
+    return nomes.length ? { modelos: mapa, nomes: nomes } : null;
+  }
+  var subsidioModelosAuthority = makeAuthority('simulador_get_subsidio_modelos', ['entrada_minima', 'subsidio_montadora'], ['modelo'],
+    montaSubsidioModelos,
+    montaSubsidioModelos(SUBSIDIO_MODELOS_FALLBACK.map(function (m) { return { modelo: m[0], entrada_minima: m[1], subsidio_montadora: m[2] }; })));
   var tritonAuthority = makeAuthority('simulador_get_semestral_triton_outlander', ['rebate_total', 'rebate_hpe', 'rebate_brabus', 'entrada_minima'], ['modelo'], function (linhas) {
     var mapa = {};
     linhas.forEach(function (x) { mapa[x.modelo] = { rebateTotal: x.rebate_total, hpeShare: x.rebate_hpe, brabusShare: x.rebate_brabus, entradaMinima: x.entrada_minima }; });
@@ -377,7 +396,7 @@
     parcelaunica: 'Uma única parcela no mês 25, após 24 meses de carência — entrada mínima de 50%.',
     linear: 'Parcela mensal fixa, todos os prazos calculados automaticamente.',
     campanha: 'Plano Coparticipado — condições especiais por modelo, entrada mínima de 60% do valor de venda.',
-    subsidiadas: 'Comparação de taxas subsidiadas por prazo — entrada mínima de 50%.',
+    subsidiadas: 'Comparação de taxas subsidiadas por prazo — entrada mínima de 50% (ou a do modelo, se for maior).',
     triton: 'Campanha Taxa 0% — entrada fixa por modelo, sem alteração manual.',
     descobridor: 'Estima a taxa efetiva a partir do valor financiado, prazo e parcela.',
     antecipacao: 'Calcula o valor com desconto para antecipação de parcelas.',
@@ -422,6 +441,7 @@
   var MAX_BALOES = 4;
   var balloons = []; // {mes, valor} for Tradicional
   var subsTaxa = null; // Taxa Subsidiada: taxa escolhida nos botões (só filtra o que é mostrado)
+  var subsModelo = ''; // Taxa Subsidiada: modelo do carro (obrigatório; define a entrada mínima e o subsídio da montadora)
   // ANTECIPACAO-BALAO-1: restores Secure parity for the Antecipação
   // simulator's OWN, separate balloon feature (modules/simulador-
   // novos.html #aTemBalao/#aQtdBaloes, "Limite máximo: 8 balões.") --
@@ -765,7 +785,14 @@
         // independent authority (taxaBotaoAuthority) -- it never blocks
         // this screen's own Calcular; see bankRateButtonHtml().
         if (subsidiadasAuthority.getState() !== 'READY') return authorityGateHtml(subsidiadasAuthority);
-        return UI.moneyField('nBem', 'Valor do bem', 'R$ 100.000,00') +
+        if (subsidioModelosAuthority.getState() !== 'READY') return authorityGateHtml(subsidioModelosAuthority);
+        var nomesModelos = subsidioModelosAuthority.getAuthority().nomes;
+        if (nomesModelos.indexOf(subsModelo) === -1) subsModelo = '';
+        return '<div class="field"><label for="nSubsModelo">Modelo do carro <span class="smObrig">(obrigatório)</span></label>' +
+          '<select class="select" id="nSubsModelo" required aria-required="true"><option value=""' + (subsModelo ? '' : ' selected') + '>Selecione o modelo</option>' +
+          nomesModelos.map(function (m) { return '<option value="' + UI.esc(m) + '"' + (m === subsModelo ? ' selected' : '') + '>' + UI.esc(m) + '</option>'; }).join('') +
+          '</select></div>' +
+          UI.moneyField('nBem', 'Valor do bem', 'R$ 100.000,00') +
           UI.entryField('nEntrada', 'Entrada', 'R$ 50.000,00', 'nBem') +
           UI.balanceField('nSaldo', 'nBem', 'nEntrada') +
           UI.moneyField('nMinVenda', 'Valor mínimo de venda (opcional)', '') +
@@ -940,7 +967,12 @@
       }
     } else if (mode === 'subsidiadas') {
       if (!wireAuthorityGate(subsidiadasAuthority, mode)) return;
+      if (!wireAuthorityGate(subsidioModelosAuthority, mode)) return;
       document.getElementById('nCalc').addEventListener('click', calcSubsidiadas);
+      document.getElementById('nSubsModelo').addEventListener('change', function (e) {
+        subsModelo = e.target.value;
+        if (subsTaxa != null || document.querySelector('#smResultRegion .smSubsidiadaCard')) calcSubsidiadas();
+      });
       document.querySelectorAll('#nSubsTaxa .smTaxaChip').forEach(function (b) {
         b.addEventListener('click', function () {
           subsTaxa = Number(b.getAttribute('data-taxa'));
@@ -1161,9 +1193,29 @@
     setResult(html);
     wireResultTermGrid(r.terms.length);
   }
+  // 07/11/2026: mensagem junto da divisão do rebate (pedido do Luis):
+  //  - modelo sem subsídio: "Sem subsídio da montadora — custo da loja: R$ X" (rebate inteiro);
+  //  - rebate maior que o subsídio: "Custo da loja: R$ X", em destaque;
+  //  - rebate menor ou igual ao subsídio: "Usado R$ U do subsídio de R$ S — custo da loja: R$ 0".
+  function subsidioMensagem(row) {
+    if (!(row.subsidioModelo > 0)) return { tipo: 'sem', texto: 'Sem subsídio da montadora — custo da loja: ' + UI.brl(row.parteLoja) };
+    if (row.rebateValor > row.subsidioModelo + 0.005) return { tipo: 'custo', texto: 'Custo da loja: ' + UI.brl(row.parteLoja) };
+    return { tipo: 'parcial', texto: 'Usado ' + UI.brl(row.subsidioUsado) + ' do subsídio de ' + UI.brl(row.subsidioModelo) + ' — custo da loja: ' + UI.brl(0) };
+  }
+  function subsidioDivisaoHtml(row) {
+    var msg = subsidioMensagem(row);
+    return '<div class="smSubsidiadaCardRow smSubsDivRow"><span class="kpiLabel">Subsídio da montadora</span><strong>' + UI.brl(row.subsidioUsado) + '</strong></div>' +
+      '<div class="smSubsidiadaCardRow smSubsDivRow"><span class="kpiLabel">Parte da loja</span><strong>' + UI.brl(row.parteLoja) + '</strong></div>' +
+      '<p class="smSubsMsg smSubsMsg-' + msg.tipo + '" data-subs-msg="' + msg.tipo + '">' + UI.esc(msg.texto) + '</p>';
+  }
   function calcSubsidiadas() {
-    var r = N.calcularSubsidiadas({ bem: UI.moneyVal('nBem'), entrada: UI.moneyVal('nEntrada'), minVenda: UI.moneyVal('nMinVenda'), tabelaRebates: subsidiadasAuthority.getAuthority() });
+    var modelos = subsidioModelosAuthority.getAuthority();
+    var modelo = modelos && subsModelo ? modelos.modelos[subsModelo] : null;
+    if (!modelo) { setResult(UI.errorBlock('Selecione o modelo do carro para calcular a Taxa Subsidiada.')); return; }
+    var r = N.calcularSubsidiadas({ bem: UI.moneyVal('nBem'), entrada: UI.moneyVal('nEntrada'), minVenda: UI.moneyVal('nMinVenda'), tabelaRebates: subsidiadasAuthority.getAuthority(),
+      subsidioMontadora: modelo.subsidio, entradaMinimaModelo: modelo.entradaMinima });
     if (r.empty) { setResult(UI.emptyBlock('Preencha os campos e clique em Calcular.')); return; }
+    if (r.error === 'ENTRADA_MINIMA_MODELO') { setResult(UI.errorBlock('A entrada mínima para ' + subsModelo + ' é de ' + UI.pct1(r.entradaMinima) + '.')); return; }
     if (r.error) { setResult(UI.errorBlock(errMsg(r.error))); return; }
     // Wave 2: o vendedor escolhe a taxa nos botões; aqui só se FILTRA o
     // r.rows do motor para a taxa escolhida (nenhum valor recalculado).
@@ -1197,10 +1249,11 @@
           // denominator is "financiado" (bem - entrada), NOT "valor do bem".
           // Displayed as-is, no derivation, no new precision invented.
           // Wave 2: barrinha = o próprio row.rebate do motor (% do valor financiado), só desenhada.
-          '<div class="smSubsidiadaCardRow smSubsidiadaCardRowEmphasis smSubsRebateRow"><span class="kpiLabel">Rebate — custo comercial</span>' +
+          '<div class="smSubsidiadaCardRow smSubsidiadaCardRowEmphasis smSubsRebateRow"><span class="kpiLabel">Rebate total</span>' +
           '<span class="smSubsidiadaCardValueStack"><strong>' + UI.brl(row.rebateValor) + '</strong>' +
           '<span class="smRebateBar" aria-hidden="true"><span style="width:' + Math.max(0, Math.min(100, row.rebate * 100)).toFixed(2) + '%"></span></span>' +
           '<span class="smSubsidiadaCardRebatePct">' + UI.pct2(row.rebate) + ' do valor financiado</span></span></div>' +
+          subsidioDivisaoHtml(row) +
           '<div class="smSubsidiadaCardRow smSubsidiadaCardRowEmphasis"><span class="kpiLabel">Valor final de venda</span><strong>' + UI.brl(row.valorFinalVenda) + '</strong></div>' +
           '</div>';
       }).join('');
@@ -1208,7 +1261,9 @@
     }).join('');
     if (!groupsHtml) { setResult(SUBS_ESCOLHA); return; }
     setResult('<div class="smSubsidiadaGroups">' + groupsHtml + '</div>' +
-      '<p class="smFootnote">Rebate é o custo comercial da taxa subsidiada — nunca um desconto concedido ao cliente. Valor final de venda já considera o valor líquido para a loja.</p>');
+      '<p class="smFootnote">Rebate é o custo comercial da taxa subsidiada — nunca um desconto concedido ao cliente. ' +
+      'Modelo: ' + UI.esc(subsModelo) + ' (subsídio da montadora de até ' + UI.brl(modelo.subsidio) + '). ' +
+      'Valor final de venda desconta só a parte da loja (rebate total − subsídio da montadora).</p>');
   }
   function calcTriton() {
     var tritonAuth = tritonAuthority.getAuthority();
@@ -1306,6 +1361,7 @@
       balloons = [];
       antBaloes = [];
       subsTaxa = null;
+      subsModelo = '';
       openCategory = null; // SIM-NAV-4 / F.2: all categories collapsed on entry
       outlet.innerHTML =
         '<div class="smPage">' +

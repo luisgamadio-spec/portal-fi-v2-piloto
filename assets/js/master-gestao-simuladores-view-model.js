@@ -350,6 +350,46 @@
     return { rows: rows, avisos: [] };
   }
 
+  // ---------------- 11. Taxa Subsidiada — modelos e subsídio da montadora (07/11/2026) ----------------
+  // Formato de "taxa coparticipado.xlsx" (aba rebates): Modelo do Carro | Entrada Mínima | Sub Montadora.
+  // Entrada aceita fração (0,5) ou porcentagem (50 / "50%"); subsídio em R$ (número ou "R$ 10.000,00").
+  function gsValorReais(v) {
+    if (v === null || v === undefined || v === '') return null;
+    if (typeof v === 'number') return isFinite(v) ? v : null;
+    var t = String(v).replace(/R\$/i, '').replace(/\s/g, '');
+    if (t.indexOf(',') !== -1) t = t.replace(/\./g, '').replace(',', '.');
+    else if (/^\d{1,3}(\.\d{3})+$/.test(t)) t = t.replace(/\./g, '');   // 11.000 = onze mil
+    var n = Number(t);
+    return isFinite(n) ? n : null;
+  }
+  function gsEntradaFracao(v) {
+    var n = gsNum(v);
+    if (n === null) return null;
+    return n > 1 ? n / 100 : n;
+  }
+  function parseSubsidioModelos(matrix) {
+    var nome = 'Taxa Subsidiada — modelos e subsídio da montadora';
+    var h = gsAcharLinhaHeader(matrix, ['Modelo', 'Entrada', 'Sub']);
+    if (h < 0) throw gsErroEstrutura(nome);
+    var cab = (matrix[h] || []).map(gsNorm);
+    var col = function (k) { for (var i = 0; i < cab.length; i++) if (cab[i] && cab[i].indexOf(k) !== -1) return i; return -1; };
+    var cM = col('modelo'), cE = col('entrada'), cS = col('sub');
+    var rows = [], vistos = {};
+    for (var i = h + 1; i < matrix.length; i++) {
+      var r = matrix[i]; if (!r || r.every(function (c) { return c === null || c === ''; })) continue;
+      var modelo = String(r[cM] == null ? '' : r[cM]).trim().toUpperCase();
+      if (!modelo) continue;
+      var entrada = gsEntradaFracao(r[cE]), subsidio = gsValorReais(r[cS]);
+      if (entrada === null || entrada < 0 || entrada >= 1) throw new Error('Entrada mínima inválida para ' + modelo + '.');
+      if (subsidio === null || subsidio < 0) throw new Error('Subsídio da montadora inválido para ' + modelo + '.');
+      if (vistos[modelo]) throw new Error('Modelo repetido no arquivo: ' + modelo);
+      vistos[modelo] = true;
+      rows.push({ modelo: modelo, entrada_minima: entrada, subsidio_montadora: Math.round(subsidio * 100) / 100 });
+    }
+    if (!rows.length) throw gsErroEstrutura(nome);
+    return { rows: rows, avisos: [] };
+  }
+
   var PARSERS = {
     parseLinearCoef: parseLinearCoef,
     parseTaxasSubsidiadas: parseTaxasSubsidiadas,
@@ -360,18 +400,25 @@
     parseCoefSeminovo: parseCoefSeminovo,
     parseTaxaCoparticipado: parseTaxaCoparticipado,
     parseCoparticipadoSemestral: parseCoparticipadoSemestral,
-    parseCoefCoparticipado: parseCoefCoparticipado
+    parseCoefCoparticipado: parseCoefCoparticipado,
+    parseSubsidioModelos: parseSubsidioModelos
   };
 
   // ---------------- catálogo das 10 vitrines (9 tipos de base; Antecipação
   // é compartilhada e aparece nos dois grupos) -- verbatim from V1's own
   // GS_BASE_DEFS, including each family's exact montarArgs shape. ----------------
   var GS_BASE_DEFS = [
-    { uid: 'ZK_COPARTICIPADO', tipoBase: 'COPARTICIPADO', grupo: 'ZEROKM', label: 'Plano Coparticipado',
+    // 07/11/2026: o Plano Coparticipado não existe mais; o bloco dele virou a tabela de modelos da Taxa Subsidiada.
+    { uid: 'ZK_SUBSIDIO_MODELOS', tipoBase: 'SUBSIDIO_MODELOS', grupo: 'ZEROKM', label: 'Taxa Subsidiada — modelos e subsídio da montadora',
+      parser: 'parseSubsidioModelos', rpc: 'master_simulador_importar_subsidio_modelos', modelosSubsidio: true,
+      montarArgs: function (r) { return { p_linhas: r.rows }; },
+      nota: 'Na Taxa Subsidiada, o modelo do carro define a entrada mínima (vale a maior entre 50% e a do modelo) e o subsídio da montadora. A importação usa o formato de "taxa coparticipado.xlsx" (Modelo do Carro / Entrada Mínima / Sub Montadora) e substitui a lista inteira.' },
+    { uid: 'ZK_COPARTICIPADO', tipoBase: 'COPARTICIPADO', grupo: 'OCULTO', label: 'Plano Coparticipado',
       parser: 'parseTaxaCoparticipado', rpc: 'master_simulador_commit_coparticipado',
       montarArgs: function (r) { return { p_linhas_modelo: r.rows, p_linhas_geral: r.geral || [], p_linhas_coeficiente: [], p_avisos: r.avisos || [] }; },
       nota: 'Matriz por modelo atualizada por taxa coparticipado.xlsx. O simulador consome a base ACTIVE. Antes de ativar uma nova matriz, o sistema confere automaticamente se a Matriz de Coeficientes Coparticipado (base separada, abaixo) cobre todas as taxas — se faltar coeficiente, a ativação é bloqueada.' },
-    { uid: 'ZK_COEFICIENTES_COPARTICIPADO', tipoBase: 'COEFICIENTES_COPARTICIPADO', grupo: 'ZEROKM', label: 'Matriz de Coeficientes — Coparticipado',
+    // 07/11/2026: escondido da tela (o Coparticipado não existe mais); os dados continuam no banco.
+    { uid: 'ZK_COEFICIENTES_COPARTICIPADO', tipoBase: 'COEFICIENTES_COPARTICIPADO', grupo: 'OCULTO', label: 'Matriz de Coeficientes — Coparticipado',
       parser: 'parseCoefCoparticipado', rpc: 'master_simulador_commit_coeficientes_coparticipado',
       montarArgs: function (r) { return { p_linhas: r.rows }; },
       nota: 'Coeficientes financeiros por prazo e taxa utilizados pelo Plano Coparticipado. Antes de ativar, o sistema confere se a matriz de modelos ACTIVE do Plano Coparticipado continua totalmente coberta — se alguma combinação prazo/taxa ainda necessária for removida, a ativação é bloqueada.' },
@@ -397,7 +444,7 @@
       parser: 'parseAntecipacao', rpc: 'master_simulador_commit_antecipacao', montarArgs: function (r) { return { p_linhas: r.rows }; } }
   ];
   var GS_HEADER_ANCHOR_HINT = {
-    ZK_COPARTICIPADO: 'Modelo', ZK_COEFICIENTES_COPARTICIPADO: 'Prazo', ZK_LINEAR: 'Prazo', ZK_SUBSIDIADAS: 'Prazo',
+    ZK_SUBSIDIO_MODELOS: 'Modelo do Carro', ZK_COPARTICIPADO: 'Modelo', ZK_COEFICIENTES_COPARTICIPADO: 'Prazo', ZK_LINEAR: 'Prazo', ZK_SUBSIDIADAS: 'Prazo',
     ZK_TAXABOTAO: 'Prazo', ZK_BALAO: 'Entrada mínima', ZK_SEMESTRAL: 'Modelo', ZK_ANTECIPACAO: 'Parcela',
     SN_FINANCIAMENTO: 'Prazo', SN_BALAO: 'Entrada mínima', SN_ANTECIPACAO: 'Parcela'
   };

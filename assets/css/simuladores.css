@@ -687,11 +687,12 @@
 .smToast.show { opacity: 1; transform: translate(-50%, 0); }
 @media (prefers-reduced-motion: reduce) { .smToast { transition: none; } }
 
-/* Taxa Subsidiada: rebate em vermelho com barrinha do % do financiado, filete sob o prazo, entrada suave dos cartões */
-.smPage .smSubsGrid4 .smSubsRebateRow strong { color: var(--color-accent-primary); }
+/* Taxa Subsidiada: rebate total com barrinha do % do financiado, filete sob o prazo, entrada suave dos cartões.
+   07/11/2026: rebate total sem vermelho — o destaque em vermelho fica só no "Custo da loja". */
+.smPage .smSubsGrid4 .smSubsRebateRow strong { color: var(--color-text-primary); }
 .smPage .smSubsGrid4 .smSubsidiadaCardValueStack { width: 100%; }
 .smPage .smRebateBar { display: block; width: 100%; height: 4px; margin: 5px 0 3px; border-radius: 2px; background: var(--color-hairline-strong); overflow: hidden; }
-.smPage .smRebateBar > span { display: block; height: 100%; border-radius: 2px; background: var(--color-accent-primary); }
+.smPage .smRebateBar > span { display: block; height: 100%; border-radius: 2px; background: var(--color-text-secondary); }
 .smPage .smSubsGrid4 .smSubsidiadaCardPrazo { display: flex; flex-direction: column; align-items: center; }
 .smPage .smSubsGrid4 .smSubsidiadaCardPrazo::after { content: ''; display: block; width: 34px; height: 3px; border-radius: 2px; background: var(--p-red-1, #ee4b57); margin: 8px auto 2px; }
 @keyframes smCardEntra { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
@@ -704,3 +705,9 @@
 .smPage .smSubsGrid4 .smSubsidiadaCard:nth-child(7) { animation-delay: .18s; }
 .smPage .smSubsGrid4 .smSubsidiadaCard:nth-child(n+8) { animation-delay: .21s; }
 @media (prefers-reduced-motion: reduce) { .smPage .smSubsGrid4 .smSubsidiadaCard { animation: none; } }
+
+/* 07/11/2026: Taxa Subsidiada — divisão do rebate (subsídio da montadora x parte da loja) e a mensagem do custo da loja. */
+.smPage .smObrig { font-weight: 400; color: var(--color-text-secondary); text-transform: none; letter-spacing: 0; }
+.smPage .smSubsMsg { margin: 2px 0 0; padding: 6px 8px; border-radius: 6px; font-size: 0.75rem; line-height: 1.35; background: var(--color-surface-2); color: var(--color-text-secondary); overflow-wrap: anywhere; }
+.smPage .smSubsMsg-custo { background: var(--color-critical-soft); color: var(--color-critical); font-weight: 800; font-size: 0.8125rem; }
+.smPage .smSubsMsg-parcial { background: var(--color-success-soft); color: var(--color-success); font-weight: 600; }

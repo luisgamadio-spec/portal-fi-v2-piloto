@@ -792,3 +792,24 @@ col.absColStatus { width: 86px; }    /* badge content ~62px + cell padding, view
 .clPreviewTable td:nth-child(5), .clPreviewTable td:nth-child(6), .clPreviewTable td:nth-child(7) { text-align: right; font-variant-numeric: tabular-nums; }
 
 .fechamentoPreviewGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: var(--space-2); margin: var(--mod-space-control-gap) 0; }
+
+/* 07/11/2026: Taxa Subsidiada — modelos e subsídio da montadora (bloco que era do Coparticipado). */
+.gsSubsCard { grid-column: 1 / -1; min-width: 0; }
+.gsSubsTable td.gsSubsAcoes { text-align: right; white-space: nowrap; }
+.gsSubsTable td.gsSubsAcoes .modBtnGhost { padding: 2px 8px; margin-left: 4px; font-size: 0.6875rem; }
+.gsSubsBotoes { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* 07/11/2026 (ajustes): erro por campo no formulário de modelo; tabela de modelos em cartões no celular (3 colunas visíveis). */
+.maudModalBody input.gsSubsInvalido { border-color: var(--color-critical, #e5484d); box-shadow: 0 0 0 2px rgba(229, 72, 77, .25); }
+@media (max-width: 640px) {
+  .gsSubsCard .gsTableWrap { overflow-x: visible; border: 0; }
+  .gsSubsTable, .gsSubsTable tbody { display: block; width: 100%; }
+  .gsSubsTable thead { display: none; }
+  .gsSubsTable tr { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 8px 10px; margin-bottom: 8px; border: 1px solid var(--mod-border); border-radius: var(--radius-sm); }
+  .gsSubsTable td { display: flex; justify-content: space-between; gap: 8px; padding: 2px 0; border: 0; white-space: normal; text-align: right; grid-column: 1 / -1; min-width: 0; }
+  .gsSubsTable td::before { content: attr(data-label); color: var(--color-text-secondary); font-size: 0.6875rem; text-transform: uppercase; letter-spacing: .03em; text-align: left; }
+  .gsSubsTable td:first-child { font-weight: 700; justify-content: flex-start; text-align: left; }
+  .gsSubsTable td:first-child::before { content: none; }
+  .gsSubsTable td.gsSubsAcoes { justify-content: flex-end; padding-top: 6px; }
+  .gsSubsTable td.gsSubsAcoes::before { content: none; }
+}

@@ -125,6 +125,7 @@
     'central-atendimento-fi': 'NX_CENTRAL_ATENDIMENTO_FI_PAGE',
     'salarios-comissoes': 'NX_SALARIOS_COMISSOES_PAGE',
     'brabus-intelligence': 'NX_BRABUS_INTELLIGENCE_PAGE',
+    'analise-faturamentos': 'NX_ANALISE_FATURAMENTOS_PAGE',
     'shell-admin': 'NX_SHELL_ADMIN_PAGE'
   };
 

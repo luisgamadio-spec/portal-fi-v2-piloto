@@ -327,7 +327,7 @@
     {
       "id": "analise-faturamentos",
       "permissionId": "analiseFaturamentos",
-      "authMode": "ANALISTA_OR_MASTER",
+      "authMode": "FATURAMENTOS",
       "name": "Análise de Faturamentos",
       "route": "/analise-faturamentos",
       "title": "Análise de Faturamentos",
@@ -343,7 +343,7 @@
       "migrationStatus": "TECH_READY_HUMAN_UAT_PENDING",
       "landingTitle": "Análise de Faturamentos",
       "landingDesc": "Propostas faturadas e ainda sem pagamento do banco: dias úteis em aberto, faixas e prazo por banco.",
-      "notes": "Master e Analistas ativos (todas as lojas); Exportar só Master; Justificar demora em Em atenção/Urgência/Grave (09/11/2026). Datas de faturamento/pagamento = 1ª carga do SPF com FATURADA/PAGA (opção A) até o relatório do SPF trazer as colunas (opção B: trocar só _fat_marcos)."
+      "notes": "Master, Analistas e Financeiro ativos (todas as lojas; authMode FATURAMENTOS, 10/11/2026). Ligação proposta->chassi: Documento (chave protegida), Nome ou Manual. Financeiro: lista, detalhes, Exportar e Solicitar retorno urgente (sem justificar). Antes (09/11): Master e Analistas ativos (todas as lojas); Exportar só Master; Justificar demora em Em atenção/Urgência/Grave (09/11/2026). Datas de faturamento/pagamento = 1ª carga do SPF com FATURADA/PAGA (opção A) até o relatório do SPF trazer as colunas (opção B: trocar só _fat_marcos)."
     }
   ]
 }

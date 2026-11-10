@@ -133,7 +133,7 @@
   // Gate 18/19: extracted verbatim from the real RPC's own accepted
   // values (docs/MASTER-USERS-RPC-CONTRACT-CAPTURE.md) -- not invented,
   // not reconstructed from memory.
-  var PERFIL_VALUES = ['MASTER', 'DIRETOR NOVOS', 'DIRETOR SEMINOVOS', 'ANALISTA', 'GERENTE', 'VENDEDOR', 'RECURSOS HUMANOS', 'RH'];
+  var PERFIL_VALUES = ['MASTER', 'DIRETOR NOVOS', 'DIRETOR SEMINOVOS', 'ANALISTA', 'GERENTE', 'VENDEDOR', 'RECURSOS HUMANOS', 'RH', 'FINANCEIRO'];   // FINANCEIRO (10/11/2026): grupo todo, sem loja e sem departamento (o banco grava vazio)
   // Gate 19: BRABUS_SPECIFIC_STORE_CATALOG_DEBT -- hardcoded inside the
   // real RPC itself (master_convidar_usuario's v_lojas_validas), not a
   // catalog table; V2 mirrors it as-is, not a new source of truth.

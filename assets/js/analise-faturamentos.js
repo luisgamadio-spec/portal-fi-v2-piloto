@@ -7,7 +7,16 @@
    a partir de master_faturamentos, que continua só do Master no banco; para o Analista o botão nem aparece.
    Justificar demora (faixas Em atenção, Urgência e Grave): fat_justificar grava (só acréscimo, com autor e data/hora);
    fat_justificativas devolve o histórico (mais recente primeiro). As regras e os números do cálculo não mudaram.
-   Textos para o usuário não citam o nome do relatório de origem ("Dados atualizados em"). Nunca recebe nem mostra CPF. */
+   Textos para o usuário não citam o nome do relatório de origem ("Dados atualizados em"). Nunca recebe nem mostra CPF.
+
+   10/11/2026 (OK do Luis) — v2: perfil FINANCEIRO e ligação em 3 camadas.
+   - Acesso: authMode FATURAMENTOS (Master, Analistas e Financeiro); faturamentos_painel confere no banco e diz o que cada
+     perfil pode fazer (pode_exportar / pode_justificar / pode_vincular / pode_solicitar_retorno).
+   - Ligação proposta -> chassi: Documento (chave protegida do CPF/CNPJ, nunca o CPF), Nome ou Manual. Nada fica
+     "a confirmar": sem ligação segura, o Master/Analista vincula o chassi à mão (faturamentos_vincular, com motivo).
+   - Financeiro: lista e detalhes, Exportar (registrado no banco) e "Solicitar retorno urgente" (Edge Function
+     faturamentos-retorno-urgente: e-mail só ao Analista responsável vigente da loja, sem CPF e sem nome do cliente).
+     Não justifica. O Analista responsável vê um aviso a cada acesso até registrar a justificativa. */
 (function () {
   'use strict';
 
@@ -26,7 +35,19 @@
   var MOTIVOS = ['Pendência de documento', 'Aguardando banco', 'Contrato não assinado', 'Gravame', 'Outro'];
   var JUST_FILTRO = [{ v: 'SEM', label: 'Sem justificativa' }, { v: 'DESATUALIZADA', label: 'Desatualizada' }, { v: 'OK', label: 'Justificadas' }];
   var MIN_TEXTO = 20;
-  var A_CONFIRMAR = 'a confirmar';
+  var SEM_CHASSI = 'sem chassi ligado';
+  var ORIGEM = { DOCUMENTO: 'Documento', NOME: 'Nome', MANUAL: 'Manual' };
+  var ORIGEM_DICA = {
+    DOCUMENTO: 'Ligado pelo documento do cliente (mesmo CPF/CNPJ na venda, comparado de forma protegida).',
+    NOME: 'Ligado pelo nome do cliente nos financiamentos.',
+    MANUAL: 'Vinculado à mão por um Master ou Analista.'
+  };
+  var SEM_LIGACAO_TXT = {
+    CONFLITO: 'o documento e o nome apontam carros diferentes',
+    MAIS_DE_UM_CARRO: 'há mais de um carro possível',
+    NAO_ENCONTRADO: 'nenhuma venda encontrada para este cliente'
+  };
+  var MIN_MOTIVO = 10;
 
   var outletRef = null, S = null, focoAntes = null;
 
@@ -53,7 +74,25 @@
       }, function () { return Promise.reject({ state: 'BACKEND_ERROR', message: 'Sem conexão. Confira a internet e tente de novo.' }); });
     });
   }
-  function buscar(ini, fim) { return rpc('faturamentos_analise', { p_ini: ini || null, p_fim: fim || null }); }
+  function buscar(ini, fim) { return rpc('faturamentos_painel', { p_ini: ini || null, p_fim: fim || null }); }
+  // pedido de retorno urgente: Edge Function (o banco confere perfil, faixa e pedido em aberto com o JWT de quem pede)
+  function pedirRetorno(proposta) {
+    var cfg = window.NX_INTELLIGENCE_CONFIG || {};
+    return window.NX_AUTH.getAccessToken().then(function (token) {
+      if (!token) return Promise.reject({ state: 'SESSION_EXPIRED', message: 'Sessão expirada.' });
+      return fetch(cfg.supabaseUrl + '/functions/v1/faturamentos-retorno-urgente', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': cfg.supabasePublishableKey, 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ proposta: proposta })
+      }).then(function (resp) {
+        return resp.json().catch(function () { return null; }).then(function (b) {
+          if (resp.ok && b && b.ok) return b;
+          if (resp.status === 401) return Promise.reject({ state: 'SESSION_EXPIRED' });
+          return Promise.reject({ state: 'VALIDATION', message: (b && b.message) || 'Não foi possível pedir o retorno agora.' });
+        });
+      }, function () { return Promise.reject({ state: 'BACKEND_ERROR', message: 'Sem conexão. Confira a internet e tente de novo.' }); });
+    });
+  }
 
   // ---------------------------------------------------------------- utilidades
   function esc(s) {
@@ -70,17 +109,41 @@
     if (isNaN(d.getTime())) return '—';
     return d.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }) + ' às ' + d.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' });
   }
+  function diaHora(v) {   // curto, para os selos: 10/11 09:05
+    var d = new Date(v);
+    if (isNaN(d.getTime())) return '—';
+    return d.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit' }) + ' ' +
+      d.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' });
+  }
   function iso(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
   function loja(code) { return code ? (window.NX_STORE_DISPLAY ? window.NX_STORE_DISPLAY.storeDisplayName(code) : code) : '—'; }
   function titulo(s) { return String(s || '').toLowerCase().replace(/(^|\s)\S/g, function (m) { return m.toUpperCase(); }); }
-  function chassiDe(r) { return r.ligacao === 'OK' && r.chassi ? r.chassi : A_CONFIRMAR; }
-  function seLigado(r, v) { return r.ligacao === 'OK' ? (v || '—') : A_CONFIRMAR; }
-  function vendedorDe(r) { return r.ligacao === 'OK' ? (titulo(r.vendedor) || '—') : A_CONFIRMAR; }
+  function ligado(r) { return r.ligacao === 'OK' && !!r.chassi; }
+  function chassiDe(r) { return ligado(r) ? r.chassi : SEM_CHASSI; }
+  function seLigado(r, v) { return ligado(r) ? (v || '—') : '—'; }
+  function vendedorDe(r) { return ligado(r) ? (titulo(r.vendedor) || '—') : '—'; }
+  function pode(p) { return !!(S && S.dados && S.dados[p] === true); }
+  function seloOrigem(r) {
+    if (!ligado(r)) return '<span class="fatOrigem fatOrigemSem" title="' + esc('Sem ligação segura: ' + (SEM_LIGACAO_TXT[r.sem_ligacao] || 'conferir')) + '">Sem ligação</span>';
+    var o = r.ligacao_origem;
+    return '<span class="fatOrigem fatOrigem' + esc(o) + '" title="' + esc(ORIGEM_DICA[o] || '') + '">' + esc(ORIGEM[o] || o) + '</span>';
+  }
+  function retornoAberto(r) { return !!(r.retorno && !r.retorno.resposta); }
+  function seloRetorno(r) {
+    var t = r.retorno;
+    if (!t) return '';
+    if (t.resposta) return '<span class="fatRet fatRetOk" title="' + esc('Respondido por ' + titulo(t.resposta.por) + ' em ' + dataHora(t.resposta.em)) + '">Respondido ' + esc(diaHora(t.resposta.em)) + '</span>';
+    return '<span class="fatRet fatRetAberto" title="' + esc('Pedido por ' + titulo(t.solicitado_por) + (t.email_erro ? ' — o e-mail não saiu; o aviso no Portal foi criado' : '')) + '">' +
+      'Retorno solicitado ' + esc(diaHora(t.solicitado_em)) + (t.teste ? ' · teste' : '') + '</span>';
+  }
+  function tituloForm(r) { return ligado(r) && r.modelo ? r.modelo : 'Proposta nº ' + r.proposta; }
+  function podePedirRetorno(r) { return pode('pode_solicitar_retorno') && r.faixa !== 'NORMAL' && !retornoAberto(r); }
   function fatTxt(r) { return (r.faturamento_desde_inicio ? 'até ' : '') + data(r.faturamento); }
   function badge(f) { return '<span class="fatBadge fat' + f + '">' + esc(FAIXA_LABEL[f] || f) + '</span>'; }
   function soma(l) { return l.reduce(function (s, r) { return s + Number(r.financiado || 0); }, 0); }
   function opcoes(lista) { var s = {}; lista.forEach(function (x) { if (x) s[x] = true; }); return Object.keys(s).sort(function (a, b) { return a.localeCompare(b, 'pt-BR'); }); }
   function pedeJust(r) { return r.faixa !== 'NORMAL'; }
+  function podeJust(r) { return pedeJust(r) && pode('pode_justificar'); }
   function justStatus(r) { return (r.just && r.just.status) || (pedeJust(r) ? 'SEM' : 'NAO_SE_APLICA'); }
   function seloJust(r) {
     var st = justStatus(r);
@@ -128,7 +191,7 @@
     var selo = c ? '<span class="fatSelo' + (c.desatualizada ? ' fatSeloAviso' : '') + '">Dados atualizados em: <b>' + esc(dataCurta(c.data)) + '</b>' +
       (c.desatualizada ? ' · há ' + esc(c.dias_uteis_desde) + ' dias úteis' : '') + '</span>' : '';
     return '<header class="fatTopo">' +
-      '<div class="fatTopoTexto"><p class="modEyebrow">Master e Analistas</p><h1 class="modTitle">Análise de Faturamentos</h1>' +
+      '<div class="fatTopoTexto"><p class="modEyebrow">Master, Analistas e Financeiro</p><h1 class="modTitle">Análise de Faturamentos</h1>' +
       '<p class="modSubtitle">Propostas de financiamento faturadas e ainda sem pagamento do banco para a loja.</p></div>' +
       '<div class="fatTopoAcoes">' + selo +
       (exp ? '<button type="button" class="modBtn modBtnPrimary fatExportar" data-acao="exportar"' + (n && !S.exportando ? '' : ' disabled') + '>' + (S.exportando ? 'Exportando…' : 'Exportar Excel') + '</button>' : '') +
@@ -196,30 +259,38 @@
       barra + legenda + '</div></section>';
   }
   function botaoJust(r, cls) {
-    return pedeJust(r) ? '<button type="button" class="fatJustBtn' + (cls ? ' ' + cls : '') + '" data-acao="justificar" data-id="' + esc(r._k) + '">Justificar demora</button>' : '';
+    return podeJust(r) ? '<button type="button" class="fatJustBtn' + (cls ? ' ' + cls : '') + '" data-acao="justificar" data-id="' + esc(r._k) + '">Justificar demora</button>' : '';
   }
+  function botaoRetorno(r, cls) {
+    return podePedirRetorno(r) ? '<button type="button" class="fatRetBtn' + (cls ? ' ' + cls : '') + '" data-acao="retorno" data-id="' + esc(r._k) + '">Solicitar retorno urgente</button>' : '';
+  }
+  function botaoVincular(r, cls) {
+    return !ligado(r) && pode('pode_vincular') ? '<button type="button" class="fatVincBtn' + (cls ? ' ' + cls : '') + '" data-acao="vincular" data-id="' + esc(r._k) + '">Vincular chassi</button>' : '';
+  }
+  // na linha: o Financeiro vê "Solicitar retorno" (não justifica); Master e Analistas veem "Justificar demora"
+  function acoesLinha(r) { return botaoVincular(r) + (pode('pode_justificar') ? botaoJust(r) : botaoRetorno(r)); }
   function linhaHtml(r) {
     return '<tr class="fatLinha fat' + r.faixa + '">' +
       '<td class="fatColDias"><b>' + esc(r.dias) + '</b></td>' +
-      '<td class="fatMono">' + esc(chassiDe(r)) + '</td>' +
+      '<td class="fatMono">' + esc(chassiDe(r)) + '<br>' + seloOrigem(r) + '</td>' +
       '<td class="fatCorta" title="' + esc(seLigado(r, r.modelo)) + '">' + esc(seLigado(r, r.modelo)) + '</td>' +
       '<td class="fatCorta" title="' + esc(loja(r.loja)) + '">' + esc(loja(r.loja)) + '</td>' +
       '<td class="fatCorta" title="' + esc(r.banco || '—') + '">' + esc(r.banco || '—') + '</td>' +
       '<td class="fatNum">' + esc(brl(r.financiado)) + '</td>' +
       '<td class="fatNum">' + esc(fatTxt(r)) + '</td>' +
-      '<td class="fatColJust">' + seloJust(r) + '</td>' +
-      '<td class="fatColAcao">' + botaoJust(r) +
+      '<td class="fatColJust">' + seloJust(r) + seloRetorno(r) + '</td>' +
+      '<td class="fatColAcao">' + acoesLinha(r) +
       '<button type="button" class="fatMais" data-acao="detalhe" data-id="' + esc(r._k) + '" aria-label="Mais detalhes da proposta ' + esc(chassiDe(r)) + '">+ detalhes</button></td></tr>';
   }
   function cartaoHtml(r) {
     return '<li class="fatCartao fat' + r.faixa + '"><div class="fatCartaoTopo">' + badge(r.faixa) +
       '<span class="fatCartaoDias"><b>' + esc(r.dias) + '</b> dias úteis</span></div>' +
       '<p class="fatCartaoModelo">' + esc(seLigado(r, r.modelo)) + '</p>' +
-      '<p class="fatMono fatCartaoChassi">' + esc(chassiDe(r)) + '</p>' +
-      (pedeJust(r) ? '<p class="fatCartaoJust">' + seloJust(r) + '</p>' : '') +
+      '<p class="fatMono fatCartaoChassi">' + esc(chassiDe(r)) + ' ' + seloOrigem(r) + '</p>' +
+      (pedeJust(r) || r.retorno ? '<p class="fatCartaoJust">' + (pedeJust(r) ? seloJust(r) : '') + seloRetorno(r) + '</p>' : '') +
       '<dl><div><dt>Loja</dt><dd>' + esc(loja(r.loja)) + '</dd></div><div><dt>Banco</dt><dd>' + esc(r.banco || '—') + '</dd></div>' +
       '<div><dt>Financiado</dt><dd>' + esc(brl(r.financiado)) + '</dd></div><div><dt>Faturamento</dt><dd>' + esc(fatTxt(r)) + '</dd></div></dl>' +
-      '<div class="fatCartaoAcoes">' + botaoJust(r) + '<button type="button" class="fatMais" data-acao="detalhe" data-id="' + esc(r._k) + '">+ detalhes</button></div></li>';
+      '<div class="fatCartaoAcoes">' + acoesLinha(r) + '<button type="button" class="fatMais" data-acao="detalhe" data-id="' + esc(r._k) + '">+ detalhes</button></div></li>';
   }
   function listaHtml() {
     var lista = ordenar(filtradas());
@@ -240,7 +311,8 @@
     var desde = S.dados.carga && S.dados.carga.primeira;
     return h + '<p class="modMuted fatNota">Data de faturamento: dia em que o faturamento da proposta foi identificado na atualização dos dados ' +
       '(os dados começam em ' + esc(data(desde)) + ' — "até" = já estava faturada no início). ' +
-      '"A confirmar": o chassi não foi ligado com segurança pelo nome do cliente.</p></section>';
+      'Ligação do chassi: <b>Documento</b> = mesmo CPF/CNPJ na venda (comparado de forma protegida); <b>Nome</b> = nome do cliente nos financiamentos; ' +
+      '<b>Manual</b> = vinculado por um Master ou Analista. "Sem ligação": nenhuma das duas formas achou um único carro com segurança.</p></section>';
   }
   function bancosHtml() {
     var p = (S.dados && S.dados.pagas_por_banco) || [];
@@ -254,16 +326,29 @@
   }
   function historicoHtml(r) {
     var hst = S.hist[r.proposta];
-    var h = '<section class="fatHist" aria-label="Justificativas"><div class="fatHistTopo"><h3 class="fatHistTitulo">Justificativas</h3>' +
-      (pedeJust(r) ? botaoJust(r, 'fatJustBtnForte') : '') + '</div>';
-    if (!pedeJust(r) && (!hst || hst.lista && !hst.lista.length)) return h + '<p class="modMuted">Propostas na faixa Normal não pedem justificativa.</p></section>';
+    var h = '<section class="fatHist" aria-label="Histórico"><div class="fatHistTopo"><h3 class="fatHistTitulo">Histórico</h3>' +
+      botaoJust(r, 'fatJustBtnForte') + botaoRetorno(r, 'fatRetBtnForte') + '</div>';
     if (!hst || hst.carregando) return h + '<p class="modMuted">Carregando o histórico…</p></section>';
     if (hst.erro) return h + '<p class="fatErroForm">' + esc(hst.erro) + '</p></section>';
-    if (!hst.lista.length) return h + '<p class="modMuted">Nenhuma justificativa ainda.</p></section>';
-    return h + '<ol class="fatHistLista">' + hst.lista.map(function (j) {
-      return '<li><div class="fatHistCab"><b>' + esc(j.motivo) + '</b><span>' + esc(dataHora(j.criado_em)) + '</span></div>' +
-        '<p class="fatHistTexto">' + esc(j.texto) + '</p><p class="fatHistAutor">' + esc(titulo(j.autor) || '—') + ' · ' + esc(titulo(j.perfil)) + '</p></li>';
-    }).join('') + '</ol></section>';
+    var itens = [];
+    (hst.justificativas || []).forEach(function (j) {
+      itens.push({ em: j.criado_em, html: '<li><div class="fatHistCab"><b>' + esc(j.motivo) + '</b><span>' + esc(dataHora(j.criado_em)) + '</span></div>' +
+        '<p class="fatHistTexto">' + esc(j.texto) + '</p><p class="fatHistAutor">' + esc(titulo(j.autor) || '—') + ' · ' + esc(titulo(j.perfil)) + '</p></li>' });
+    });
+    (hst.retornos || []).forEach(function (t) {
+      itens.push({ em: t.solicitado_em, html: '<li class="fatHistRet"><div class="fatHistCab"><b>Retorno urgente solicitado' + (t.teste ? ' (teste)' : '') + '</b><span>' + esc(dataHora(t.solicitado_em)) + '</span></div>' +
+        '<p class="fatHistTexto">' + (t.resposta ? 'Respondido por ' + esc(titulo(t.resposta.por)) + ' em ' + esc(dataHora(t.resposta.em)) + '.' :
+          'Aguardando a justificativa do Analista responsável da loja.') + (t.email_erro ? ' O e-mail não saiu; o aviso no Portal foi criado.' : (t.email_enviado_em ? ' E-mail enviado.' : '')) + '</p>' +
+        '<p class="fatHistAutor">' + esc(titulo(t.solicitado_por) || '—') + '</p></li>' });
+    });
+    (hst.vinculos || []).forEach(function (v) {
+      itens.push({ em: v.em, html: '<li class="fatHistVinc"><div class="fatHistCab"><b>Chassi vinculado à mão</b><span>' + esc(dataHora(v.em)) + '</span></div>' +
+        '<p class="fatHistTexto"><span class="fatMono">' + esc(v.chassi) + '</span> — ' + esc(v.motivo) + '</p>' +
+        '<p class="fatHistAutor">' + esc(titulo(v.por) || '—') + ' · ' + esc(titulo(v.perfil)) + '</p></li>' });
+    });
+    if (!itens.length) return h + '<p class="modMuted">' + (pedeJust(r) ? 'Nenhuma justificativa ainda.' : 'Propostas na faixa Normal não pedem justificativa.') + '</p></section>';
+    itens.sort(function (a, b) { return String(b.em).localeCompare(String(a.em)); });
+    return h + '<ol class="fatHistLista">' + itens.map(function (x) { return x.html; }).join('') + '</ol></section>';
   }
   function detalheHtml() {
     var r = S.detalhe && porChave(S.detalhe);
@@ -275,13 +360,15 @@
       '<div class="fatDetTopo"><div><p class="modEyebrow">Proposta faturada em aberto</p><h2 id="fatDetTitulo" class="fatDetTitulo">' + esc(r.cliente || '—') + '</h2></div>' +
       '<button type="button" class="fatFechar" data-acao="fechar" aria-label="Fechar detalhes">×</button></div>' +
       '<div class="fatDetDestaque"><b>' + esc(r.dias) + '</b><span>dias úteis em aberto</span>' + badge(r.faixa) + '</div>' +
-      (pedeJust(r) ? '<div class="fatDetJust">' + seloJust(r) + '</div>' : '') +
+      (pedeJust(r) || r.retorno ? '<div class="fatDetJust">' + (pedeJust(r) ? seloJust(r) : '') + seloRetorno(r) + '</div>' : '') +
+      (!ligado(r) ? '<div class="fatDetSemLig"><p>Sem ligação segura com um chassi: ' + esc(SEM_LIGACAO_TXT[r.sem_ligacao] || 'conferir') + '.</p>' + botaoVincular(r, 'fatVincBtnForte') + '</div>' : '') +
       '<dl class="fatDetLista">' +
       item('Cliente', esc(r.cliente || '—')) +
       item('Vendedor', esc(vendedorDe(r))) +
       item('Data de inclusão', esc(dataLonga(r.inclusao))) +
       item('Data de faturamento', esc((r.faturamento_desde_inicio ? 'até ' : '') + dataLonga(r.faturamento))) +
       item('Chassi', '<span class="fatMono">' + esc(chassiDe(r)) + '</span>') +
+      item('Ligação do chassi', seloOrigem(r) + (r.ligacao_origem === 'MANUAL' && r.vinculo_manual ? ' <small>' + esc(titulo(r.vinculo_manual.por)) + ' · ' + esc(dataHora(r.vinculo_manual.em)) + '</small>' : '')) +
       item('Modelo', esc(seLigado(r, r.modelo))) +
       item('Loja', esc(loja(r.loja))) +
       item('Banco/Financeira', esc(r.banco || '—')) +
@@ -297,7 +384,7 @@
     var n = (F.texto || '').trim().length;
     return '<div class="fatVeu" data-acao="cancelar"></div>' +
       '<aside class="fatDetalhe fatForm fat' + r.faixa + '" role="dialog" aria-modal="true" aria-labelledby="fatFormTitulo">' +
-      '<div class="fatDetTopo"><div><p class="modEyebrow">Justificar demora</p><h2 id="fatFormTitulo" class="fatDetTitulo">' + esc(seLigado(r, r.modelo)) + '</h2>' +
+      '<div class="fatDetTopo"><div><p class="modEyebrow">Justificar demora</p><h2 id="fatFormTitulo" class="fatDetTitulo">' + esc(tituloForm(r)) + '</h2>' +
       '<p class="fatFormSub"><span class="fatMono">' + esc(chassiDe(r)) + '</span> · ' + esc(loja(r.loja)) + ' · ' + esc(r.banco || '—') + '</p></div>' +
       '<button type="button" class="fatFechar" data-acao="cancelar" aria-label="Fechar sem salvar">×</button></div>' +
       '<div class="fatDetDestaque"><b>' + esc(r.dias) + '</b><span>dias úteis em aberto</span>' + badge(r.faixa) + '</div>' +
@@ -314,6 +401,51 @@
       '<button type="submit" class="modBtn modBtnPrimary" data-acao="salvar"' + (F.salvando ? ' disabled' : '') + '>' + (F.salvando ? 'Salvando…' : 'Salvar justificativa') + '</button></div>' +
       '</form></aside>';
   }
+  function retornoHtml() {
+    var F = S.ret, r = F && porChave(F.k);
+    if (!r) return '';
+    return '<div class="fatVeu" data-acao="cancelar"></div>' +
+      '<aside class="fatDetalhe fatForm fat' + r.faixa + '" role="dialog" aria-modal="true" aria-labelledby="fatRetTitulo">' +
+      '<div class="fatDetTopo"><div><p class="modEyebrow">Solicitar retorno urgente</p><h2 id="fatRetTitulo" class="fatDetTitulo">' + esc(tituloForm(r)) + '</h2>' +
+      '<p class="fatFormSub"><span class="fatMono">' + esc(chassiDe(r)) + '</span> · ' + esc(loja(r.loja)) + ' · ' + esc(r.banco || '—') + '</p></div>' +
+      '<button type="button" class="fatFechar" data-acao="cancelar" aria-label="Fechar sem pedir">×</button></div>' +
+      '<div class="fatDetDestaque"><b>' + esc(r.dias) + '</b><span>dias úteis em aberto</span>' + badge(r.faixa) + '</div>' +
+      '<div class="fatFormCorpo">' +
+      '<p>O <b>Analista responsável da loja ' + esc(loja(r.loja)) + '</b> recebe um e-mail com o chassi, o modelo, a loja, o banco, o valor e os dias em aberto ' +
+      '(sem CPF e sem nome do cliente) e vê um aviso no Portal a cada acesso, até registrar a justificativa.</p>' +
+      '<p class="modMuted">O pedido fica registrado com o seu nome, a data e a hora.</p>' +
+      (F.erro ? '<p class="fatErroForm" role="alert">' + esc(F.erro) + '</p>' : '') +
+      '<div class="fatFormAcoes"><button type="button" class="modBtn modBtnGhost" data-acao="cancelar">Cancelar</button>' +
+      '<button type="button" class="modBtn modBtnPrimary" data-acao="confirmarRetorno"' + (F.enviando ? ' disabled' : '') + '>' + (F.enviando ? 'Enviando…' : 'Pedir retorno urgente') + '</button></div>' +
+      '</div></aside>';
+  }
+  function vincularHtml() {
+    var F = S.vinc, r = F && porChave(F.k);
+    if (!r) return '';
+    var n = (F.motivo || '').trim().length;
+    var lista = F.carregando ? '<p class="modMuted">Buscando as vendas da loja perto da data da proposta…</p>' :
+      (F.candidatos && F.candidatos.length ? '<fieldset class="fatMotivos fatCandidatos"><legend>Vendas da loja ' + esc(loja(r.loja)) + ' (15 dias antes a 60 dias depois da inclusão)</legend>' +
+        F.candidatos.map(function (c, i) {
+          return '<label class="fatMotivo fatCand"><input type="radio" name="fatCand" value="' + esc(c.chassi) + '"' + (F.chassi === c.chassi ? ' checked' : '') + (i === 0 ? ' id="fatCand0"' : '') + '>' +
+            '<span><b class="fatMono">' + esc(c.chassi) + '</b> · ' + esc(c.modelo || '—') + '<small> · venda ' + esc(dataLonga(c.data_venda)) + ' · ' + esc(titulo(c.vendedor) || '—') + '</small></span></label>';
+        }).join('') + '</fieldset>' : '<p class="modMuted">Nenhuma venda da loja nesse intervalo. Digite o chassi abaixo.</p>');
+    return '<div class="fatVeu" data-acao="cancelar"></div>' +
+      '<aside class="fatDetalhe fatForm fat' + r.faixa + '" role="dialog" aria-modal="true" aria-labelledby="fatVincTitulo">' +
+      '<div class="fatDetTopo"><div><p class="modEyebrow">Vincular chassi</p><h2 id="fatVincTitulo" class="fatDetTitulo">' + esc(r.cliente || '—') + '</h2>' +
+      '<p class="fatFormSub">' + esc(loja(r.loja)) + ' · ' + esc(r.banco || '—') + ' · ' + esc(brl(r.financiado)) + ' · inclusão ' + esc(dataLonga(r.inclusao)) + '</p></div>' +
+      '<button type="button" class="fatFechar" data-acao="cancelar" aria-label="Fechar sem salvar">×</button></div>' +
+      '<form class="fatFormCorpo fatVincCorpo" novalidate>' + lista +
+      '<label class="fatTextoRot" for="fatVincChassi">Chassi <span>(17 caracteres; precisa estar nas vendas)</span></label>' +
+      '<input id="fatVincChassi" class="fatMono" maxlength="17" autocomplete="off" value="' + esc(F.chassi || '') + '">' +
+      '<label class="fatTextoRot" for="fatVincMotivo">Motivo <span>(mínimo de ' + MIN_MOTIVO + ' caracteres)</span></label>' +
+      '<textarea id="fatVincMotivo" rows="3" maxlength="500" aria-describedby="fatVincCont">' + esc(F.motivo || '') + '</textarea>' +
+      '<p id="fatVincCont" class="fatContador' + (n >= MIN_MOTIVO ? ' ok' : '') + '">' + n + ' de ' + MIN_MOTIVO + ' caracteres</p>' +
+      (F.erro ? '<p class="fatErroForm" role="alert">' + esc(F.erro) + '</p>' : '') +
+      '<p class="modMuted fatFormNota">O vínculo fica registrado com o seu nome, a data, a hora e o motivo, e passa a valer para todos. Para corrigir, registre um novo.</p>' +
+      '<div class="fatFormAcoes"><button type="button" class="modBtn modBtnGhost" data-acao="cancelar">Cancelar</button>' +
+      '<button type="button" class="modBtn modBtnPrimary" data-acao="salvarVinculo"' + (F.salvando ? ' disabled' : '') + '>' + (F.salvando ? 'Salvando…' : 'Salvar vínculo') + '</button></div>' +
+      '</form></aside>';
+  }
   function render() {
     if (!outletRef) return;
     var corpo;
@@ -323,13 +455,14 @@
       corpo = topoHtml() + periodoHtml() + filtrosHtml() + (S.msg ? '<div class="modErrorState" role="status">' + esc(S.msg) + '</div>' : '') +
         (S.aviso ? '<div class="fatOk" role="status">' + esc(S.aviso) + '</div>' : '') +
         (S.carregando ? '<div class="modLoadingState fatAtualizando">Atualizando…</div>' : '') + resumoHtml() + listaHtml() + bancosHtml() +
-        (S.form ? formHtml() : detalheHtml());
+        (S.form ? formHtml() : S.ret ? retornoHtml() : S.vinc ? vincularHtml() : detalheHtml());
     }
-    var aberto = !!(S.form || S.detalhe);
+    var aberto = !!(S.form || S.detalhe || S.ret || S.vinc);
     var manter = chaveDoFoco();
     outletRef.innerHTML = '<div class="fatPage' + (aberto ? ' fatComDetalhe' : '') + '">' + corpo + '</div>';
     if (manter) { var de = outletRef.querySelector(manter); if (de) de.focus(); }
-    if (S.form && S.form.focar) { var alvo = outletRef.querySelector(S.form.focar); if (alvo) alvo.focus(); S.form.focar = null; }
+    var Fo = S.form || S.vinc;
+    if (Fo && Fo.focar) { var alvo = outletRef.querySelector(Fo.focar); if (alvo) alvo.focus(); Fo.focar = null; }
     else if (aberto && S.focarFechar) { var bt = outletRef.querySelector('.fatFechar'); if (bt) bt.focus(); S.focarFechar = false; }
   }
 
@@ -356,6 +489,15 @@
       (S.dados.abertas || []).forEach(function (r) { r._k = String(r.proposta); });
       if (!S.todas) S.todas = (res[1] || S.dados).abertas || [];
       if (S.detalhe && !porChave(S.detalhe)) S.detalhe = null;
+      // link do e-mail / do aviso: ?proposta=X abre o detalhe dessa proposta (uma vez) e sai da barra de endereço
+      if (S.abrir) {
+        var alvo = porChave(S.abrir);
+        if (!alvo && S.filtros.periodo !== 'tudo' && (S.todas || []).some(function (x) { return String(x.proposta) === S.abrir; })) {
+          S.filtros.periodo = 'tudo'; S.carregando = false; return carregar(true);
+        }
+        S.abrir = null;
+        if (alvo) { S.detalhe = alvo._k; S.focarFechar = true; carregarHistorico(alvo); }
+      }
       S.erro = null; S.carregando = false; render();
     }).catch(function (e) {
       S.carregando = false;
@@ -366,8 +508,8 @@
   }
   function carregarHistorico(r) {
     S.hist[r.proposta] = { carregando: true };
-    return rpc('fat_justificativas', { p_proposta: r.proposta }).then(function (lista) {
-      S.hist[r.proposta] = { lista: Array.isArray(lista) ? lista : [] };
+    return rpc('faturamentos_historico', { p_proposta: r.proposta }).then(function (h) {
+      S.hist[r.proposta] = { justificativas: (h && h.justificativas) || [], retornos: (h && h.retornos) || [], vinculos: (h && h.vinculos) || [] };
       if (S.detalhe === r._k) render();
     }).catch(function (e) {
       S.hist[r.proposta] = { erro: (e && e.message) || 'Não foi possível carregar o histórico.' };
@@ -380,21 +522,23 @@
     var quais = {}; filtradas().forEach(function (r) { quais[r.proposta] = true; });
     var iv = intervalo();
     S.exportando = true; render();
-    // o arquivo sai da função do Master (o banco recusa qualquer outro perfil), com os mesmos filtros da tela
-    rpc('master_faturamentos', { p_por: 'faturamento', p_ini: iv.ini || null, p_fim: iv.fim || null }).then(function (d) {
-      var lista = ordenar(((d && d.abertas) || []).filter(function (r) { return quais[r.proposta]; }));
+    // o arquivo sai de faturamentos_exportar (só Master e Financeiro), que registra quem, quando e com quais filtros
+    var f = S.filtros;
+    rpc('faturamentos_exportar', { p_ini: iv.ini || null, p_fim: iv.fim || null, p_propostas: Object.keys(quais),
+      p_filtros: { periodo: f.periodo, loja: f.loja || '', banco: f.banco || '', vendedor: f.vendedor || '', faixa: f.faixa || '', justificativa: f.just || '' } }).then(function (d) {
+      var lista = ordenar((Array.isArray(d) ? d : []).filter(function (r) { return quais[r.proposta]; }));
       if (!lista.length) { S.exportando = false; render(); return; }
-      var headers = ['Chassi', 'Nome do cliente', 'Modelo', 'Loja', 'Vendedor', 'Banco/financeira', 'Valor financiado', 'Data de inclusão',
+      var headers = ['Chassi', 'Ligação do chassi', 'Nome do cliente', 'Modelo', 'Loja', 'Vendedor', 'Banco/financeira', 'Valor financiado', 'Data de inclusão',
                      'Data de faturamento', 'Dias úteis em aberto', 'Faixa', 'Nº da proposta'];
       var linhas = lista.map(function (r) {
-        return [chassiDe(r), r.cliente || '', seLigado(r, r.modelo), loja(r.loja), vendedorDe(r), r.banco || '',
+        return [chassiDe(r), ligado(r) ? (ORIGEM[r.ligacao_origem] || r.ligacao_origem) : 'Sem ligação', r.cliente || '', seLigado(r, r.modelo), loja(r.loja), vendedorDe(r), r.banco || '',
                 Number(r.financiado) || 0, H.excelDateValue(r.inclusao) || '', H.excelDateValue(r.faturamento) || '', Number(r.dias) || 0,
                 FAIXA_LABEL[r.faixa] || r.faixa, r.proposta || ''];
       });
       H.downloadWorkbook(headers, linhas, 'Faturamentos em aberto', 'Faturamentos_em_aberto_' + H.excelFileStamp() + '.xlsx', {
         moneyCols: new Set(['Valor financiado']), pctCols: new Set(), dateCols: new Set(['Data de inclusão', 'Data de faturamento']),
         intCols: new Set(['Dias úteis em aberto']),
-        textCols: new Set(['Chassi', 'Nome do cliente', 'Modelo', 'Loja', 'Vendedor', 'Banco/financeira', 'Faixa', 'Nº da proposta'])
+        textCols: new Set(['Chassi', 'Ligação do chassi', 'Nome do cliente', 'Modelo', 'Loja', 'Vendedor', 'Banco/financeira', 'Faixa', 'Nº da proposta'])
       });
       S.exportando = false; render();
     }).catch(function (e) {
@@ -422,8 +566,60 @@
       S.form.salvando = false; S.form.erro = (e && e.message) || 'Não foi possível salvar agora.'; render();
     });
   }
+  function abrirRetorno(k) { S.ret = { k: k, erro: null, enviando: false, deDetalhe: S.detalhe || null }; S.detalhe = null; S.aviso = null; render(); }
+  function confirmarRetorno() {
+    var F = S.ret, r = F && porChave(F.k);
+    if (!r || F.enviando) return;
+    F.enviando = true; F.erro = null; render();
+    pedirRetorno(r.proposta).then(function (res) {
+      S.ret = null; S.detalhe = r._k; S.focarFechar = true;
+      S.aviso = (res && res.message) || 'Retorno urgente solicitado.';
+      delete S.hist[r.proposta]; carregarHistorico(r); render();
+      return carregar(true);
+    }).catch(function (e) {
+      if (e && e.state === 'SESSION_EXPIRED' && window.NX_AUTH_CORE && window.NX_AUTH_CORE.reportSessionExpired) { window.NX_AUTH_CORE.reportSessionExpired(); return; }
+      if (!S.ret) return;
+      S.ret.enviando = false; S.ret.erro = (e && e.message) || 'Não foi possível pedir o retorno agora.'; render();
+    });
+  }
+  function abrirVincular(k) {
+    var r = porChave(k);
+    if (!r) return;
+    S.vinc = { k: k, candidatos: null, carregando: true, chassi: '', motivo: '', erro: null, salvando: false, deDetalhe: S.detalhe || null, focar: '#fatVincChassi' };
+    S.detalhe = null; S.aviso = null; render();
+    rpc('faturamentos_candidatos', { p_proposta: r.proposta }).then(function (l) {
+      if (!S.vinc || S.vinc.k !== k) return;
+      S.vinc.candidatos = Array.isArray(l) ? l : []; S.vinc.carregando = false;
+      if (S.vinc.candidatos.length) S.vinc.focar = '#fatCand0';
+      render();
+    }).catch(function (e) {
+      if (!S.vinc || S.vinc.k !== k) return;
+      S.vinc.candidatos = []; S.vinc.carregando = false; S.vinc.erro = (e && e.message) || 'Não foi possível buscar as vendas.'; render();
+    });
+  }
+  function salvarVinculo() {
+    var F = S.vinc, r = F && porChave(F.k);
+    if (!r || F.salvando) return;
+    var ch = String(F.chassi || '').toUpperCase().replace(/[^A-Z0-9]/g, ''), m = (F.motivo || '').trim();
+    if (ch.length !== 17) { F.erro = 'Escolha uma venda da lista ou digite o chassi completo (17 caracteres).'; F.focar = '#fatVincChassi'; render(); return; }
+    if (m.length < MIN_MOTIVO) { F.erro = 'Escreva o motivo do vínculo (pelo menos ' + MIN_MOTIVO + ' caracteres).'; F.focar = '#fatVincMotivo'; render(); return; }
+    F.salvando = true; F.erro = null; render();
+    rpc('faturamentos_vincular', { p_proposta: r.proposta, p_chassi: ch, p_motivo: m }).then(function () {
+      S.vinc = null; S.detalhe = r._k; S.focarFechar = true; S.aviso = 'Chassi vinculado.';
+      delete S.hist[r.proposta]; carregarHistorico(r); render();
+      return carregar(true);
+    }).catch(function (e) {
+      if (!S.vinc) return;
+      S.vinc.salvando = false; S.vinc.erro = (e && e.message) || 'Não foi possível salvar agora.'; render();
+    });
+  }
   // fecha o formulário (volta ao detalhe, se veio de lá) ou o detalhe; o foco volta ao botão que abriu
   function fecharPainel() {
+    if (S.ret || S.vinc) {
+      var G = S.ret || S.vinc; S.ret = null; S.vinc = null;
+      if (G.deDetalhe) { S.detalhe = G.deDetalhe; S.focarFechar = true; render(); return; }
+      render(); focar('[data-id="' + G.k + '"]'); return;
+    }
     if (S.form) {
       var F = S.form; S.form = null;
       if (F.deDetalhe) { S.detalhe = F.deDetalhe; S.focarFechar = true; render(); return; }
@@ -441,6 +637,10 @@
     if (!b || !b.closest('.fatPage') || !outletRef.contains(b) || b.disabled) return;
     var a = b.getAttribute('data-acao');
     if (a === 'salvar') { e.preventDefault(); salvar(); return; }
+    if (a === 'salvarVinculo') { e.preventDefault(); salvarVinculo(); return; }
+    if (a === 'confirmarRetorno') { confirmarRetorno(); return; }
+    if (a === 'retorno') { var kr = b.getAttribute('data-id'); if (!S.detalhe) focoAntes = kr; abrirRetorno(kr); return; }
+    if (a === 'vincular') { var kv = b.getAttribute('data-id'); if (!S.detalhe) focoAntes = kv; abrirVincular(kv); return; }
     if (a === 'periodo') {
       var v = b.getAttribute('data-v');
       if (v === S.filtros.periodo) return;
@@ -468,6 +668,7 @@
     var t = e.target;
     if (!t || !t.closest || !t.closest('.fatPage')) return;
     if (t.name === 'fatMotivo') { if (S.form) { S.form.motivo = t.value; S.form.erro = null; } return; }
+    if (t.name === 'fatCand') { if (S.vinc) { S.vinc.chassi = t.value; S.vinc.erro = null; var ci = outletRef.querySelector('#fatVincChassi'); if (ci) ci.value = t.value; } return; }
     if (t.id === 'fatF_ini' || t.id === 'fatF_fim') {
       S.filtros[t.id.slice(5)] = t.value;
       if (S.filtros.ini && S.filtros.fim && S.filtros.fim < S.filtros.ini) { S.msg = 'A data "Até" precisa ser igual ou depois da data "De".'; render(); return; }
@@ -478,15 +679,26 @@
   }
   function onInput(e) {   // o texto da justificativa: atualiza só o contador (sem redesenhar, para não perder o cursor)
     var t = e.target;
+    if (t && S.vinc && t.id === 'fatVincChassi') { S.vinc.chassi = t.value; return; }
+    if (t && S.vinc && t.id === 'fatVincMotivo') {
+      S.vinc.motivo = t.value;
+      var nv = t.value.trim().length, cv = outletRef.querySelector('#fatVincCont');
+      if (cv) { cv.textContent = nv + ' de ' + MIN_MOTIVO + ' caracteres'; cv.classList.toggle('ok', nv >= MIN_MOTIVO); }
+      return;
+    }
     if (!t || t.id !== 'fatTexto' || !S.form) return;
     S.form.texto = t.value;
     var n = t.value.trim().length, c = outletRef.querySelector('#fatContador');
     if (c) { c.textContent = n + ' de ' + MIN_TEXTO + ' caracteres'; c.classList.toggle('ok', n >= MIN_TEXTO); }
     if (n >= MIN_TEXTO && S.form.erro) { S.form.erro = null; var er = outletRef.querySelector('.fatForm .fatErroForm'); if (er) er.remove(); }
   }
-  function onSubmit(e) { if (e.target && e.target.classList && e.target.classList.contains('fatFormCorpo')) { e.preventDefault(); salvar(); } }
+  function onSubmit(e) {
+    if (!e.target || !e.target.classList || !e.target.classList.contains('fatFormCorpo')) return;
+    e.preventDefault();
+    if (e.target.classList.contains('fatVincCorpo')) salvarVinculo(); else salvar();
+  }
   function onKey(e) {
-    if (!S || !(S.detalhe || S.form)) return;
+    if (!S || !(S.detalhe || S.form || S.ret || S.vinc)) return;
     if (e.key === 'Escape') { e.preventDefault(); fecharPainel(); return; }
     if (e.key === 'Tab') {   // mantém o foco dentro do painel
       var foc = outletRef.querySelectorAll('.fatDetalhe button:not([disabled]), .fatDetalhe input, .fatDetalhe textarea, .fatDetalhe [href]');
@@ -512,7 +724,18 @@
       outletRef = outlet;
       S = { filtros: { periodo: '6m', ini: '', fim: '', loja: '', banco: '', vendedor: '', faixa: '', just: '' },
             dados: null, todas: null, erro: null, msg: null, aviso: null, carregando: false, exportando: false,
-            detalhe: null, form: null, hist: {}, focarFechar: false };
+            detalhe: null, form: null, ret: null, vinc: null, hist: {}, focarFechar: false, abrir: null };
+      // link do e-mail do retorno urgente / do aviso ao Analista: ?proposta=X
+      try {
+        var qp = new URLSearchParams(location.search).get('proposta');
+        if (qp) {
+          S.abrir = String(qp);
+          var u = new URL(location.href); u.searchParams.delete('proposta');
+          history.replaceState(history.state, '', u.pathname + (u.search || '') + u.hash);
+        }
+      } catch (e) { /* sem link direto */ }
+      if (!S.abrir && window.NX_FAT_ABRIR) S.abrir = String(window.NX_FAT_ABRIR);   // vindo do aviso de retorno urgente
+      window.NX_FAT_ABRIR = null;
       return carregar();
     }
   };

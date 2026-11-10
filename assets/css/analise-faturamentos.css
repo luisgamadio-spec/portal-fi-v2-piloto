@@ -221,3 +221,56 @@
 @media (max-width: 760px) {
   .fatFormAcoes > .modBtn { flex: 1 1 0; }
 }
+
+/* ---- 10/11/2026: ligação do chassi (Documento/Nome/Manual), retorno urgente, vínculo manual e o aviso ao Analista ---- */
+.fatOrigem { display: inline-block; margin-top: 3px; font-family: var(--font-sans, inherit); font-size: 0.625rem; font-weight: 600; letter-spacing: .04em;
+  text-transform: uppercase; padding: 1px 6px; border-radius: 999px; border: 1px solid var(--mod-border-strong); color: var(--color-text-secondary); white-space: nowrap; }
+.fatOrigemDOCUMENTO { color: var(--fat-normal); border-color: color-mix(in srgb, var(--fat-normal) 55%, transparent); }
+.fatOrigemMANUAL { color: #8fb4ff; border-color: color-mix(in srgb, #8fb4ff 55%, transparent); }
+.fatOrigemSem { color: var(--fat-atencao); border-color: color-mix(in srgb, var(--fat-atencao) 60%, transparent); }
+.fatRet { display: inline-block; margin-top: 4px; font-size: 0.6875rem; font-weight: 600; padding: 3px 8px; border-radius: 999px; white-space: nowrap; border: 1px solid; }
+.fatCartaoJust .fatRet, .fatDetJust .fatRet { margin-left: 4px; }
+.fatColJust .fatRet { display: block; width: fit-content; max-width: 100%; white-space: normal; margin-top: 4px; }
+.fatRetAberto { color: var(--fat-urgencia); border-color: color-mix(in srgb, var(--fat-urgencia) 60%, transparent); background: color-mix(in srgb, var(--fat-urgencia) 10%, transparent); }
+.fatRetOk { color: var(--fat-normal); border-color: color-mix(in srgb, var(--fat-normal) 55%, transparent); background: color-mix(in srgb, var(--fat-normal) 9%, transparent); }
+.fatRetBtn, .fatVincBtn { background: transparent; border: 1px solid color-mix(in srgb, var(--fat-urgencia) 70%, transparent); color: var(--fat-urgencia); border-radius: var(--radius-sm);
+  padding: 6px 10px; font: inherit; font-size: 0.75rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.fatVincBtn { border-color: color-mix(in srgb, #8fb4ff 70%, transparent); color: #8fb4ff; }
+.fatRetBtn:hover { background: color-mix(in srgb, var(--fat-urgencia) 12%, transparent); }
+.fatVincBtn:hover { background: color-mix(in srgb, #8fb4ff 12%, transparent); }
+.fatRetBtn:focus-visible, .fatVincBtn:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+.fatColAcao .fatRetBtn, .fatColAcao .fatVincBtn { margin-right: 6px; }
+.fatTab .fatColAcao .fatRetBtn, .fatTab .fatColAcao .fatVincBtn { padding: 6px 9px; }
+.fatRetBtnForte { background: var(--fat-urgencia); color: #1a0d00; border-color: var(--fat-urgencia); }
+.fatRetBtnForte:hover { background: #ffa04a; }
+.fatVincBtnForte { background: #8fb4ff; color: #06142e; border-color: #8fb4ff; }
+.fatHistTopo { flex-wrap: wrap; }
+.fatHistLista li.fatHistRet { border-left: 3px solid var(--fat-urgencia); }
+.fatHistLista li.fatHistVinc { border-left: 3px solid #8fb4ff; }
+.fatDetSemLig { border: 1px solid color-mix(in srgb, var(--fat-atencao) 50%, transparent); background: color-mix(in srgb, var(--fat-atencao) 7%, transparent);
+  border-radius: var(--radius-sm); padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.fatDetSemLig p { margin: 0; font-size: 0.8125rem; }
+.fatCand span { display: flex; flex-direction: column; gap: 2px; font-size: 0.8125rem; }
+.fatCand small { color: var(--color-text-secondary); }
+#fatVincChassi, #fatVincMotivo { width: 100%; box-sizing: border-box; background: var(--mod-surface-elevated); color: var(--color-text-primary);
+  border: 1px solid var(--mod-border-strong); border-radius: var(--radius-sm); padding: 9px 12px; font: inherit; font-size: 0.875rem; }
+#fatVincChassi { font-family: var(--font-mono, ui-monospace, monospace); text-transform: uppercase; letter-spacing: .04em; }
+#fatVincMotivo { resize: vertical; min-height: 72px; line-height: 1.45; }
+#fatVincChassi:focus-visible, #fatVincMotivo:focus-visible { outline: var(--focus-ring); outline-offset: 1px; }
+.fatTab col.cAcao { width: 268px; }
+
+/* aviso de retorno urgente ao Analista responsável (aparece em qualquer tela, a cada acesso, até ele justificar) */
+.fatAvisoVeu { position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 9000; display: flex; align-items: center; justify-content: center; padding: 16px; }
+.fatAvisoCaixa { width: min(560px, 100%); max-height: calc(100vh - 32px); overflow: auto; background: var(--mod-surface, #15161a); color: var(--color-text-primary, #f2f2f2);
+  border: 1px solid #ff8c1a; border-radius: 12px; padding: 20px; box-shadow: 0 20px 60px rgba(0,0,0,.5); display: flex; flex-direction: column; gap: 12px; }
+.fatAvisoCaixa h2 { margin: 0; font-size: 1.125rem; color: #ff8c1a; }
+.fatAvisoCaixa p { margin: 0; font-size: 0.875rem; line-height: 1.5; }
+.fatAvisoLista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.fatAvisoLista li { border: 1px solid var(--mod-border-strong, #333); border-radius: 8px; padding: 10px 12px; display: flex; justify-content: space-between; gap: 10px; align-items: center; flex-wrap: wrap; }
+.fatAvisoLista b { font-family: var(--font-mono, ui-monospace, monospace); }
+.fatAvisoLista small { display: block; color: var(--color-text-secondary, #aaa); font-size: 0.75rem; }
+.fatAvisoAcoes { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
+.fatAvisoAbrir { background: #ff8c1a; color: #1a0d00; border: 0; border-radius: 6px; padding: 8px 12px; font: inherit; font-size: 0.8125rem; font-weight: 600; cursor: pointer; }
+.fatAvisoFechar { background: transparent; color: inherit; border: 1px solid var(--mod-border-strong, #444); border-radius: 6px; padding: 8px 12px; font: inherit; font-size: 0.8125rem; cursor: pointer; }
+.fatAvisoAbrir:focus-visible, .fatAvisoFechar:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.fatCandidatos { max-height: 280px; overflow-y: auto; padding-right: 4px; }

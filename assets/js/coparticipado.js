@@ -515,6 +515,34 @@
   // for every COPARTICIPADO row) or, defensively, calcCoparticipacaoDetalhe()
   // directly -- same frozen function the on-screen table itself calls
   // (renderCoparticipadosTable, above), never a second classifier.
+  // Exportações do Master e do Financeiro ficam registradas no banco (quem, quando, filtros e linhas; 10/11/2026).
+  // Para esses dois perfis o arquivo só sai depois do registro; os demais perfis exportam como antes.
+  function cpBaixarComRegistro(visao, linhas, statusEl, filename, baixar) {
+    var ctx = window.NX_AUTH_CORE && typeof window.NX_AUTH_CORE.getContext === 'function' ? window.NX_AUTH_CORE.getContext() : null;
+    var perfil = ctx && ctx.perfil;
+    if (perfil !== 'MASTER' && perfil !== 'FINANCEIRO') {
+      baixar();
+      if (statusEl) statusEl.textContent = 'Exportado: ' + filename;
+      return;
+    }
+    var cfg = window.NX_INTELLIGENCE_CONFIG || {};
+    if (statusEl) statusEl.textContent = 'Registrando a exportação…';
+    window.NX_AUTH.getAccessToken().then(function (token) {
+      return fetch(cfg.supabaseUrl + '/rest/v1/rpc/portal_registrar_exportacao', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': cfg.supabasePublishableKey, 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ p_modulo: 'COPARTICIPADOS', p_linhas: linhas, p_filtros: {
+          visao: visao, loja: currentStore || 'Todas', periodo_ini: currentDateStart || null, periodo_fim: currentDateEnd || null } })
+      });
+    }).then(function (resp) {
+      if (!resp.ok) throw new Error('registro');
+      baixar();
+      if (statusEl) statusEl.textContent = 'Exportado: ' + filename;
+    }).catch(function () {
+      if (statusEl) statusEl.textContent = 'Não foi possível registrar a exportação; o arquivo não foi gerado. Tente novamente.';
+    });
+  }
+
   function exportCoparticipadosXlsx(btn) {
     var now = Date.now();
     if (now - lastCpExportAt < 800) return; // debounce accidental double-click
@@ -573,8 +601,9 @@
       // "Score_FI" is V1's own platform-wide F&I branding, not a
       // Score-module artifact. No change made; see FC-2.3 report.
       var filename = 'Coparticipados_Score_FI_' + window.NX_XLSX_EXPORT_HELPER.excelFileStamp() + '.xlsx';
-      window.NX_XLSX_EXPORT_HELPER.downloadWorkbook(headers, dataRows, 'Coparticipados', filename, columnTypes);
-      if (statusEl) statusEl.textContent = 'Exportado: ' + filename;
+      cpBaixarComRegistro('Coparticipados', dataRows.length, statusEl, filename, function () {
+        window.NX_XLSX_EXPORT_HELPER.downloadWorkbook(headers, dataRows, 'Coparticipados', filename, columnTypes);
+      });
     } catch (err) {
       if (statusEl) statusEl.textContent = 'Falha ao gerar o arquivo Excel. Tente novamente.';
     } finally {
@@ -643,8 +672,9 @@
       // wide F&I naming, not a Score artifact -- see FC-2.3 report); V1's
       // own exportarSubsidiados() used exactly this pattern.
       var filename = 'Subsidiados_Score_FI_' + window.NX_XLSX_EXPORT_HELPER.excelFileStamp() + '.xlsx';
-      window.NX_XLSX_EXPORT_HELPER.downloadWorkbook(headers, dataRows, 'Subsidiados', filename, columnTypes);
-      if (statusEl) statusEl.textContent = 'Exportado: ' + filename;
+      cpBaixarComRegistro('Subsidiados', dataRows.length, statusEl, filename, function () {
+        window.NX_XLSX_EXPORT_HELPER.downloadWorkbook(headers, dataRows, 'Subsidiados', filename, columnTypes);
+      });
     } catch (err) {
       if (statusEl) statusEl.textContent = 'Falha ao gerar o arquivo Excel. Tente novamente.';
     } finally {

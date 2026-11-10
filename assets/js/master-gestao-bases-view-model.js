@@ -290,7 +290,9 @@
       balloon_payment: null,
       balloon_value: gbAsNumber(gbGetCol(raw, ['Op Fin - Balão PMT (R$)'])) || null,
       finance_code: String(gbGetCol(raw, ['Tabela - Código IF'])).trim() || null,
-      tc_returned: String(gbGetCol(raw, ['Tabela - TC Devolvida (R$)'])).trim() || null
+      tc_returned: String(gbGetCol(raw, ['Tabela - TC Devolvida (R$)'])).trim() || null,
+      // 10/11/2026 (Análise de Faturamentos): o banco guarda só a chave protegida (HMAC) deste documento, nunca o CPF/CNPJ
+      client_document_normalized: gbNormalizeDocumentForMatch(gbGetCol(raw, ['Cli - CPF/CNPJ'])).normalized
     };
   }
   // Incidente T35918/M4 (porte do v1 em produção, 07/10/2026) -- uma linha

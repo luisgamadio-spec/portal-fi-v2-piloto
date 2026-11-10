@@ -62,7 +62,11 @@
     return window.NX_AUTH.getAccessToken().then(function (token) {
       if (!token) return Promise.reject({ state: 'SESSION_EXPIRED', message: 'Sessão expirada.' });
 
-      return fetch(cfg.supabaseUrl + '/rest/v1/rpc/operational_score_coparticipated_data', {
+      // Perfil FINANCEIRO (10/11/2026): função própria, do grupo todo (fin_coparticipados); o banco recusa os outros perfis nela
+      // e recusa o FINANCEIRO na função dos demais. Escolher a função aqui não dá acesso a nada: quem decide é o banco.
+      var ctx = window.NX_AUTH_CORE && typeof window.NX_AUTH_CORE.getContext === 'function' ? window.NX_AUTH_CORE.getContext() : null;
+      var fn = ctx && ctx.perfil === 'FINANCEIRO' ? 'fin_coparticipados' : 'operational_score_coparticipated_data';
+      return fetch(cfg.supabaseUrl + '/rest/v1/rpc/' + fn, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

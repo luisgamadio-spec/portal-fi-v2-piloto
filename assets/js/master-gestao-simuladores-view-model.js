@@ -112,17 +112,22 @@
   }
 
   // ---------------- 3. Taxa Botão (Copiar Taxa Banco) ----------------
+  // 09/11/2026: 3 colunas — Prazo, Taxa Simulador, Taxa Copiar (a Taxa Copiar vale para a COMBINAÇÃO prazo + taxa).
   function parseTaxaBotao(matrix) {
-    var h = gsAcharLinhaHeader(matrix, ['Prazo', 'Taxa']);
-    if (h < 0) throw gsErroEstrutura('Taxa Botão (Copiar Taxa Banco)');
+    var nome = 'Taxa Botão (Copiar Taxa Banco) — colunas Prazo, Taxa Simulador e Taxa Copiar';
+    var h = gsAcharLinhaHeader(matrix, ['Prazo', 'Taxa Simulador', 'Taxa Copiar']);
+    if (h < 0) throw gsErroEstrutura(nome);
+    var cab = (matrix[h] || []).map(gsNorm);
+    var iP = cab.indexOf('prazo'), iT = cab.indexOf('taxa simulador'), iC = cab.indexOf('taxa copiar');
+    if (iP < 0 || iT < 0 || iC < 0) throw gsErroEstrutura(nome);
     var rows = [];
     for (var i = h + 1; i < matrix.length; i++) {
       var r = matrix[i]; if (!r || r.every(function (c) { return c === null; })) continue;
-      var prazo = gsPrazoDeTexto(r[0]), taxa = gsNum(r[1]);
-      if (prazo === null || taxa === null) continue;
-      rows.push({ prazo: prazo, taxa_copiar: taxa });
+      var prazo = gsPrazoDeTexto(r[iP]), taxa = gsNum(r[iT]), copiar = gsNum(r[iC]);
+      if (prazo === null || taxa === null || copiar === null) continue;
+      rows.push({ prazo: prazo, taxa_simulador: taxa, taxa_copiar: copiar });
     }
-    if (!rows.length) throw gsErroEstrutura('Taxa Botão (Copiar Taxa Banco)');
+    if (!rows.length) throw gsErroEstrutura(nome);
     return { rows: rows, avisos: [] };
   }
 
@@ -426,8 +431,9 @@
       parser: 'parseLinearCoef', rpc: 'master_simulador_commit_linear', montarArgs: function (r) { return { p_linhas: r.rows }; } },
     { uid: 'ZK_SUBSIDIADAS', tipoBase: 'TAXAS_SUBSIDIADAS', grupo: 'ZEROKM', label: 'Taxas Subsidiadas',
       parser: 'parseTaxasSubsidiadas', rpc: 'master_simulador_commit_taxas_subsidiadas', montarArgs: function (r) { return { p_linhas: r.rows }; } },
-    { uid: 'ZK_TAXABOTAO', tipoBase: 'TAXA_BOTAO', grupo: 'ZEROKM', label: 'Copiar Taxa Banco (Taxa Botão)',
-      parser: 'parseTaxaBotao', rpc: 'master_simulador_commit_taxa_botao', montarArgs: function (r) { return { p_linhas: r.rows }; } },
+    { uid: 'ZK_TAXABOTAO', tipoBase: 'TAXA_BOTAO_COMBINACAO', grupo: 'ZEROKM', label: 'Copiar Taxa Banco (Taxa Botão)',
+      parser: 'parseTaxaBotao', rpc: 'master_simulador_commit_taxa_botao_combinacoes', montarArgs: function (r) { return { p_linhas: r.rows }; },
+      nota: 'Planilha com 3 colunas: Prazo, Taxa Simulador e Taxa Copiar. A taxa copiada no simulador é a da combinação exata prazo + taxa; combinação fora da tabela mostra "Taxa não cadastrada — consulte o F&I".' },
     { uid: 'ZK_BALAO', tipoBase: 'BALAO_ZEROKM', grupo: 'ZEROKM', label: 'Simulador Balão',
       parser: 'parseCoefBalaoZeroKm', rpc: 'master_simulador_commit_balao_zerokm', montarArgs: function (r) { return { p_linhas: r.rows }; },
       parcial: 'Atualiza: Tradicional e Semestral/Anual. Parcela Única permanece na configuração atual (o arquivo não traz o coeficiente que esse plano usa).' },

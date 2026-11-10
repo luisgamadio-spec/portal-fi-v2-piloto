@@ -230,15 +230,15 @@
   // V1's own exact hardcoded map (modules/simulador-novos.html,
   // portal-financiamento-brabus-secure), used only as the
   // AUTH_NOT_CONFIGURED fallback and as this file's own parity fixture.
-  var taxasBancoCopiar_FALLBACK = {
-    12: 0.01783, 15: 0.01785, 18: 0.01785, 24: 0.01633,
-    30: 0.01662, 36: 0.01661, 48: 0.01559, 60: 0.01558
-  };
-  var taxaBotaoAuthority = makeAuthority('simulador_get_taxa_botao', ['prazo', 'taxa_copiar'], [], function (linhas) {
+  // 09/11/2026 (pedido do Luis): a Taxa Copiar é escolhida pela combinação PRAZO + TAXA DO SIMULADOR
+  // (tabela simulador_taxa_botao_combinacoes). Sem tabela fixa de reserva: combinação que não está na
+  // tabela mostra "Taxa não cadastrada — consulte o F&I" e não copia nada (nunca valor aproximado/de outro prazo).
+  function chaveTaxaBotao(prazo, taxa) { return Number(prazo) + '|' + Number(taxa).toFixed(6); }
+  var taxaBotaoAuthority = makeAuthority('simulador_get_taxa_botao_combinacoes', ['prazo', 'taxa_simulador', 'taxa_copiar'], [], function (linhas) {
     var mapa = {};
-    linhas.forEach(function (x) { mapa[x.prazo] = x.taxa_copiar; });
+    linhas.forEach(function (x) { mapa[chaveTaxaBotao(x.prazo, x.taxa_simulador)] = x.taxa_copiar; });
     return Object.keys(mapa).length ? mapa : null;
-  }, taxasBancoCopiar_FALLBACK);
+  }, null);
 
   // Shared gate used by formHtml()/wireForm() for every live-authority
   // mode below — same visual language as Plano Coparticipado's own
@@ -290,11 +290,21 @@
     return !!ctx && (ctx.isMaster === true || p === 'MASTER' || p === 'ANALISTA');
   }
   var ICONE_COPIAR = '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M10.5 3.5v-.5A1.5 1.5 0 0 0 9 1.5H4A1.5 1.5 0 0 0 2.5 3v5A1.5 1.5 0 0 0 4 9.5h.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
-  function bankRateButtonHtml(prazo) {
-    if (!podeCopiarTaxa() || taxaBotaoAuthority.getState() !== 'READY') return '';
+  var TAXA_NAO_CADASTRADA = 'Taxa não cadastrada — consulte o F&I';
+  function taxaBancoDe(prazo, taxa) {
     var mapa = taxaBotaoAuthority.getAuthority() || {};
-    if (mapa[prazo] == null) return '';
-    return '<button type="button" class="smCopyTaxaIcon" data-copy-prazo="' + prazo + '" title="Copiar taxa banco" aria-label="Copiar taxa banco do prazo ' + prazo + 'x">' + ICONE_COPIAR + '</button>';
+    var v = mapa[chaveTaxaBotao(prazo, taxa)];
+    return v == null ? null : Number(v);
+  }
+  function bankRateButtonHtml(prazo, taxa) {
+    if (!podeCopiarTaxa() || taxaBotaoAuthority.getState() !== 'READY') return '';
+    if (taxaBancoDe(prazo, taxa) == null) return '';
+    return '<button type="button" class="smCopyTaxaIcon" data-copy-prazo="' + prazo + '" data-copy-taxa="' + Number(taxa) + '" title="Copiar taxa banco" aria-label="Copiar taxa banco do prazo ' + prazo + 'x">' + ICONE_COPIAR + '</button>';
+  }
+  // Combinação prazo + taxa sem Taxa Copiar cadastrada: aviso no cartão (só para quem copia: Analista e Master).
+  function bankRateFaltaHtml(prazo, taxa) {
+    if (!podeCopiarTaxa() || taxaBotaoAuthority.getState() !== 'READY' || taxaBancoDe(prazo, taxa) != null) return '';
+    return '<p class="smCopyTaxaFalta" role="note">' + TAXA_NAO_CADASTRADA + '</p>';
   }
   // Aviso curto no rodapé da tela, some sozinho.
   var avisoTimer = null;
@@ -311,7 +321,11 @@
     avisoTimer = setTimeout(function () { el.classList.remove('show'); }, 2200);
   }
   function formatTaxaBancoCopy(v) {
-    return (v * 100).toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 }) + '%';
+    // a taxa vem do banco com 6 casas decimais (= até 4 casas no percentual; a importação recusa mais que isso)
+    var micro = Math.round(Number(v) * 1e6);
+    var frac = String(micro % 10000).padStart(4, '0');
+    if (frac.charAt(3) === '0') frac = frac.slice(0, 3);
+    return Math.floor(micro / 10000) + ',' + frac + '%';
   }
   if (!window.__nxSimCopiaTaxa) {
     window.__nxSimCopiaTaxa = true;
@@ -319,14 +333,13 @@
       var btn = ev.target && ev.target.closest && ev.target.closest('[data-copy-prazo]');
       if (!btn) return;
       ev.stopPropagation();
-      copiarTaxaBanco(btn.getAttribute('data-copy-prazo'));
+      copiarTaxaBanco(btn.getAttribute('data-copy-prazo'), btn.getAttribute('data-copy-taxa'));
     });
   }
-  function copiarTaxaBanco(prazo) {
+  function copiarTaxaBanco(prazo, taxaSimulador) {
     if (!podeCopiarTaxa()) return;
-    var mapa = taxaBotaoAuthority.getAuthority() || {};
-    var taxa = mapa[Number(prazo)];
-    if (taxa == null) { avisoCurto('Taxa do banco indisponível para este prazo.'); return; }
+    var taxa = taxaBancoDe(prazo, taxaSimulador);
+    if (taxa == null) { avisoCurto(TAXA_NAO_CADASTRADA); return; }   // nunca copia valor de outra combinação
     var texto = formatTaxaBancoCopy(taxa);
     var done = function () { avisoCurto('Taxa copiada'); };
     var fail = function () { avisoCurto('Não foi possível copiar. Taxa: ' + texto); };
@@ -1288,7 +1301,7 @@
         if (row.melhor) pill = '<span class="smPill excellent">Melhor opção</span>';
         else if (r.minVenda > 0) pill = '<span class="smPill ' + (row.viavel ? 'good' : 'bad') + '">' + (row.viavel ? 'Dentro do mínimo' : 'Abaixo do mínimo') + '</span>';
         return '<div class="smSubsidiadaCard' + (row.melhor ? ' best' : '') + '">' +
-          '<div class="smSubsidiadaCardHead"><span class="smSubsidiadaCardPrazo">' + row.prazo + 'x</span><span class="smSubsidiadaCardTaxa">' + UI.rateBadge(row.taxa) + '</span>' + bankRateButtonHtml(row.prazo) + '</div>' +
+          '<div class="smSubsidiadaCardHead"><span class="smSubsidiadaCardPrazo">' + row.prazo + 'x</span><span class="smSubsidiadaCardTaxa">' + UI.rateBadge(row.taxa) + '</span>' + bankRateButtonHtml(row.prazo, row.taxa) + '</div>' + bankRateFaltaHtml(row.prazo, row.taxa) +
           (pill ? '<div class="smSubsidiadaCardPill">' + pill + '</div>' : '') +
           '<div class="smSubsidiadaCardRow"><span class="kpiLabel">Parcela</span><strong>' + UI.brl(row.parcela) + '</strong></div>' +
           // Gate 1-3 (PORTAL-NEXT-08.4): row.rebate is the engine's own

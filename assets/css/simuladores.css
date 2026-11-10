@@ -677,6 +677,8 @@
 }
 .smPage .smCopyTaxaIcon:hover { color: var(--color-text-primary); border-color: var(--color-accent-primary); }
 .smPage .smCopyTaxaIcon:focus-visible { outline: 2px solid var(--color-accent-primary); outline-offset: 2px; }
+/* 09/11/2026: combinação prazo + taxa sem Taxa Copiar cadastrada */
+.smPage .smCopyTaxaFalta { margin: 6px 0 0; font-size: 0.75rem; color: var(--color-warning, #f0c64a); }
 /* aviso curto ("Taxa copiada"), no rodapé da tela */
 .smToast {
   position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 12px); z-index: 1000; max-width: calc(100vw - 32px);

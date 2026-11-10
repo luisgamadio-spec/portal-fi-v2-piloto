@@ -813,3 +813,13 @@ col.absColStatus { width: 86px; }    /* badge content ~62px + cell padding, view
   .gsSubsTable td.gsSubsAcoes { justify-content: flex-end; padding-top: 6px; }
   .gsSubsTable td.gsSubsAcoes::before { content: none; }
 }
+
+/* 10/11/2026: prévia da Taxa Botão — no celular cada linha alterada vira um cartão (nenhuma coluna cortada) */
+@media (max-width: 640px) {
+  .gsPreviaWrap { overflow-x: visible; border: 0; }
+  .gsPreviaCartoes, .gsPreviaCartoes tbody { display: block; width: 100%; }
+  .gsPreviaCartoes thead { display: none; }
+  .gsPreviaCartoes tr { display: block; padding: 8px 10px; margin-bottom: 8px; border: 1px solid var(--mod-border); border-radius: var(--radius-sm); }
+  .gsPreviaCartoes td { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; border: 0; white-space: normal; text-align: right; }
+  .gsPreviaCartoes td::before { content: attr(data-label); color: var(--color-text-secondary); font-size: 0.6875rem; text-transform: uppercase; letter-spacing: .03em; text-align: left; }
+}

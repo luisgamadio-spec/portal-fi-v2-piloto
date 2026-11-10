@@ -55,6 +55,7 @@
     master_simulador_commit_linear: true,
     master_simulador_commit_taxas_subsidiadas: true,
     master_simulador_commit_taxa_botao: true,
+    master_simulador_commit_taxa_botao_combinacoes: true,
     master_simulador_commit_balao_zerokm: true,
     master_simulador_commit_balao_seminovos: true,
     master_simulador_commit_antecipacao: true,
@@ -158,6 +159,7 @@
   function commitLinear(args, params) { params = params || {}; return callRpc('master_simulador_commit_linear', args, params.signal); }
   function commitTaxasSubsidiadas(args, params) { params = params || {}; return callRpc('master_simulador_commit_taxas_subsidiadas', args, params.signal); }
   function commitTaxaBotao(args, params) { params = params || {}; return callRpc('master_simulador_commit_taxa_botao', args, params.signal); }
+  function commitTaxaBotaoCombinacoes(args, params) { params = params || {}; return callRpc('master_simulador_commit_taxa_botao_combinacoes', args, params.signal); }
   function commitBalaoZeroKm(args, params) { params = params || {}; return callRpc('master_simulador_commit_balao_zerokm', args, params.signal); }
   function commitBalaoSeminovos(args, params) { params = params || {}; return callRpc('master_simulador_commit_balao_seminovos', args, params.signal); }
   function commitAntecipacao(args, params) { params = params || {}; return callRpc('master_simulador_commit_antecipacao', args, params.signal); }
@@ -185,6 +187,7 @@
     master_simulador_commit_linear: commitLinear,
     master_simulador_commit_taxas_subsidiadas: commitTaxasSubsidiadas,
     master_simulador_commit_taxa_botao: commitTaxaBotao,
+    master_simulador_commit_taxa_botao_combinacoes: commitTaxaBotaoCombinacoes,
     master_simulador_commit_balao_zerokm: commitBalaoZeroKm,
     master_simulador_commit_balao_seminovos: commitBalaoSeminovos,
     master_simulador_commit_antecipacao: commitAntecipacao,

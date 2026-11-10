@@ -274,3 +274,6 @@
 .fatAvisoFechar { background: transparent; color: inherit; border: 1px solid var(--mod-border-strong, #444); border-radius: 6px; padding: 8px 12px; font: inherit; font-size: 0.8125rem; cursor: pointer; }
 .fatAvisoAbrir:focus-visible, .fatAvisoFechar:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .fatCandidatos { max-height: 280px; overflow-y: auto; padding-right: 4px; }
+/* 10/11/2026: com 3 botões (Vincular, Justificar e + detalhes) a célula quebra a linha em vez de passar da borda */
+.fatTab td.fatColAcao { white-space: normal; }
+.fatTab td.fatColAcao > button { margin-top: 3px; margin-bottom: 3px; }

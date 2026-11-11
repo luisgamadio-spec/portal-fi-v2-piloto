@@ -2764,6 +2764,14 @@
     ) : '<p class="note">Nenhuma base ACTIVE encontrada.</p>';
     var avisos = (info && Array.isArray(info.avisos) && info.avisos.length)
       ? '<div class="gbWarn">' + info.avisos.map(function (a) { return '<div>⚠️ ' + esc(typeof a === 'string' ? a : JSON.stringify(a)) + '</div>'; }).join('') + '</div>' : '';
+    // 11/11/2026: Linear PF | PJ — a parte de cima é a tabela PF (a de sempre); aqui embaixo, a situação da tabela PJ.
+    if (def.pfpj) {
+      var pj = gsState.statusByTipo[def.tipoBasePj];
+      body = '<div class="gbRow"><span>Tabela</span><b>PF</b></div>' + body +
+        '<div class="gbRow gsPjRow"><span>Tabela PJ</span><b>' + (pj
+          ? esc(GS_VM.gsFmtNum(pj.quantidade_registros)) + ' registros · ' + esc(GS_VM.gsFmtDateTime(pj.importado_em))
+          : 'ainda não cadastrada') + '</b></div>';
+    }
     var notaExtra = def.nota ? '<p class="note gsNotaExtra">' + esc(def.nota) + '</p>' : '';
     var parcialExtra = def.parcial ? '<p class="note gbWarn gsPartialNote">⚠️ ' + esc(def.parcial) + '</p>' : '';
     return '<div class="gbCard">' +
@@ -2836,8 +2844,62 @@
   // name, since there is a SECOND independent comparison for the
   // coefficient table) -- same shape either way (novos/alterados/
   // sem_alteracao/removidos + detalhe_alterados), rendered identically.
+  // 11/11/2026: prévia do Linear PF | PJ — o que muda em cada lado e o que falta na PJ (prazos que não aparecerão para PJ).
+  function gsEntradaPrevia(v) { return Math.round(Number(v) * 100) + '%'; }
+  function gsDiagPfPjHtml(m) {
+    var dry = m.dry, semi = dry.segmento === 'SEMINOVOS';
+    var SIT = { NOVO: 'Nova', ALTERADO: 'Alterada', REMOVIDO: 'Sai' };
+    function lado(rotulo, d) {
+      if (!d || !d.enviado) {
+        return '<h4 class="gsDetailTitle">' + rotulo + '</h4><p class="note">Bloco ' + rotulo + ' em branco no arquivo: a tabela ' + rotulo + ' atual continua valendo, sem mudança.</p>';
+      }
+      var resumo = '<div class="gsPfPjResumo">' +
+        '<span><b>' + esc(GS_VM.gsFmtNum(d.linhas_validas)) + '</b> taxas no arquivo</span>' +
+        '<span><b>' + esc(GS_VM.gsFmtNum(d.novos)) + '</b> novas</span>' +
+        '<span><b>' + esc(GS_VM.gsFmtNum(d.alterados)) + '</b> alteradas</span>' +
+        '<span><b>' + esc(GS_VM.gsFmtNum(d.sem_alteracao)) + '</b> sem alteração</span>' +
+        '<span><b>' + esc(GS_VM.gsFmtNum(d.removidos)) + '</b> saem</span></div>';
+      var linhas = d.detalhe || [];
+      var cols = (semi ? ['Faixa de ano'] : []).concat(['Entrada', 'Prazo', 'Taxa atual', 'Taxa nova', 'Situação']);
+      var tabela = linhas.length
+        ? '<div class="gsTableWrap gsPreviaWrap"><table class="gsTable gsPreviaCartoes"><thead><tr>' + cols.map(function (c) { return '<th>' + esc(c) + '</th>'; }).join('') + '</tr></thead><tbody>' +
+          linhas.map(function (r) {
+            var v = (semi ? [r.faixa_ano] : []).concat([gsEntradaPrevia(r.entrada_pct), r.prazo + 'x', gsPctPrevia(r.taxa_atual), gsPctPrevia(r.taxa_nova), SIT[r.situacao] || r.situacao]);
+            return '<tr class="gsSit' + esc(r.situacao) + '">' + v.map(function (x, i) { return '<td data-label="' + esc(cols[i]) + '">' + esc(x) + '</td>'; }).join('') + '</tr>';
+          }).join('') + '</tbody></table></div>'
+        : '<p class="note">Nenhuma taxa muda na tabela ' + rotulo + '.</p>';
+      return '<h4 class="gsDetailTitle">' + rotulo + ' — o que muda</h4>' + resumo + tabela;
+    }
+    var falt = dry.pj_faltando || [];
+    var faltHtml;
+    if (!falt.length) {
+      faltHtml = '<p class="note gsPfPjOk">PJ completa: todos os prazos da PF têm taxa PJ.</p>';
+    } else {
+      var grupos = {}, ordem = [];
+      falt.forEach(function (f) {
+        var k = (semi ? f.faixa_ano + ' · ' : '') + 'entrada ' + gsEntradaPrevia(f.entrada_pct);
+        if (!grupos[k]) { grupos[k] = []; ordem.push(k); }
+        grupos[k].push(f.prazo + 'x');
+      });
+      faltHtml = '<div class="gbWarn gsPfPjFalta"><div>⚠️ Faltam ' + esc(GS_VM.gsFmtNum(falt.length)) + ' taxa(s) na PJ. Esses prazos <b>não aparecerão para PJ</b> (o simulador nunca usa a taxa PF para PJ):</div>' +
+        '<ul>' + ordem.map(function (k) { return '<li><b>' + esc(k) + ':</b> ' + esc(grupos[k].join(', ')) + '</li>'; }).join('') + '</ul></div>';
+    }
+    var avisos = (m.avisosArquivo || []).filter(function (a) { return a; });
+    var avisosHtml = avisos.length ? '<div class="gbWarn">' + avisos.map(function (a) { return '<div>⚠️ ' + esc(a) + '</div>'; }).join('') + '</div>' : '';
+    return '<div class="gbRow"><span>Arquivo</span><b>' + esc(m.arquivo) + '</b></div>' +
+      '<div class="gbRow"><span>Segmento</span><b>' + (semi ? 'Seminovos' : 'Novos') + '</b></div>' +
+      avisosHtml + lado('PF', dry.pf) + lado('PJ', dry.pj) +
+      '<h4 class="gsDetailTitle">PJ — o que falta</h4>' + faltHtml +
+      '<p class="note">As tabelas atuais continuam valendo no simulador até você confirmar. PF e PJ são gravadas juntas (ou nada muda).</p>' +
+      '<p id="gsDiagMsg" class="maSubtle gbErrText" role="status"></p>' +
+      '<div class="adminModalActions">' +
+      '<button type="button" class="modBtnGhost" id="gsCancelarBtn">CANCELAR</button>' +
+      '<button type="button" class="modBtn" id="gsConfirmarBtn"' + (inFlight.gsImport ? ' disabled' : '') + '>CONFIRMAR ATUALIZAÇÃO</button>' +
+      '</div>';
+  }
   function gsDiagnosticBodyHtml(m) {
     var dry = m.dry;
+    if (dry && dry.tipo_base === 'LINEAR_PF_PJ') return gsDiagPfPjHtml(m);
     var comp = dry.comparacao_com_active || dry.comparacao_matriz_modelo || {};
     var novos = comp.novos || 0, alterados = comp.alterados || 0, semAlt = comp.sem_alteracao || 0, removidos = comp.removidos || 0;
     var detalhes = comp.detalhe_alterados || [];
@@ -2911,7 +2973,7 @@
         var def = parsedFile.def;
         var argsBase = Object.assign({ p_arquivo_nome: file.name, p_arquivo_sha256: sha256 }, def.montarArgs(parsedFile.parsed));
         return GS_PROVIDER.commit(def.rpc, Object.assign({}, argsBase, { p_dry_run: true })).then(function (dry) {
-          gsState.modal = { kind: 'diagnostic', titulo: def.label, arquivo: file.name, def: def, argsBase: argsBase, dry: dry };
+          gsState.modal = { kind: 'diagnostic', titulo: def.label, arquivo: file.name, def: def, argsBase: argsBase, dry: dry, avisosArquivo: parsedFile.parsed.avisos || [] };
           renderGsModalRoot();
         });
       });

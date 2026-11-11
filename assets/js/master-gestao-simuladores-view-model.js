@@ -93,6 +93,98 @@
     return { rows: rows, avisos: [] };
   }
 
+  // ---------------- 1b. Financiamento Linear PF | PJ (11/11/2026) ----------------
+  // Planilha com o bloco PF à esquerda e o PJ à direita (Linear_Coef.xlsx / Linear_Seminovos_PF_PJ_modelo.xlsx).
+  // Novos: Prazo | Entrada | Taxa. Seminovos: Faixa de ano | Prazo | Entrada | Taxa. Taxa = taxa MENSAL em fração (0,0295 = 2,95% a.m.).
+  // Linha com taxa em branco = "falta" (não vai ao banco; na PJ, aquele prazo não aparece). Bloco inteiro em branco = aquele lado não muda.
+  // Arquivo no formato antigo (um bloco só, sem PF/PJ) continua aceito: vale como PF e a PJ não muda.
+  function gsFracao(v, ehEntrada) {
+    if (v === null || v === undefined || v === '') return null;
+    var temPct = typeof v === 'string' && v.indexOf('%') !== -1;
+    var n = gsNum(v);
+    if (n === null) return NaN;
+    if (temPct) n = n / 100;
+    else if (ehEntrada && n > 1) n = n / 100;            // "20" na entrada = 20%
+    return Math.round(n * 1e6) / 1e6;
+  }
+  function gsFaixaAno(v) {
+    var s = String(v == null ? '' : v).trim();
+    var m = s.match(/^(\d{4})\s*(?:-|–|a|até)\s*(\d{4})$/i);
+    if (m) return m[1] + '-' + m[2];
+    var m2 = s.match(/^(\d{4})\s*\+$/);
+    if (m2) return m2[1] + '-2099';
+    return null;
+  }
+  function gsLerBlocosPfPj(matrix, semi, nome) {
+    var esperadas = semi ? ['Faixa', 'Prazo', 'Entrada', 'Taxa'] : ['Prazo', 'Entrada', 'Taxa'];
+    var h = gsAcharLinhaHeader(matrix, esperadas);
+    if (h < 0) return null;
+    var cab = (matrix[h] || []).map(gsNorm);
+    var chave = semi ? 'faixa' : 'prazo';
+    var inicios = [];
+    cab.forEach(function (c, i) { if (c && c.indexOf(chave) === 0) inicios.push(i); });
+    if (!inicios.length) return null;
+    var titulo = (matrix[h - 1] || []).map(gsNorm);
+    function ladoDo(ini, idx) {
+      for (var c = ini + (semi ? 3 : 2); c >= Math.max(0, ini - 1); c--) { if (titulo[c] === 'pj') return 'PJ'; if (titulo[c] === 'pf') return 'PF'; }
+      return idx === 0 ? 'PF' : 'PJ';
+    }
+    var res = { pf: [], pj: [], faltando: { PF: 0, PJ: 0 }, avisos: [], blocos: [] };
+    var erros = [], altas = { PF: 0, PJ: 0 };
+    inicios.slice(0, 2).forEach(function (ini, idx) {
+      var lado = ladoDo(ini, idx);
+      if (res.blocos.indexOf(lado) !== -1) throw new Error('A planilha tem dois blocos ' + lado + '. Deixe o PF à esquerda e o PJ à direita.');
+      res.blocos.push(lado);
+      var dest = lado === 'PF' ? res.pf : res.pj;
+      for (var i = h + 1; i < matrix.length; i++) {
+        var r = matrix[i] || [];
+        var cel = r.slice(ini, ini + esperadas.length);
+        if (cel.every(function (c) { return c === null || c === ''; })) continue;
+        var faixa = semi ? gsFaixaAno(cel[0]) : null;
+        var o = semi ? 1 : 0;
+        var prazo = gsPrazoDeTexto(cel[o]), entrada = gsFracao(cel[o + 1], true), taxa = gsFracao(cel[o + 2], false);
+        var linhaTxt = 'linha ' + (i + 1) + ' (' + lado + ')';
+        if ((semi && !faixa) || prazo === null || entrada === null || isNaN(entrada)) { erros.push(linhaTxt + ': faixa de ano, prazo ou entrada não reconhecidos'); continue; }
+        if (taxa === null) { res.faltando[lado]++; continue; }
+        if (isNaN(taxa) || taxa < 0) { erros.push(linhaTxt + ': taxa não reconhecida'); continue; }
+        if (taxa >= 1) { erros.push(linhaTxt + ': taxa ' + cel[o + 2] + ' parece estar em % sem o símbolo — use 2,95% ou 0,0295'); continue; }
+        if (taxa > 0.06) altas[lado]++;
+        var row = { prazo: prazo, entrada_pct: entrada, taxa: taxa };
+        if (semi) row = { faixa_ano: faixa, prazo: prazo, entrada_pct: entrada, taxa: taxa };
+        dest.push(row);
+      }
+    });
+    if (erros.length) throw new Error(nome + ': ' + erros.length + ' linha(s) com problema. ' + erros.slice(0, 3).join('; ') + (erros.length > 3 ? '…' : ''));
+    ['PF', 'PJ'].forEach(function (lado) {
+      if (altas[lado]) res.avisos.push(lado + ': ' + altas[lado] + ' taxa(s) acima de 6% a.m. — confira se a coluna Taxa é a taxa mensal (não o coeficiente).');
+    });
+    if (res.blocos.indexOf('PJ') === -1) res.avisos.push('O arquivo não tem bloco PJ: a tabela PJ não muda.');
+    else if (!res.pj.length) res.avisos.push('O bloco PJ está todo em branco: a tabela PJ não muda.');
+    if (res.blocos.indexOf('PF') !== -1 && !res.pf.length) res.avisos.push('O bloco PF está todo em branco: a tabela PF não muda.');
+    return res;
+  }
+  function gsPfPjSaida(r, nome) {
+    if (!r.pf.length && !r.pj.length) throw gsErroEstrutura(nome);
+    return { rows: r.pf, pf: r.pf, pj: r.pj, faltandoArquivo: r.faltando, avisos: r.avisos };
+  }
+  function parseLinearPfPj(matrix) {
+    if (gsAcharLinhaHeader(matrix, ['Faixa', 'Prazo', 'Entrada', 'Taxa']) >= 0) {
+      throw new Error('Este arquivo tem a coluna Faixa de ano: é a planilha de Seminovos. Use o cartão "Financiamento Linear Seminovos — PF | PJ".');
+    }
+    var r = gsLerBlocosPfPj(matrix, false, 'Financiamento Linear');
+    if (!r) throw gsErroEstrutura('Financiamento Linear');
+    return gsPfPjSaida(r, 'Financiamento Linear');
+  }
+  function parseSeminovoPfPj(matrix) {
+    var r = gsLerBlocosPfPj(matrix, true, 'Financiamento Seminovos');
+    if (!r) {
+      // formato antigo (coef seminovo: faixas de ano em colunas) = só PF
+      var antigo = parseCoefSeminovo(matrix);
+      r = { pf: antigo.rows, pj: [], faltando: { PF: 0, PJ: 0 }, avisos: (antigo.avisos || []).concat(['Arquivo no formato antigo (sem bloco PJ): vale como PF e a tabela PJ não muda.']), blocos: ['PF'] };
+    }
+    return gsPfPjSaida(r, 'Financiamento Seminovos');
+  }
+
   // ---------------- 2. Taxas Subsidiadas ----------------
   function parseTaxasSubsidiadas(matrix) {
     var h = gsAcharLinhaHeader(matrix, ['Prazo', 'Taxa', 'Coeficiente', 'Rebate']);
@@ -397,6 +489,8 @@
 
   var PARSERS = {
     parseLinearCoef: parseLinearCoef,
+    parseLinearPfPj: parseLinearPfPj,
+    parseSeminovoPfPj: parseSeminovoPfPj,
     parseTaxasSubsidiadas: parseTaxasSubsidiadas,
     parseTaxaBotao: parseTaxaBotao,
     parseCoefBalaoZeroKm: parseCoefBalaoZeroKm,
@@ -427,8 +521,11 @@
       parser: 'parseCoefCoparticipado', rpc: 'master_simulador_commit_coeficientes_coparticipado',
       montarArgs: function (r) { return { p_linhas: r.rows }; },
       nota: 'Coeficientes financeiros por prazo e taxa utilizados pelo Plano Coparticipado. Antes de ativar, o sistema confere se a matriz de modelos ACTIVE do Plano Coparticipado continua totalmente coberta — se alguma combinação prazo/taxa ainda necessária for removida, a ativação é bloqueada.' },
-    { uid: 'ZK_LINEAR', tipoBase: 'LINEAR_ZEROKM', grupo: 'ZEROKM', label: 'Financiamento Linear',
-      parser: 'parseLinearCoef', rpc: 'master_simulador_commit_linear', montarArgs: function (r) { return { p_linhas: r.rows }; } },
+    // 11/11/2026: Linear PF | PJ — a mesma planilha traz o bloco PF e o PJ; a prévia mostra o que muda e o que falta na PJ.
+    { uid: 'ZK_LINEAR', tipoBase: 'LINEAR_ZEROKM', tipoBasePj: 'LINEAR_ZEROKM_PJ', grupo: 'ZEROKM', label: 'Financiamento Linear — PF | PJ', pfpj: true,
+      parser: 'parseLinearPfPj', rpc: 'master_simulador_linear_pf_pj',
+      montarArgs: function (r) { return { p_segmento: 'NOVOS', p_pf: r.pf, p_pj: r.pj }; },
+      nota: 'Planilha com o bloco PF à esquerda e o PJ à direita, cada um com Prazo, Entrada e Taxa (taxa mensal). Taxa PJ em branco = aquele prazo não aparece para PJ (nunca usa a taxa PF). Bloco em branco = aquele lado não muda.' },
     { uid: 'ZK_SUBSIDIADAS', tipoBase: 'TAXAS_SUBSIDIADAS', grupo: 'ZEROKM', label: 'Taxas Subsidiadas',
       parser: 'parseTaxasSubsidiadas', rpc: 'master_simulador_commit_taxas_subsidiadas', montarArgs: function (r) { return { p_linhas: r.rows }; } },
     { uid: 'ZK_TAXABOTAO', tipoBase: 'TAXA_BOTAO_COMBINACAO', grupo: 'ZEROKM', label: 'Copiar Taxa Banco (Taxa Botão)',
@@ -442,8 +539,10 @@
       montarArgs: function (r) { return { p_linhas_modelo: r.rows, p_linhas_geral: r.geral || [], p_avisos: r.avisos || [] }; } },
     { uid: 'ZK_ANTECIPACAO', tipoBase: 'ANTECIPACAO', grupo: 'ZEROKM', label: 'Simulador de Antecipação', compartilhada: true,
       parser: 'parseAntecipacao', rpc: 'master_simulador_commit_antecipacao', montarArgs: function (r) { return { p_linhas: r.rows }; } },
-    { uid: 'SN_FINANCIAMENTO', tipoBase: 'FINANCIAMENTO_SEMINOVO', grupo: 'SEMINOVOS', label: 'Financiamento Seminovos',
-      parser: 'parseCoefSeminovo', rpc: 'master_simulador_commit_financiamento_seminovo', montarArgs: function (r) { return { p_linhas: r.rows }; } },
+    { uid: 'SN_FINANCIAMENTO', tipoBase: 'FINANCIAMENTO_SEMINOVO', tipoBasePj: 'FINANCIAMENTO_SEMINOVO_PJ', grupo: 'SEMINOVOS', label: 'Financiamento Linear Seminovos — PF | PJ', pfpj: true,
+      parser: 'parseSeminovoPfPj', rpc: 'master_simulador_linear_pf_pj',
+      montarArgs: function (r) { return { p_segmento: 'SEMINOVOS', p_pf: r.pf, p_pj: r.pj }; },
+      nota: 'Planilha com o bloco PF à esquerda e o PJ à direita, cada um com Faixa de ano, Prazo, Entrada e Taxa (taxa mensal). Taxa PJ em branco = aquele prazo não aparece para PJ (nunca usa a taxa PF). O arquivo no formato antigo continua aceito e vale só para a PF.' },
     { uid: 'SN_BALAO', tipoBase: 'BALAO_SEMINOVOS', grupo: 'SEMINOVOS', label: 'Simulador Balão',
       parser: 'parseCoefBalaoSeminovos', rpc: 'master_simulador_commit_balao_seminovos', montarArgs: function (r) { return { p_linhas: r.rows }; } },
     { uid: 'SN_ANTECIPACAO', tipoBase: 'ANTECIPACAO', grupo: 'SEMINOVOS', label: 'Simulador de Antecipação', compartilhada: true,

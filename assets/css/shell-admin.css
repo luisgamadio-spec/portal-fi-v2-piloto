@@ -823,3 +823,14 @@ col.absColStatus { width: 86px; }    /* badge content ~62px + cell padding, view
   .gsPreviaCartoes td { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; border: 0; white-space: normal; text-align: right; }
   .gsPreviaCartoes td::before { content: attr(data-label); color: var(--color-text-secondary); font-size: 0.6875rem; text-transform: uppercase; letter-spacing: .03em; text-align: left; }
 }
+
+/* 11/11/2026: prévia do Financiamento Linear PF | PJ */
+.gsPfPjResumo { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 4px 0 8px; font-size: .8125rem; color: var(--color-text-secondary); }
+.gsPfPjResumo b { color: var(--color-text-primary, inherit); }
+.gsPreviaCartoes tr.gsSitNOVO td:last-child { color: var(--color-success, #1b7f4b); font-weight: 600; }
+.gsPreviaCartoes tr.gsSitALTERADO td:last-child { color: var(--color-warning, #9a6400); font-weight: 600; }
+.gsPreviaCartoes tr.gsSitREMOVIDO td:last-child { color: var(--color-danger, #b3261e); font-weight: 600; }
+.gsPfPjFalta ul { margin: 6px 0 0; padding-left: 18px; }
+.gsPfPjFalta li { margin: 2px 0; }
+.gsPfPjOk { color: var(--color-success, #1b7f4b); }
+.gsPjRow b { font-weight: 600; }

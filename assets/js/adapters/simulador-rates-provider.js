@@ -92,6 +92,11 @@
             var code = body && body.code;
             return Promise.reject({ state: classifyError(code, resp.status), message: (body && body.message) || ('Erro ao carregar base de taxas (' + rpcName + ').') });
           }
+          // 11/11/2026 (Linear PF | PJ): só quem pede `permitirVazio` aceita {ok:true, linhas:[]} — a tabela PJ começa vazia
+          // e isso NÃO é erro ("Tabela PJ ainda não cadastrada"). Todas as outras bases continuam exigindo linhas.
+          if (params.permitirVazio && body && body.ok === true && Array.isArray(body.linhas) && body.linhas.length === 0) {
+            return body;
+          }
           if (!hasValidEnvelope(body)) {
             return Promise.reject({ state: 'BACKEND_ERROR', message: 'Base de taxas retornou formato inesperado.' });
           }

@@ -111,6 +111,46 @@
     });
     return Object.keys(tabela).length ? tabela : null;
   }, SN._internal.RATE_TABLE);
+  // 11/11/2026 (Luis): Linear separado em PF e PJ. A PF é a tabela de sempre (linearRTAuthority acima, intocada); a PJ é
+  // outra tabela no MESMO formato (faixa de ano × entrada × prazo), que pode estar VAZIA. Nunca se usa taxa PF para PJ:
+  // prazo sem taxa PJ não aparece; sem tabela PJ, aviso "Tabela PJ ainda não cadastrada — consulte o F&I". Abre sempre em PF.
+  function montaRateTable(linhas) {
+    var tabela = {};
+    linhas.forEach(function (x) {
+      var eBand = String(Math.round(x.entrada_pct * 100));
+      if (!tabela[x.faixa_ano]) tabela[x.faixa_ano] = {};
+      if (!tabela[x.faixa_ano][eBand]) tabela[x.faixa_ano][eBand] = {};
+      tabela[x.faixa_ano][eBand][String(x.prazo)] = x.taxa;
+    });
+    return tabela;
+  }
+  function makePjAuthority(rpcName, camposNumericos, camposTexto, transform) {
+    var state = 'IDLE', authority = null, loadPromise = null;
+    function ensure() {
+      if (state === 'READY') return Promise.resolve(authority);
+      if (loadPromise) return loadPromise;
+      if (!window.NX_AUTH || !window.NX_AUTH.isAuthConfigured) { authority = transform([]); state = 'READY'; return Promise.resolve(authority); }
+      state = 'LOADING';
+      loadPromise = RATES.loadRateAuthority(rpcName, function (linhas) {
+        return RATES.linhasValidas(linhas, camposNumericos, camposTexto);
+      }, { permitirVazio: true }).then(function (body) {
+        authority = transform(body.linhas || []);
+        state = 'READY';
+        return authority;
+      }).catch(function (err) {
+        authority = null;
+        state = 'ERROR';
+        return Promise.reject(err);
+      }).finally(function () {
+        loadPromise = null;
+      });
+      return loadPromise;
+    }
+    return { ensure: ensure, getState: function () { return state; }, getAuthority: function () { return authority; } };
+  }
+  var linearRTPjAuthority = makePjAuthority('simulador_get_financiamento_seminovo_pj', ['entrada_pct', 'prazo', 'taxa'], ['faixa_ano'], montaRateTable);
+  var pessoaLinear = 'PF';
+  var PJ_SEM_TABELA_MSG = 'Tabela PJ ainda não cadastrada — consulte o F&I.';
   // ANTECIPACAO -- same RPC as Novos ("Base COMPARTILHADA com o
   // Simulador ZeroKM"), reused via the same shared provider, but with
   // an INDEPENDENT authority/cache instance in this file (each page
@@ -386,6 +426,7 @@
 
   function switchMode(id) {
     currentMode = modoValido(id);
+    pessoaLinear = 'PF';   // o Linear abre sempre em PF
     balloons = [];
     antBaloes = [];
     document.getElementById('smModeNavRegion').innerHTML = modeNavHtml();
@@ -463,6 +504,20 @@
     var ro = UI.wireTermResultGrid(grid, 130, itemCount);
     if (ro) termGridObservers.push(ro);
   }
+  // 11/11/2026 (Luis): na PJ podem faltar prazos (ex.: 7 cards). A regra da PF exige linhas completas e, com um número
+  // primo de cards, cai para 1 coluna. Aqui: até 4 por linha, quantos couberem com 130px (4 no computador, 2 no celular),
+  // mesmo tamanho de card; só a última linha pode ficar menor. A PF continua com a regra de sempre (wireResultTermGrid acima).
+  function wirePjTermGrid() {
+    var grid = document.querySelector('#smResultRegion .smTermGrid');
+    if (!grid) return;
+    function recompute() {
+      var w = grid.clientWidth || (grid.parentElement && grid.parentElement.clientWidth) || 0;
+      var escala = (parseFloat(getComputedStyle(document.documentElement).fontSize) || 16) / 16;
+      grid.style.setProperty('--term-grid-cols', String(Math.max(1, Math.min(4, Math.floor(w / (130 * escala))))));
+    }
+    recompute();
+    if (window.ResizeObserver) { var ro = new ResizeObserver(recompute); ro.observe(grid); termGridObservers.push(ro); }
+  }
 
   function formHtml(mode) {
     switch (mode) {
@@ -482,7 +537,8 @@
       case 'ratetable':
         // SIMLIVE1: gated on linearRTAuthority (simulador_get_financiamento_seminovo).
         if (linearRTAuthority.getState() !== 'READY') return authorityGateHtml(linearRTAuthority);
-        return UI.numberField('sAnoRT', 'Ano do veículo', 2020, { min: 2007, max: 2099, hint: 'Tabela cadastrada para 2007–2099.' }) +
+        return UI.segmentedField('sPessoa', 'Tipo de cliente', [{ value: 'PF', label: 'PF' }, { value: 'PJ', label: 'PJ' }], pessoaLinear) +
+          UI.numberField('sAnoRT', 'Ano do veículo', 2020, { min: 2007, max: 2099, hint: 'Tabela cadastrada para 2007–2099.' }) +
           UI.moneyField('sValorRT', 'Valor do veículo', 'R$ 80.000,00') +
           UI.entryField('sEntradaRT', 'Entrada', 'R$ 0,00', 'sValorRT', 'Entrada permitida a partir de 0%.') +
           UI.balanceField('sSaldo', 'sValorRT', 'sEntradaRT') +
@@ -615,6 +671,11 @@
       ligaBalaoLimite();
     } else if (mode === 'ratetable') {
       if (!wireAuthorityGate(linearRTAuthority, mode)) return;
+      UI.wireSegmented('sPessoa', function (v) {
+        pessoaLinear = v === 'PJ' ? 'PJ' : 'PF';
+        if (UI.moneyVal('sValorRT') > 0) calcRateTable();
+        else setResult(UI.emptyBlock('Preencha os campos e clique em Calcular.'));
+      });
       document.getElementById('sCalc').addEventListener('click', calcRateTable);
     } else if (mode === 'descobridor') {
       document.getElementById('sCalc').addEventListener('click', calcDescobridor);
@@ -722,12 +783,40 @@
     setResult(html);
   }
   function calcRateTable() {
+    if (pessoaLinear === 'PJ') { calcRateTablePj(); return; }
     var r = SN.calcularLinearRateTable({ ano: UI.numVal('sAnoRT'), valor: UI.moneyVal('sValorRT'), entrada: UI.moneyVal('sEntradaRT'), rateTable: linearRTAuthority.getAuthority() });
     if (r.invalid) { setResult(UI.errorBlock('Verifique o ano do veículo e a entrada informada (entrada não pode ser maior que o valor do veículo, nem o percentual maior que 100%).')); return; }
     var html = UI.termGrid(r.terms.map(function (t) { return { prazo: t.prazo, payment: t.payment, rate: t.rate, best: false }; }));
     setResult('<div class="smResultHead"><p class="kpiLabel">Parcela por prazo</p>' +
       '<p class="smResultHeadNote">Ano ' + UI.esc(r.band || '—') + ' · taxa da faixa de entrada a partir de ' + r.eBand + '%</p></div>' + html);
     wireResultTermGrid(r.terms.length);
+  }
+  // PJ: mesma conta, só com a tabela PJ. Prazo sem taxa PJ não aparece (nunca usa a taxa PF).
+  function calcRateTablePj() {
+    function denovo() { if (currentMode === 'ratetable' && pessoaLinear === 'PJ') calcRateTablePj(); }
+    var st = linearRTPjAuthority.getState();
+    if (st === 'ERROR') {
+      setResult(UI.errorBlock(RATE_FAIL_MSG) + '<button type="button" class="btn btn-secondary" id="sPjRetry" style="width:100%;margin-top:6px">Tentar novamente</button>');
+      var b = document.getElementById('sPjRetry');
+      if (b) b.addEventListener('click', function () { linearRTPjAuthority.ensure().then(denovo, denovo); });
+      return;
+    }
+    if (st !== 'READY') {
+      setResult(UI.emptyBlock('Carregando as taxas PJ...'));
+      linearRTPjAuthority.ensure().then(denovo, denovo);
+      return;
+    }
+    var tabela = linearRTPjAuthority.getAuthority() || {};
+    if (!Object.keys(tabela).length) { setResult(UI.emptyBlock(PJ_SEM_TABELA_MSG)); return; }
+    var r = SN.calcularLinearRateTable({ ano: UI.numVal('sAnoRT'), valor: UI.moneyVal('sValorRT'), entrada: UI.moneyVal('sEntradaRT'), rateTable: tabela });
+    if (r.invalid) { setResult(UI.errorBlock('Verifique o ano do veículo e a entrada informada (entrada não pode ser maior que o valor do veículo, nem o percentual maior que 100%).')); return; }
+    var terms = r.terms.filter(function (t) { return !t.invalid && t.rate !== null && t.rate !== undefined; });
+    if (!terms.length) { setResult(UI.emptyBlock('Sem taxa PJ cadastrada para o ano ' + UI.esc(r.band || '—') + ' com entrada a partir de ' + r.eBand + '% — consulte o F&I.')); return; }
+    var html = UI.termGrid(terms.map(function (t) { return { prazo: t.prazo, payment: t.payment, rate: t.rate, best: false }; }));
+    setResult('<div class="smResultHead"><p class="kpiLabel">Parcela por prazo — PJ</p>' +
+      '<p class="smResultHeadNote">Ano ' + UI.esc(r.band || '—') + ' · taxa PJ da faixa de entrada a partir de ' + r.eBand + '%' +
+      (terms.length < r.terms.length ? ' · prazos sem taxa PJ não aparecem' : '') + '</p></div>' + html);
+    wirePjTermGrid();
   }
   function calcDescobridor() {
     var r = SN.calcularDescobridor({ financiado: UI.moneyVal('sFinanciado'), prazo: UI.numVal('sPrazoNum'), parcela: UI.moneyVal('sParcela') });
@@ -787,6 +876,7 @@
   window.NX_SIMULADOR_SEMINOVOS_PAGE = {
     render: function (outlet) {
       currentMode = MODO_INICIAL;
+      pessoaLinear = 'PF';   // o Linear abre sempre em PF
       balloons = [];
       antBaloes = [];
       openCategory = null; // SIM-NAV-4 / F.2: all categories collapsed on entry

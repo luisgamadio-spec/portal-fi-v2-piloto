@@ -63,6 +63,8 @@
     master_simulador_commit_coparticipado: true,
     master_simulador_commit_semestral_triton_outlander: true,
     master_simulador_commit_coeficientes_coparticipado: true,
+    // 11/11/2026: Linear PF | PJ (fora de produção só simula a gravação; a prévia é consulta real)
+    master_simulador_linear_pf_pj: true,
     // 07/11/2026: modelos da Taxa Subsidiada (homolog e produção usam o mesmo banco: fora de produção só simula)
     master_simulador_importar_subsidio_modelos: true,
     master_subsidio_modelo_salvar: true,
@@ -195,7 +197,8 @@
     master_simulador_commit_coparticipado: commitCoparticipado,
     master_simulador_commit_semestral_triton_outlander: commitSemestralTritonOutlander,
     master_simulador_commit_coeficientes_coparticipado: commitCoeficientesCoparticipado,
-    master_simulador_importar_subsidio_modelos: commitSubsidioModelos
+    master_simulador_importar_subsidio_modelos: commitSubsidioModelos,
+    master_simulador_linear_pf_pj: function (args, params) { params = params || {}; return callRpc('master_simulador_linear_pf_pj', args, params.signal); }
   };
   // Generic dispatch by RPC name (the view-model's catalog names the RPC
   // per family; this avoids a second, parallel name->function map living

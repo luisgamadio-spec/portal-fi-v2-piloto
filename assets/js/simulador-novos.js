@@ -186,6 +186,46 @@
     var t = linhas.map(function (x) { return { prazo: x.prazo, entrada: x.entrada_pct, taxa: x.taxa }; });
     return t.length ? t : null;
   }, N._internal.tabelaLinear_FALLBACK);
+  // 11/11/2026 (Luis): Financiamento Linear separado em PF e PJ. A PF é a tabela de sempre (linearAuthority acima, intocada);
+  // a PJ é outra tabela (simulador_get_linear_zerokm_pj), que pode estar VAZIA. Nunca se usa taxa PF para PJ: prazo sem
+  // taxa PJ não aparece; sem tabela PJ, aviso "Tabela PJ ainda não cadastrada — consulte o F&I". O seletor abre sempre em PF.
+  function makePjAuthority(rpcName, camposNumericos, camposTexto, transform) {
+    var state = 'IDLE', authority = null, loadPromise = null;
+    function ensure() {
+      if (state === 'READY') return Promise.resolve(authority);
+      if (loadPromise) return loadPromise;
+      if (!window.NX_AUTH || !window.NX_AUTH.isAuthConfigured) { authority = transform([]); state = 'READY'; return Promise.resolve(authority); }
+      state = 'LOADING';
+      loadPromise = RATES.loadRateAuthority(rpcName, function (linhas) {
+        return RATES.linhasValidas(linhas, camposNumericos, camposTexto);
+      }, { permitirVazio: true }).then(function (body) {
+        authority = transform(body.linhas || []);
+        state = 'READY';
+        return authority;
+      }).catch(function (err) {
+        authority = null;
+        state = 'ERROR';
+        return Promise.reject(err);
+      }).finally(function () {
+        loadPromise = null;
+      });
+      return loadPromise;
+    }
+    return { ensure: ensure, getState: function () { return state; }, getAuthority: function () { return authority; } };
+  }
+  var linearPjAuthority = makePjAuthority('simulador_get_linear_zerokm_pj', ['prazo', 'entrada_pct', 'taxa'], [], function (linhas) {
+    return linhas.map(function (x) { return { prazo: x.prazo, entrada: x.entrada_pct, taxa: x.taxa }; });
+  });
+  var pessoaLinear = 'PF';
+  var PJ_SEM_TABELA_MSG = 'Tabela PJ ainda não cadastrada — consulte o F&I.';
+  function pessoaFieldHtml(id) {
+    return UI.segmentedField(id, 'Tipo de cliente', [{ value: 'PF', label: 'PF' }, { value: 'PJ', label: 'PJ' }], pessoaLinear);
+  }
+  // O Assistente de solução financeira usa só as taxas PF: com PJ selecionado ele fica escondido (nunca sugere taxa PF a um PJ).
+  function marcaPessoa() {
+    document.body.classList.toggle('smPessoaPJ', pessoaLinear === 'PJ');
+    if (pessoaLinear === 'PJ') { var pop = document.getElementById('asstPop'); if (pop) pop.remove(); }
+  }
   var subsidiadasAuthority = makeAuthority('simulador_get_taxas_subsidiadas', ['prazo', 'taxa', 'coeficiente', 'rebate'], [], function (linhas) {
     var t = linhas.map(function (x) { return { prazo: x.prazo, taxa: x.taxa, coef: x.coeficiente, rebate: x.rebate }; });
     return t.length ? t : null;
@@ -645,6 +685,8 @@
 
   function switchMode(id) {
     currentMode = modoValido(id);
+    pessoaLinear = 'PF';   // o Linear abre sempre em PF
+    document.body.classList.remove('smPessoaPJ');
     balloons = [];
     antBaloes = [];
     document.getElementById('smModeNavRegion').innerHTML = modeNavHtml();
@@ -735,6 +777,20 @@
     var ro = UI.wireTermResultGrid(grid, 130, itemCount);
     if (ro) termGridObservers.push(ro);
   }
+  // 11/11/2026 (Luis): na PJ podem faltar prazos (ex.: 7 cards). A regra da PF exige linhas completas e, com 7, caía
+  // para 1 coluna. Aqui: até 4 por linha, quantos couberem com 130px (4 no computador, 2 no celular), mesmo tamanho de card;
+  // só a última linha pode ficar menor. A PF continua com a regra de sempre (wireResultTermGrid acima).
+  function wirePjTermGrid() {
+    var grid = document.querySelector('#smResultRegion .smTermGrid');
+    if (!grid) return;
+    function recompute() {
+      var w = grid.clientWidth || (grid.parentElement && grid.parentElement.clientWidth) || 0;
+      var escala = (parseFloat(getComputedStyle(document.documentElement).fontSize) || 16) / 16;
+      grid.style.setProperty('--term-grid-cols', String(Math.max(1, Math.min(4, Math.floor(w / (130 * escala))))));
+    }
+    recompute();
+    if (window.ResizeObserver) { var ro = new ResizeObserver(recompute); ro.observe(grid); termGridObservers.push(ro); }
+  }
 
   /* ---------- forms ---------- */
   function formHtml(mode) {
@@ -774,7 +830,8 @@
       case 'linear':
         // SIMLIVE1: gated on linearAuthority (simulador_get_linear_zerokm).
         if (linearAuthority.getState() !== 'READY') return authorityGateHtml(linearAuthority);
-        return UI.moneyField('nBem', 'Valor do bem', 'R$ 100.000,00') +
+        return pessoaFieldHtml('nPessoa') +
+          UI.moneyField('nBem', 'Valor do bem', 'R$ 100.000,00') +
           UI.entryField('nEntrada', 'Entrada', 'R$ 20.000,00', 'nBem') +
           UI.balanceField('nSaldo', 'nBem', 'nEntrada');
       case 'campanha':
@@ -968,6 +1025,8 @@
       document.getElementById('nCalc').addEventListener('click', runParcelaUnica);
     } else if (mode === 'linear') {
       if (!wireAuthorityGate(linearAuthority, mode)) return;
+      marcaPessoa();
+      UI.wireSegmented('nPessoa', function (v) { pessoaLinear = v === 'PJ' ? 'PJ' : 'PF'; marcaPessoa(); calcLinear(); });
       UI.wireMoneyMask('nBem', calcLinear);
       UI.wireMoneyMask('nEntrada', calcLinear);
       calcLinear();
@@ -1169,6 +1228,7 @@
     setResult(html);
   }
   function calcLinear() {
+    if (pessoaLinear === 'PJ') { calcLinearPj(); return; }
     var r = N.calcularLinear({ bem: UI.moneyVal('nBem'), entrada: UI.moneyVal('nEntrada'), tabelaLinear: linearAuthority.getAuthority() });
     if (r.empty) { setResult(UI.emptyBlock('Preencha o valor do bem e a entrada para visualizar todos os prazos.')); return; }
     if (r.error) { setResult(UI.errorBlock(errMsg(r.error))); return; }
@@ -1176,6 +1236,34 @@
     setResult('<div class="smResultHead"><p class="kpiLabel">Parcela por prazo</p>' +
       '<p class="smResultHeadNote">Taxa da faixa de entrada a partir de ' + UI.fmtEntryPct(r.faixa) + '%</p></div>' + html);
     wireResultTermGrid(r.itens.length);
+  }
+  // PJ: mesma conta, só com a tabela PJ. Prazo sem taxa PJ não aparece (nunca usa a taxa PF).
+  function calcLinearPj() {
+    function denovo() { if (currentMode === 'linear' && pessoaLinear === 'PJ') calcLinearPj(); }
+    var st = linearPjAuthority.getState();
+    if (st === 'ERROR') {
+      setResult(UI.errorBlock(RATE_FAIL_MSG) + '<button type="button" class="btn btn-secondary" id="nPjRetry" style="width:100%;margin-top:6px">Tentar novamente</button>');
+      var b = document.getElementById('nPjRetry');
+      if (b) b.addEventListener('click', function () { linearPjAuthority.ensure().then(denovo, denovo); });
+      return;
+    }
+    if (st !== 'READY') {
+      setResult(UI.emptyBlock('Carregando as taxas PJ...'));
+      linearPjAuthority.ensure().then(denovo, denovo);
+      return;
+    }
+    var tabela = linearPjAuthority.getAuthority() || [];
+    if (!tabela.length) { setResult(UI.emptyBlock(PJ_SEM_TABELA_MSG)); return; }
+    var r = N.calcularLinear({ bem: UI.moneyVal('nBem'), entrada: UI.moneyVal('nEntrada'), tabelaLinear: tabela });
+    if (r.empty) { setResult(UI.emptyBlock('Preencha o valor do bem e a entrada para visualizar todos os prazos.')); return; }
+    if (r.error) { setResult(UI.errorBlock(errMsg(r.error))); return; }
+    var itens = r.itens.filter(function (x) { return x.parcela !== null && x.parcela !== undefined; });
+    if (!itens.length) { setResult(UI.emptyBlock('Sem taxa PJ cadastrada para entrada a partir de ' + UI.fmtEntryPct(r.faixa) + '% — consulte o F&I.')); return; }
+    var html = UI.termGrid(itens.map(function (x) { return { prazo: x.prazo, payment: x.parcela, rate: null, best: false }; }));
+    setResult('<div class="smResultHead"><p class="kpiLabel">Parcela por prazo — PJ</p>' +
+      '<p class="smResultHeadNote">Taxa PJ da faixa de entrada a partir de ' + UI.fmtEntryPct(r.faixa) + '%' +
+      (itens.length < r.itens.length ? ' · prazos sem taxa PJ não aparecem' : '') + '</p></div>' + html);
+    wirePjTermGrid();
   }
   function calcCampanha() {
     // Governed authority only -- never falls back to CAMP's internal
@@ -1418,6 +1506,8 @@
     getCampAuthorityForTest: function () { return campAuthority; },
     render: function (outlet) {
       currentMode = MODO_INICIAL;
+      pessoaLinear = 'PF';   // o Linear abre sempre em PF
+      document.body.classList.remove('smPessoaPJ');
       balloons = [];
       antBaloes = [];
       subsTaxa = null;

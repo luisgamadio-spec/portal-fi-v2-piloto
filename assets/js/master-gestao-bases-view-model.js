@@ -41,7 +41,9 @@
     SPF_CURRENT: 'Op - Código',
     COLABORADORES: 'NBS'
   };
-  var CHUNK_SIZE = 500;
+  // 10/11/2026: lotes de 250 (a parte mais pesada caiu de ~5 s para ~1,6 s; o banco corta cada chamada em 8 s).
+  var CHUNK_SIZE = 250;
+  var CHUNK_SIZE_PREPARO = 400;   // financiamentos da Base 03 por lote (cada um leva menos de 0,1 s)
 
   // ---------------- utilitários ----------------
   function gbNormalize(v) {
@@ -458,6 +460,7 @@
     SOURCE_ORDER: SOURCE_ORDER,
     HEADER_ANCHORS: HEADER_ANCHORS,
     CHUNK_SIZE: CHUNK_SIZE,
+    CHUNK_SIZE_PREPARO: CHUNK_SIZE_PREPARO,
     gbNormalize: gbNormalize,
     gbAsNumber: gbAsNumber,
     gbOnlyDigits: gbOnlyDigits,

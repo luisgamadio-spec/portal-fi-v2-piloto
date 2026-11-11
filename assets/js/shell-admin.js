@@ -2218,7 +2218,7 @@
   function gbMensagemFalha(e, contexto) {
     var bruta = String((e && (e.message || e.original && e.original.message)) || '');
     var codigo = e && (e.codigo || (e.original && e.original.codigo));
-    var onde = (e && e.parte) ? ' (parte ' + e.parte + ' de ' + e.totalPartes + ')' : (contexto ? ' (' + contexto + ')' : '');
+    var onde = (e && e.parte) ? ' (lote ' + e.parte + ' de ' + e.totalPartes + ')' : (contexto ? ' (' + contexto + ')' : '');
     var oQue;
     if (/já foi importado e confirmado/i.test(bruta)) return bruta + ' Se precisar reimportar, use o arquivo do dia mais recente.';
     if (codigo === '57014' || /statement timeout|canceling statement/i.test(bruta) || (e && e.state === 'TIMEOUT')) {
@@ -2271,22 +2271,53 @@
     renderGbModalRoot();
   }
 
-  function gbImportChunked(rpcFn, batchId, rows, med) {
-    var chunks = GB_VM.gbChunk(rows, GB_VM.CHUNK_SIZE);
+  // 10/11/2026: lotes pequenos e NOVA TENTATIVA automática do mesmo lote (até 2 vezes) quando o banco demora ou a conexão
+  // cai. Reenviar um lote é seguro: o banco substitui o mesmo lote. A base oficial só muda na confirmação/troca final.
+  var GB_TENTATIVAS_EXTRAS = 2, GB_ESPERA_NOVA_TENTATIVA_MS = 1500;
+  function gbPodeTentarDeNovo(e) {
+    var bruta = String((e && (e.message || (e.original && e.original.message))) || '');
+    var codigo = e && (e.codigo || (e.original && e.original.codigo));
+    return codigo === '57014' || /statement timeout|canceling statement/i.test(bruta) || !!(e && (e.state === 'TIMEOUT' || e.state === 'NETWORK_ERROR'));
+  }
+  function gbComNovaTentativa(med, etapa, fn, aoTentarDeNovo) {
+    var tentativa = 0;
+    function vai() {
+      return gbMedir(med, etapa + (tentativa ? ' (nova tentativa ' + tentativa + ')' : ''), fn).then(null, function (e) {
+        if (tentativa < GB_TENTATIVAS_EXTRAS && gbPodeTentarDeNovo(e)) {
+          tentativa++;
+          if (aoTentarDeNovo) aoTentarDeNovo(tentativa);
+          return new Promise(function (ok) { setTimeout(ok, GB_ESPERA_NOVA_TENTATIVA_MS); }).then(vai);
+        }
+        return Promise.reject(e);
+      });
+    }
+    return vai();
+  }
+  function gbImportChunked(rpcFn, batchId, rows, med, opts) {
+    opts = opts || {};
+    var tam = opts.tamanho || GB_VM.CHUNK_SIZE;
+    var chunks = GB_VM.gbChunk(rows, tam);
     var accepted = 0;
     var i = 0;
-    if (med) med.partes = chunks.length;
-    function texto(n) { return 'Enviando parte ' + n + ' de ' + chunks.length + '… (' + GB_VM.gbFmtNum(Math.min(n * GB_VM.CHUNK_SIZE, rows.length)) + ' de ' + GB_VM.gbFmtNum(rows.length) + ' registros)'; }
+    if (med) med.partes = (opts.somarPartes ? (med.partes || 0) : 0) + chunks.length;
+    function feitos(n) { return Math.min(n * tam, rows.length); }
+    function texto(n, extra) {
+      return 'Enviando lote ' + n + ' de ' + chunks.length + (opts.titulo ? ' (' + opts.titulo + ')' : '') + '… (' +
+        GB_VM.gbFmtNum(feitos(n)) + ' de ' + GB_VM.gbFmtNum(rows.length) + ' registros)' + (extra || '');
+    }
     function next() {
       if (i >= chunks.length) return Promise.resolve(accepted);
-      gbSetProgress(Math.min(i * GB_VM.CHUNK_SIZE, rows.length), rows.length, texto(i + 1));
-      return gbMedir(med, 'parte ' + (i + 1), function () { return rpcFn(batchId, chunks[i]); }).then(function (count) {
+      gbSetProgress(feitos(i), rows.length, texto(i + 1));
+      var n = i + 1;
+      return gbComNovaTentativa(med, (opts.etapa || 'parte') + ' ' + n, function () { return opts.comNumero ? rpcFn(batchId, chunks[i], n) : rpcFn(batchId, chunks[i]); },
+        function (tentativa) { gbSetProgress(feitos(i), rows.length, texto(n, ' — o banco demorou; tentando de novo (' + tentativa + ' de ' + GB_TENTATIVAS_EXTRAS + ')')); }
+      ).then(function (count) {
         accepted += Number(count) || 0;
         i++;
-        gbSetProgress(Math.min(i * GB_VM.CHUNK_SIZE, rows.length), rows.length, i < chunks.length ? texto(i + 1) : 'Partes enviadas. Conferindo…');
+        gbSetProgress(feitos(i), rows.length, i < chunks.length ? texto(i + 1) : (opts.fim || 'Lotes enviados. Conferindo…'));
         return next();
       }, function (e) {
-        return Promise.reject({ parte: i + 1, totalPartes: chunks.length, original: e, message: e && e.message, codigo: e && e.codigo, state: e && e.state });
+        return Promise.reject({ parte: n, totalPartes: chunks.length, original: e, message: e && e.message, codigo: e && e.codigo, state: e && e.state });
       });
     }
     return next();
@@ -2416,7 +2447,8 @@
     gbSetProgress(0, 1, 'Calculando a prévia…');
     var med = gbNovoMedidor('SPF_CURRENT', file.name, cls.allRows.length);
     // Prévia: a contagem de SPF é da própria tela; o servidor só calcula o enriquecimento (não precisa das linhas de SPF).
-    return gbMedir(med, 'prévia', function () { return GB_PROVIDER.applyBase03(file.name, sha256, financeRows, [], true); }).then(function (preview) {
+    // 10/11/2026: prévia rápida (mesma conta, pelos pares únicos de venda; levava até ~10 s e agora ~0,4 s)
+    return gbComNovaTentativa(med, 'prévia', function () { return GB_PROVIDER.previaBase03(financeRows); }).then(function (preview) {
       gbSetProgress(1, 1);
       // Trava (incidente 07/10/2026): 0 financiamentos completados, ou bem
       // menos que a última importação normal, bloqueia a confirmação.
@@ -2431,7 +2463,7 @@
         '<div class="gbRow"><span>Linhas operacionais principais</span><b>' + esc(GB_VM.gbFmtNum(cls.principalRows.length)) + '</b></div>' +
         '<div class="gbRow"><span>Linhas SPF Extra (complementares)</span><b>' + esc(GB_VM.gbFmtNum(cls.spfRows.length)) + '</b></div>' +
         (cls.discardedTotalRows ? '<div class="gbRow"><span>Linhas descartadas (subtotais/lixo de planilha)</span><b>' + esc(GB_VM.gbFmtNum(cls.discardedTotalRows)) + '</b></div>' : '') +
-        '<p class="note">Ao confirmar, o SPF é enviado em partes e, no fim, uma consolidação única atualiza juntos os dados financeiros e o SPF (principais + complementares): ou entra tudo, ou nada é alterado.</p>' +
+        '<p class="note">Ao confirmar, as propostas e os financiamentos são enviados em lotes pequenos e, no fim, uma troca rápida atualiza a base oficial de uma vez: ou entra tudo, ou nada é alterado. Se a conexão cair no meio, envie o mesmo arquivo de novo.</p>' +
         (gbHomolog() ? '<p class="note gbWarn">🧪 MODO HOMOLOGAÇÃO: ao confirmar, nenhuma escrita real ocorrerá — os números acima já vêm de uma consulta real (p_dry_run=true), só a gravação final é simulada.</p>' : '');
 
       gbShowDiagnostic({
@@ -2449,9 +2481,14 @@
           gbSetProgress(0, cls.allRows.length, 'Abrindo o lote…');
           return gbMedir(med, 'abrir lote', function () { return GB_PROVIDER.beginImport('SPF_CURRENT', file.name, sha256, cls.allRows.length); }).then(function (spfBatchId) {
             med.batchId = spfBatchId;
-            return gbImportChunked(GB_PROVIDER.importSpf, spfBatchId, cls.allRows, med).then(function () {
-              gbSetProgress(cls.allRows.length, cls.allRows.length, 'Consolidando: completando os financiamentos e confirmando a base…');
-              return gbMedir(med, 'consolidar', function () { return GB_PROVIDER.consolidarBase03(spfBatchId, financeRows); });
+            // 10/11/2026: propostas em lotes, financiamentos em lotes (área de preparo) e, no fim, a troca rápida da base oficial
+            var partesFin = Math.ceil(financeRows.length / GB_VM.CHUNK_SIZE_PREPARO);
+            return gbImportChunked(GB_PROVIDER.importSpf, spfBatchId, cls.allRows, med, { titulo: 'propostas' }).then(function () {
+              return gbImportChunked(function (b, rows, n) { return GB_PROVIDER.prepararBase03(b, n, rows); }, spfBatchId, financeRows, med,
+                { tamanho: GB_VM.CHUNK_SIZE_PREPARO, titulo: 'financiamentos', etapa: 'financiamentos', comNumero: true, somarPartes: true, fim: 'Trocando a base oficial…' });
+            }).then(function () {
+              gbSetProgress(1, 1, 'Trocando a base oficial (tudo de uma vez)…');
+              return gbComNovaTentativa(med, 'trocar base oficial', function () { return GB_PROVIDER.trocarBase03(spfBatchId, partesFin); });
             });
           }).then(function (result) {
             // Em homologação a consolidação é simulada: mostra os números já comprovados pela prévia real.
@@ -2464,7 +2501,7 @@
               (gbAvisoDuracao(med) ? ' ' + gbAvisoDuracao(med) : ''));
           }, function (e) {
             gbRegistrarDuracao(med, gbResultadoDaFalha(e), e && e.message);
-            gbShowError(gbMensagemFalha(e, 'consolidação'));
+            gbShowError(gbMensagemFalha(e, 'troca da base oficial'));
           });
         }
       });

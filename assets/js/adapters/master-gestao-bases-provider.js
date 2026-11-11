@@ -83,6 +83,9 @@
     // Fase 3 (19/10/2026): Base 03 em partes + consolidação, e o registro de duração -- simulados fora da produção
     master_operational_import_spf: true,
     master_operational_base03_consolidar: true,
+    // 10/11/2026: Base 03 em lotes + troca rápida da base oficial (a prévia nova é só leitura e fica liberada)
+    master_operational_base03_preparar: true,
+    master_operational_base03_trocar: true,
     master_operational_registrar_duracao: true
   };
   function gbIsBlockedWrite(name, params) {
@@ -106,6 +109,10 @@
       case 'master_operational_import_spf':
         return Array.isArray(params && params.p_rows) ? params.p_rows.length : 0;
       case 'master_operational_base03_consolidar':
+        return { dry_run: false, simulated: true, spf_batch_id: params && params.p_spf_batch_id };
+      case 'master_operational_base03_preparar':
+        return { ok: true, simulated: true, parte: params && params.p_parte, recebidas: Array.isArray(params && params.p_finance_rows) ? params.p_finance_rows.length : 0 };
+      case 'master_operational_base03_trocar':
         return { dry_run: false, simulated: true, spf_batch_id: params && params.p_spf_batch_id };
       case 'master_operational_registrar_duracao':
         return { alerta: false, simulated: true, limite_ms: 5000 };
@@ -230,6 +237,19 @@
     params = params || {};
     return callRpc('master_operational_import_spf', { p_batch_id: batchId, p_rows: rows }, params.signal);
   }
+  // 10/11/2026: prévia rápida (só leitura), financiamentos da Base 03 em lotes e troca rápida da base oficial
+  function previaBase03(financeRows, params) {
+    params = params || {};
+    return callRpc('master_operational_base03_previa', { p_finance_rows: financeRows }, params.signal);
+  }
+  function prepararBase03(spfBatchId, parte, financeRows, params) {
+    params = params || {};
+    return callRpc('master_operational_base03_preparar', { p_spf_batch_id: spfBatchId, p_parte: parte, p_finance_rows: financeRows }, params.signal);
+  }
+  function trocarBase03(spfBatchId, partes, params) {
+    params = params || {};
+    return callRpc('master_operational_base03_trocar', { p_spf_batch_id: spfBatchId, p_partes: partes }, params.signal);
+  }
   function consolidarBase03(spfBatchId, financeRows, params) {
     params = params || {};
     return callRpc('master_operational_base03_consolidar', { p_spf_batch_id: spfBatchId, p_finance_rows: financeRows }, params.signal);
@@ -290,6 +310,9 @@
     applyBase03: applyBase03,
     importSpf: importSpf,
     consolidarBase03: consolidarBase03,
+    previaBase03: previaBase03,
+    prepararBase03: prepararBase03,
+    trocarBase03: trocarBase03,
     registrarDuracao: registrarDuracao,
     listDuracoes: listDuracoes,
     listBatches: listBatches,

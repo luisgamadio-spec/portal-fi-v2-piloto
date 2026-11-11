@@ -223,9 +223,15 @@
   // Retorno/Rentabilidade: só para os perfis que o servidor autoriza a receber esses campos
   // (_operational_ocultar_retorno_vendedor: MASTER, DIRETOR, GERENTE, ANALISTA). Para os demais
   // (vendedor, RH) o servidor já não manda o dado; aqui só some a coluna/cartão vazio.
+  // 11/11/2026 (Luis): o VENDEDOR vê o PRÓPRIO retorno. O servidor manda o retorno só nas linhas dele; a coluna e os
+  // cartões aparecem quando o retorno chegou de fato (onde a regra ainda não está ligada, continuam escondidos).
   function veRetorno() {
     var c = getAuthContext();
     var p = String((c && c.perfil) || '').trim().toUpperCase();
+    if (!!c && p === 'VENDEDOR') {
+      var rows = (dashboard && dashboard.metrics && dashboard.metrics.rows) || [];
+      return rows.some(function (r) { return r && Object.prototype.hasOwnProperty.call(r, 'return_value'); });
+    }
     return !!c && (c.isMaster === true || p === 'MASTER' || p.indexOf('DIRETOR') === 0 || p === 'GERENTE' || p === 'ANALISTA');
   }
   function soRetorno(html) { return veRetorno() ? html : ''; }

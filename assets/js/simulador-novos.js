@@ -218,8 +218,16 @@
   });
   var pessoaLinear = 'PF';
   var PJ_SEM_TABELA_MSG = 'Tabela PJ ainda não cadastrada — consulte o F&I.';
+  // 12/11/2026 (Luis): seletor bem visível — dois botões na largura toda, "Pessoa Física" | "Pessoa Jurídica"
+  // (PF | PJ em tela muito estreita), o selecionado em vermelho da marca. Mesmo .segmented (UI.wireSegmented/getSegmentedValue).
   function pessoaFieldHtml(id) {
-    return UI.segmentedField(id, 'Tipo de cliente', [{ value: 'PF', label: 'PF' }, { value: 'PJ', label: 'PJ' }], pessoaLinear);
+    function botao(v, longo) {
+      var on = pessoaLinear === v;
+      return '<button type="button" data-v="' + v + '" class="' + (on ? 'active' : '') + '" aria-pressed="' + on + '">' +
+        '<span class="smPessoaLongo">' + longo + '</span><span class="smPessoaCurto">' + v + '</span></button>';
+    }
+    return '<div class="field smPessoaField"><label>Tipo de cliente</label><div class="segmented smPessoaSeg" id="' + id + '" role="group" aria-label="Tipo de cliente">' +
+      botao('PF', 'Pessoa Física') + botao('PJ', 'Pessoa Jurídica') + '</div></div>';
   }
   // O Assistente de solução financeira usa só as taxas PF: com PJ selecionado ele fica escondido (nunca sugere taxa PF a um PJ).
   function marcaPessoa() {
@@ -780,13 +788,15 @@
   // 11/11/2026 (Luis): na PJ podem faltar prazos (ex.: 7 cards). A regra da PF exige linhas completas e, com 7, caía
   // para 1 coluna. Aqui: até 4 por linha, quantos couberem com 130px (4 no computador, 2 no celular), mesmo tamanho de card;
   // só a última linha pode ficar menor. A PF continua com a regra de sempre (wireResultTermGrid acima).
+  // 12/11/2026: o número de colunas segue o da PF deste segmento (Novos: 4 no computador; 2 no celular).
+  var PJ_MAX_COLUNAS = 4;
   function wirePjTermGrid() {
     var grid = document.querySelector('#smResultRegion .smTermGrid');
     if (!grid) return;
     function recompute() {
       var w = grid.clientWidth || (grid.parentElement && grid.parentElement.clientWidth) || 0;
       var escala = (parseFloat(getComputedStyle(document.documentElement).fontSize) || 16) / 16;
-      grid.style.setProperty('--term-grid-cols', String(Math.max(1, Math.min(4, Math.floor(w / (130 * escala))))));
+      grid.style.setProperty('--term-grid-cols', String(Math.max(1, Math.min(PJ_MAX_COLUNAS, Math.floor(w / (130 * escala))))));
     }
     recompute();
     if (window.ResizeObserver) { var ro = new ResizeObserver(recompute); ro.observe(grid); termGridObservers.push(ro); }
@@ -1026,7 +1036,11 @@
     } else if (mode === 'linear') {
       if (!wireAuthorityGate(linearAuthority, mode)) return;
       marcaPessoa();
-      UI.wireSegmented('nPessoa', function (v) { pessoaLinear = v === 'PJ' ? 'PJ' : 'PF'; marcaPessoa(); calcLinear(); });
+      UI.wireSegmented('nPessoa', function (v) {
+        pessoaLinear = v === 'PJ' ? 'PJ' : 'PF';
+        document.querySelectorAll('#nPessoa button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.v === pessoaLinear)); });
+        marcaPessoa(); calcLinear();
+      });
       UI.wireMoneyMask('nBem', calcLinear);
       UI.wireMoneyMask('nEntrada', calcLinear);
       calcLinear();

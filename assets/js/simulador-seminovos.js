@@ -151,6 +151,17 @@
   var linearRTPjAuthority = makePjAuthority('simulador_get_financiamento_seminovo_pj', ['entrada_pct', 'prazo', 'taxa'], ['faixa_ano'], montaRateTable);
   var pessoaLinear = 'PF';
   var PJ_SEM_TABELA_MSG = 'Tabela PJ ainda não cadastrada — consulte o F&I.';
+  // 12/11/2026 (Luis): seletor bem visível — dois botões na largura toda, "Pessoa Física" | "Pessoa Jurídica"
+  // (PF | PJ em tela muito estreita), o selecionado em vermelho da marca. Mesmo .segmented (UI.wireSegmented/getSegmentedValue).
+  function pessoaFieldHtml(id) {
+    function botao(v, longo) {
+      var on = pessoaLinear === v;
+      return '<button type="button" data-v="' + v + '" class="' + (on ? 'active' : '') + '" aria-pressed="' + on + '">' +
+        '<span class="smPessoaLongo">' + longo + '</span><span class="smPessoaCurto">' + v + '</span></button>';
+    }
+    return '<div class="field smPessoaField"><label>Tipo de cliente</label><div class="segmented smPessoaSeg" id="' + id + '" role="group" aria-label="Tipo de cliente">' +
+      botao('PF', 'Pessoa Física') + botao('PJ', 'Pessoa Jurídica') + '</div></div>';
+  }
   // ANTECIPACAO -- same RPC as Novos ("Base COMPARTILHADA com o
   // Simulador ZeroKM"), reused via the same shared provider, but with
   // an INDEPENDENT authority/cache instance in this file (each page
@@ -507,13 +518,16 @@
   // 11/11/2026 (Luis): na PJ podem faltar prazos (ex.: 7 cards). A regra da PF exige linhas completas e, com um número
   // primo de cards, cai para 1 coluna. Aqui: até 4 por linha, quantos couberem com 130px (4 no computador, 2 no celular),
   // mesmo tamanho de card; só a última linha pode ficar menor. A PF continua com a regra de sempre (wireResultTermGrid acima).
+  // 12/11/2026 (Luis): o número de colunas segue o da PF deste segmento — Seminovos: 3 por linha no computador
+  // (a PF tem 9 prazos, 3 + 3 + 3); 2 no celular. Só a última linha fica incompleta quando falta prazo PJ.
+  var PJ_MAX_COLUNAS = 3;
   function wirePjTermGrid() {
     var grid = document.querySelector('#smResultRegion .smTermGrid');
     if (!grid) return;
     function recompute() {
       var w = grid.clientWidth || (grid.parentElement && grid.parentElement.clientWidth) || 0;
       var escala = (parseFloat(getComputedStyle(document.documentElement).fontSize) || 16) / 16;
-      grid.style.setProperty('--term-grid-cols', String(Math.max(1, Math.min(4, Math.floor(w / (130 * escala))))));
+      grid.style.setProperty('--term-grid-cols', String(Math.max(1, Math.min(PJ_MAX_COLUNAS, Math.floor(w / (130 * escala))))));
     }
     recompute();
     if (window.ResizeObserver) { var ro = new ResizeObserver(recompute); ro.observe(grid); termGridObservers.push(ro); }
@@ -537,7 +551,7 @@
       case 'ratetable':
         // SIMLIVE1: gated on linearRTAuthority (simulador_get_financiamento_seminovo).
         if (linearRTAuthority.getState() !== 'READY') return authorityGateHtml(linearRTAuthority);
-        return UI.segmentedField('sPessoa', 'Tipo de cliente', [{ value: 'PF', label: 'PF' }, { value: 'PJ', label: 'PJ' }], pessoaLinear) +
+        return pessoaFieldHtml('sPessoa') +
           UI.numberField('sAnoRT', 'Ano do veículo', 2020, { min: 2007, max: 2099, hint: 'Tabela cadastrada para 2007–2099.' }) +
           UI.moneyField('sValorRT', 'Valor do veículo', 'R$ 80.000,00') +
           UI.entryField('sEntradaRT', 'Entrada', 'R$ 0,00', 'sValorRT', 'Entrada permitida a partir de 0%.') +
@@ -673,6 +687,7 @@
       if (!wireAuthorityGate(linearRTAuthority, mode)) return;
       UI.wireSegmented('sPessoa', function (v) {
         pessoaLinear = v === 'PJ' ? 'PJ' : 'PF';
+        document.querySelectorAll('#sPessoa button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.v === pessoaLinear)); });
         if (UI.moneyVal('sValorRT') > 0) calcRateTable();
         else setResult(UI.emptyBlock('Preencha os campos e clique em Calcular.'));
       });
@@ -789,7 +804,9 @@
     var html = UI.termGrid(r.terms.map(function (t) { return { prazo: t.prazo, payment: t.payment, rate: t.rate, best: false }; }));
     setResult('<div class="smResultHead"><p class="kpiLabel">Parcela por prazo</p>' +
       '<p class="smResultHeadNote">Ano ' + UI.esc(r.band || '—') + ' · taxa da faixa de entrada a partir de ' + r.eBand + '%</p></div>' + html);
-    wireResultTermGrid(r.terms.length);
+    // 12/11/2026 (OK do Luis): a PF do Linear de Seminovos usa a mesma grade da PJ — 3 por linha no computador e 2 no celular
+    // (com 9 prazos a regra de linhas completas deixava 1 card por linha no celular). Só a arrumação; os valores não mudam.
+    wirePjTermGrid();
   }
   // PJ: mesma conta, só com a tabela PJ. Prazo sem taxa PJ não aparece (nunca usa a taxa PF).
   function calcRateTablePj() {

@@ -734,3 +734,23 @@
 .smAvisoTitulo { margin: 0 0 6px; font-weight: 800; font-size: 1rem; }
 .smAvisoTexto { margin: 0 0 16px; font-size: 0.9375rem; line-height: 1.45; }
 .smAvisoOk { width: 100%; }
+
+/* 12/11/2026 (Luis): seletor Pessoa Física | Pessoa Jurídica do Financiamento Linear — bem visível:
+   dois botões na largura toda (metade cada), mesma altura dos campos; o selecionado em vermelho da marca, texto branco em negrito;
+   o outro com borda visível e texto claro. Em tela muito estreita o texto vira "PF" | "PJ". */
+.smPage .segmented.smPessoaSeg { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; width: 100%; border: 0; border-radius: 0; overflow: visible; }
+.smPage .smPessoaSeg button {
+  /* mesma caixa dos campos (.smPage .input: padding 10px 12px, fonte 0.9375rem, borda 1px) = mesma altura no computador e no celular */
+  min-height: 0; padding: 10px 12px; border: 1px solid rgba(255, 255, 255, .42); border-radius: var(--radius-sm);
+  background: transparent; color: var(--color-text-primary); font-family: var(--font-ui); font-size: 0.9375rem; font-weight: 600;
+  line-height: normal; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.smPage .smPessoaSeg button:last-child { border-right: 1px solid rgba(255, 255, 255, .42); }
+.smPage .smPessoaSeg button:not(.active):hover { border-color: var(--color-accent-primary); }
+.smPage .smPessoaSeg button.active,
+.smPage .smPessoaSeg button.active:last-child { background: var(--color-accent-primary); border-color: var(--color-accent-primary); color: #fff; font-weight: 800; }
+.smPage .smPessoaSeg .smPessoaCurto { display: none; }
+@media (max-width: 359px) {
+  .smPage .smPessoaSeg .smPessoaLongo { display: none; }
+  .smPage .smPessoaSeg .smPessoaCurto { display: inline; }
+}

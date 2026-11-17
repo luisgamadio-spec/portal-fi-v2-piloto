@@ -338,7 +338,8 @@
     return !!ctx && (ctx.isMaster === true || p === 'MASTER' || p === 'ANALISTA');
   }
   var ICONE_COPIAR = '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M10.5 3.5v-.5A1.5 1.5 0 0 0 9 1.5H4A1.5 1.5 0 0 0 2.5 3v5A1.5 1.5 0 0 0 4 9.5h.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
-  var TAXA_NAO_CADASTRADA = 'Taxa não cadastrada — consulte o F&I';
+  // 17/11/2026 (Luis): sem Taxa Copiar para a combinação, nada aparece no cartão; o botão continua lá e, ao tocar, avisa.
+  var TAXA_NAO_CADASTRADA = 'Ag. atualização de taxa';
   function taxaBancoDe(prazo, taxa) {
     var mapa = taxaBotaoAuthority.getAuthority() || {};
     var v = mapa[chaveTaxaBotao(prazo, taxa)];
@@ -346,13 +347,11 @@
   }
   function bankRateButtonHtml(prazo, taxa) {
     if (!podeCopiarTaxa() || taxaBotaoAuthority.getState() !== 'READY') return '';
-    if (taxaBancoDe(prazo, taxa) == null) return '';
     return '<button type="button" class="smCopyTaxaIcon" data-copy-prazo="' + prazo + '" data-copy-taxa="' + Number(taxa) + '" title="Copiar taxa banco" aria-label="Copiar taxa banco do prazo ' + prazo + 'x">' + ICONE_COPIAR + '</button>';
   }
   // Combinação prazo + taxa sem Taxa Copiar cadastrada: aviso no cartão (só para quem copia: Analista e Master).
   function bankRateFaltaHtml(prazo, taxa) {
-    if (!podeCopiarTaxa() || taxaBotaoAuthority.getState() !== 'READY' || taxaBancoDe(prazo, taxa) != null) return '';
-    return '<p class="smCopyTaxaFalta" role="note">' + TAXA_NAO_CADASTRADA + '</p>';
+    return '';   // 17/11/2026: o aviso no cartão saiu (o botão avisa ao ser tocado)
   }
   // Aviso curto no rodapé da tela, some sozinho.
   var avisoTimer = null;

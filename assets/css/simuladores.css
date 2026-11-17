@@ -715,7 +715,7 @@
 .smPage .smSubsMsg-parcial { background: var(--color-success-soft); color: var(--color-success); font-weight: 600; }
 
 /* 08/11/2026: Taxa Subsidiada — cards com rótulo à esquerda e valor à direita (3 colunas no computador, 1 no celular),
-   divisão do rebate (montadora pode pagar / usando do limite / falta ou sobra) e o aviso do trade-in antes dos resultados. */
+   divisão do rebate (montadora pode pagar / usando do limite / falta ou sobra). (17/11: o aviso do trade-in saiu.) */
 .smPage .smSubsGrid4 { grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); }
 @container (max-width: 620px) { .smPage .smSubsGrid4 { grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); } }
 .smPage .smSubsGrid4 .smSubsidiadaCardRow { flex-direction: row; justify-content: space-between; align-items: baseline; gap: 10px; }
@@ -729,11 +729,6 @@
 .smPage .smSubsGrid4 .smSubsSobra { background: var(--color-success-soft); border-radius: 6px; padding: 6px 8px; border-top-color: transparent; }
 .smPage .smSubsNota { margin: -2px 0 0; font-size: 0.6875rem; color: var(--color-success); text-align: right; }
 .smPage .smSubsIgual { margin: 2px 0 0; padding: 6px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; background: var(--color-surface-2); color: var(--color-text-primary); }
-.smAvisoScrim { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(0, 0, 0, .6); }
-.smAvisoDialog { width: min(440px, 100%); padding: 20px; border-radius: 12px; background: var(--color-surface-1, #161616); color: var(--color-text-primary, #f2f2f2); border: 1px solid var(--color-hairline-strong, #333); box-shadow: 0 20px 50px rgba(0, 0, 0, .5); }
-.smAvisoTitulo { margin: 0 0 6px; font-weight: 800; font-size: 1rem; }
-.smAvisoTexto { margin: 0 0 16px; font-size: 0.9375rem; line-height: 1.45; }
-.smAvisoOk { width: 100%; }
 
 /* 12/11/2026 (Luis): seletor Pessoa Física | Pessoa Jurídica do Financiamento Linear — bem visível:
    dois botões na largura toda (metade cada), mesma altura dos campos; o selecionado em vermelho da marca, texto branco em negrito;

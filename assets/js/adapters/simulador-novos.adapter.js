@@ -169,6 +169,8 @@
 
   // ==== Taxas Subsidiadas ====
   const tabelaRebates_FALLBACK = [{"prazo":12,"taxa":0.0,"coef":0.09008,"rebate":0.1105},{"prazo":15,"taxa":0.0,"coef":0.07227,"rebate":0.1337},{"prazo":18,"taxa":0.0,"coef":0.06034,"rebate":0.156},{"prazo":24,"taxa":0.0,"coef":0.04536,"rebate":0.1807},{"prazo":30,"taxa":0.0,"coef":0.03634,"rebate":0.2206},{"prazo":36,"taxa":0.0,"coef":0.03031,"rebate":0.2554},{"prazo":48,"taxa":0.0,"coef":0.02276,"rebate":0.313},{"prazo":60,"taxa":0.0,"coef":0.01822,"rebate":0.3683},{"prazo":12,"taxa":0.0049,"coef":0.09298,"rebate":0.082},{"prazo":15,"taxa":0.0049,"coef":0.07513,"rebate":0.0993},{"prazo":18,"taxa":0.0049,"coef":0.06319,"rebate":0.1162},{"prazo":24,"taxa":0.0049,"coef":0.04819,"rebate":0.1296},{"prazo":30,"taxa":0.0049,"coef":0.03916,"rebate":0.16},{"prazo":36,"taxa":0.0049,"coef":0.03314,"rebate":0.186},{"prazo":48,"taxa":0.0049,"coef":0.0256,"rebate":0.2273},{"prazo":60,"taxa":0.0049,"coef":0.02107,"rebate":0.2693},{"prazo":12,"taxa":0.0099,"coef":0.09598,"rebate":0.0523},{"prazo":15,"taxa":0.0099,"coef":0.07812,"rebate":0.0635},{"prazo":18,"taxa":0.0099,"coef":0.06617,"rebate":0.0744},{"prazo":24,"taxa":0.0099,"coef":0.05118,"rebate":0.0755},{"prazo":30,"taxa":0.0099,"coef":0.04218,"rebate":0.0953},{"prazo":36,"taxa":0.0099,"coef":0.03618,"rebate":0.1112},{"prazo":48,"taxa":0.0099,"coef":0.02871,"rebate":0.1335},{"prazo":60,"taxa":0.0099,"coef":0.02425,"rebate":0.1592},{"prazo":12,"taxa":0.0119,"coef":0.0972,"rebate":0.0403},{"prazo":15,"taxa":0.0119,"coef":0.07934,"rebate":0.0489},{"prazo":18,"taxa":0.0119,"coef":0.06739,"rebate":0.0574},{"prazo":24,"taxa":0.0119,"coef":0.05241,"rebate":0.0533},{"prazo":30,"taxa":0.0119,"coef":0.04342,"rebate":0.0687},{"prazo":36,"taxa":0.0119,"coef":0.03744,"rebate":0.0802},{"prazo":48,"taxa":0.0119,"coef":0.03001,"rebate":0.0942},{"prazo":60,"taxa":0.0119,"coef":0.0256,"rebate":0.1125}];
+  // 17/11/2026 (Luis): as taxas vêm da TABELA ATIVA (hoje 12: 0% a 1,29%). Esta lista antiga não filtra mais nada —
+  // ela descartava 8 das 12 taxas novas. Fica só como referência das 4 taxas da tabela de reserva (_FALLBACK).
   const taxasSubsidiadasPermitidas = [0, 0.0049, 0.0099, 0.0119];
 
   // 07/11/2026 (Luis): o antigo Coparticipado fica embutido na Taxa Subsidiada. Com params.subsidioMontadora (R$ do modelo):
@@ -190,7 +192,7 @@
     if (!(financiado > 0)) return {error: 'FINANCIADO_INVALIDO'};
     if (minVenda && minVenda >= bem) return {error: 'MIN_VENDA_MAIOR_QUE_BEM'};
     let rows = (params.tabelaRebates || tabelaRebates_FALLBACK)
-      .filter(r => taxasSubsidiadasPermitidas.some(t => Math.abs(t - r.taxa) < 0.00001))
+      .filter(r => isFinite(Number(r.taxa)) && Number(r.coef) > 0)   // toda taxa da tabela, só linha com coeficiente válido
       .map(r => {
         const baseParcela = r.prazo <= 24 ? financiado : financiado + 2500;
         const parcela = baseParcela * r.coef;

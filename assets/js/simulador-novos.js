@@ -427,7 +427,6 @@
     return Math.abs(t) < 1e-9 ? '0%' : (t * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
   }
   var SUBS_ESCOLHA = '<div class="emptyState smSubsEscolha"><div class="t">Escolha a taxa para ver os prazos</div>Informe o valor do bem e a entrada e toque em uma taxa.</div>';
-  var SUBS_ESCOLHA_AVISO = '<div class="emptyState smSubsEscolha"><div class="t">Leia o aviso para ver os prazos</div>Clique em "Entendi" para mostrar os resultados.</div>';
 
   var MODES = [
     { id: 'tradicional', group: 'Financiamento', label: 'Tradicional (Balão)' },
@@ -504,7 +503,6 @@
   var balloons = []; // {mes, valor} for Tradicional
   var subsTaxa = null; // Taxa Subsidiada: taxa escolhida nos botões (só filtra o que é mostrado)
   var subsModelo = ''; // Taxa Subsidiada: modelo do carro (obrigatório; define a entrada mínima e o subsídio da montadora)
-  var subsAvisoVisto = ''; // modelo para o qual o vendedor já clicou "Entendi" no aviso do trade-in (taxa trocada não repete o aviso)
   // ANTECIPACAO-BALAO-1: restores Secure parity for the Antecipação
   // simulator's OWN, separate balloon feature (modules/simulador-
   // novos.html #aTemBalao/#aQtdBaloes, "Limite máximo: 8 balões.") --
@@ -1056,16 +1054,16 @@
     } else if (mode === 'subsidiadas') {
       if (!wireAuthorityGate(subsidiadasAuthority, mode)) return;
       if (!wireAuthorityGate(subsidioModelosAuthority, mode)) return;
-      document.getElementById('nCalc').addEventListener('click', function () { pedirCalculoSubsidiadas(true); });
+      document.getElementById('nCalc').addEventListener('click', function () { pedirCalculoSubsidiadas(); });
       document.getElementById('nSubsModelo').addEventListener('change', function (e) {
         subsModelo = e.target.value;
-        if (subsTaxa != null || document.querySelector('#smResultRegion .smSubsidiadaCard')) pedirCalculoSubsidiadas(false);
+        if (subsTaxa != null || document.querySelector('#smResultRegion .smSubsidiadaCard')) pedirCalculoSubsidiadas();
       });
       document.querySelectorAll('#nSubsTaxa .smTaxaChip').forEach(function (b) {
         b.addEventListener('click', function () {
           subsTaxa = Number(b.getAttribute('data-taxa'));
           document.querySelectorAll('#nSubsTaxa .smTaxaChip').forEach(function (x) { x.classList.toggle('active', x === b); x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
-          pedirCalculoSubsidiadas(false);
+          pedirCalculoSubsidiadas();
         });
       });
       ensureBankRates();
@@ -1332,45 +1330,9 @@
     }
     return html + '<p class="smSubsIgual" data-subs-msg="igual">Usa o limite inteiro — custo da loja: ' + UI.brl(0) + '</p>';
   }
-  // Aviso antes dos resultados (08/11/2026): só para modelo com subsídio da montadora > 0. "Entendi" fecha e mostra.
-  var AVISO_TRADEIN = 'O rebate pode ser absorvido pela montadora, mas, se utilizado, o bônus de trade-in será perdido.';
-  function avisoSubsidioAberto() { return !!document.getElementById('smAvisoSubs'); }
-  function abrirAvisoSubsidio(depois) {
-    if (avisoSubsidioAberto()) return;
-    var volta = document.activeElement;
-    var scrim = document.createElement('div');
-    scrim.className = 'smAvisoScrim'; scrim.id = 'smAvisoSubs';
-    scrim.innerHTML = '<div class="smAvisoDialog" role="alertdialog" aria-modal="true" aria-labelledby="smAvisoTitulo" aria-describedby="smAvisoTexto">' +
-      '<p class="smAvisoTitulo" id="smAvisoTitulo">Atenção</p><p class="smAvisoTexto" id="smAvisoTexto">' + UI.esc(AVISO_TRADEIN) + '</p>' +
-      '<button type="button" class="btn btn-primary smAvisoOk" id="smAvisoOk">Entendi</button></div>';
-    document.body.appendChild(scrim);
-    var ok = document.getElementById('smAvisoOk');
-    function fechar() {
-      document.removeEventListener('keydown', tecla, true);
-      scrim.remove();
-      if (volta && volta.focus && document.body.contains(volta)) volta.focus({ preventScroll: true });
-      depois();
-    }
-    function tecla(ev) {
-      if (ev.key === 'Escape' || ev.key === 'Enter') { ev.preventDefault(); fechar(); }
-      else if (ev.key === 'Tab') { ev.preventDefault(); ok.focus(); }   // um só botão: o foco fica nele
-    }
-    ok.addEventListener('click', fechar);
-    document.addEventListener('keydown', tecla, true);
-    ok.focus();
-  }
-  // Pedido do vendedor (Calcular, troca de taxa ou de modelo): com subsídio > 0 e resultado a mostrar, o aviso vem antes.
-  // "Calcular" mostra o aviso sempre; trocar a taxa ou o modelo só mostra se ainda não houve "Entendi" para este modelo.
-  function pedirCalculoSubsidiadas(peloBotao) {
-    var modelos = subsidioModelosAuthority.getAuthority();
-    var modelo = modelos && subsModelo ? modelos.modelos[subsModelo] : null;
-    if (!modelo || !(modelo.subsidio > 0) || subsTaxa == null || (!peloBotao && subsAvisoVisto === subsModelo)) { calcSubsidiadas(); return; }
-    var pre = N.calcularSubsidiadas({ bem: UI.moneyVal('nBem'), entrada: UI.moneyVal('nEntrada'), minVenda: UI.moneyVal('nMinVenda'), tabelaRebates: subsidiadasAuthority.getAuthority(),
-      subsidioMontadora: modelo.subsidio, entradaMinimaModelo: modelo.entradaMinima });
-    if (pre.empty || pre.error) { calcSubsidiadas(); return; }   // erro de preenchimento: mostra o erro, sem aviso
-    setResult(SUBS_ESCOLHA_AVISO);
-    abrirAvisoSubsidio(function () { subsAvisoVisto = subsModelo; calcSubsidiadas(); });
-  }
+  // 17/11/2026 (Luis): o aviso do trade-in ("Atenção" + "Entendi") saiu — a regra não existe mais. Calcular, trocar a taxa
+  // ou o modelo mostra o resultado direto.
+  function pedirCalculoSubsidiadas() { calcSubsidiadas(); }
   function calcSubsidiadas() {
     var modelos = subsidioModelosAuthority.getAuthority();
     var modelo = modelos && subsModelo ? modelos.modelos[subsModelo] : null;
@@ -1526,7 +1488,6 @@
       antBaloes = [];
       subsTaxa = null;
       subsModelo = '';
-      subsAvisoVisto = '';
       openCategory = null; // SIM-NAV-4 / F.2: all categories collapsed on entry
       outlet.innerHTML =
         '<div class="smPage">' +

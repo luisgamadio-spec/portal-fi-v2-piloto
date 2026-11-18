@@ -875,7 +875,8 @@
           UI.entryField('nEntrada', 'Entrada', 'R$ 50.000,00', 'nBem') +
           UI.balanceField('nSaldo', 'nBem', 'nEntrada') +
           UI.moneyField('nMinVenda', 'Valor mínimo de venda (opcional)', '') +
-          '<div class="field"><label>Taxa</label><div class="smTaxaChips" id="nSubsTaxa" role="group" aria-label="Taxa">' +
+          // 18/11/2026 (Luis): grade regular 4 × 3 e "ao mês" discreto no rótulo; ordem e comportamento iguais
+          '<div class="field"><label id="nSubsTaxaRot">Taxa <span class="smTaxaUnid">ao mês</span></label><div class="smTaxaChips" id="nSubsTaxa" role="group" aria-labelledby="nSubsTaxaRot">' +
           subsidiadasTaxas().map(function (t) {
             var ativa = subsTaxa != null && Math.abs(subsTaxa - t) < 1e-9;
             return '<button type="button" class="smTaxaChip' + (Math.abs(t) < 1e-9 ? ' smTaxaChipZero' : '') + (ativa ? ' active' : '') + '" data-taxa="' + t + '" aria-pressed="' + ativa + '">' + taxaChipLabel(t) + '</button>';

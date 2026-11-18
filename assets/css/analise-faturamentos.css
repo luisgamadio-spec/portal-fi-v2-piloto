@@ -277,3 +277,97 @@
 /* 10/11/2026: com 3 botões (Vincular, Justificar e + detalhes) a célula quebra a linha em vez de passar da borda */
 .fatTab td.fatColAcao { white-space: normal; }
 .fatTab td.fatColAcao > button { margin-top: 3px; margin-bottom: 3px; }
+
+/* ---- 12/11/2026: dados do pagamento e rebate (faturadas a partir de 01/11/2026) ---- */
+/* 18/11/2026: FATURADOS | PAGOS no mesmo estilo do "Faturadas em"; rótulos das duas linhas com a mesma largura (botões alinhados) */
+.fatPeriodo > .fatRotulo { min-width: 104px; }
+.fatVisao { margin-top: calc(var(--mod-space-section-gap) * -0.55) !important; }
+.fatVisaoSeg { display: flex; }
+.fatVisaoBtn { display: inline-flex; align-items: center; gap: 8px; min-width: 132px; justify-content: space-between; text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
+.fatVisaoQtd { font-variant-numeric: tabular-nums; font-weight: 700; letter-spacing: 0; min-width: 2ch; text-align: right; opacity: .8; }
+.fatVisaoBtn.modSegItemActive .fatVisaoQtd { opacity: 1; }
+.fatApoio { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 16px; font-size: 0.75rem; color: var(--color-text-secondary);
+  margin-top: calc(var(--mod-space-section-gap) * -0.7) !important; padding-left: 118px; }
+.fatApoio b { color: var(--color-text-primary); font-weight: 600; font-variant-numeric: tabular-nums; }
+.fatApoioFalta { display: inline-flex; align-items: center; gap: 8px; color: var(--fat-atencao); font-weight: 600; }
+.fatApoioFalta i { width: 7px; height: 7px; border-radius: 50%; background: var(--fat-atencao); display: inline-block; }
+.fatApoioFalta .fatLink { font-size: 0.75rem; font-weight: 500; color: var(--color-text-secondary); }
+.fatApoioFalta .fatLink:hover { color: var(--color-text-primary); }
+/* 18/11/2026: valor da Base 03 (sem o líquido da Base 02) — marca visível */
+.fatValBase03 { display: inline-block; margin-left: 4px; font-size: 0.625rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; vertical-align: 1px;
+  color: var(--fat-atencao); border: 1px solid color-mix(in srgb, var(--fat-atencao) 55%, transparent); border-radius: 999px; padding: 1px 6px; white-space: nowrap; cursor: help; }
+.fatNum .fatValBase03 { display: block; width: fit-content; margin: 3px 0 0 auto; }
+.fatCompletar, .fatOutraLoja, .fatSubs, .fatRebOk { display: inline-block; font-size: 0.6875rem; font-weight: 600; padding: 3px 8px; border-radius: 999px; border: 1px solid; white-space: normal; }
+.fatCompletar { color: var(--fat-atencao); border-color: color-mix(in srgb, var(--fat-atencao) 60%, transparent); background: color-mix(in srgb, var(--fat-atencao) 12%, transparent); }
+.fatOutraLoja { color: #8fb4ff; border-color: color-mix(in srgb, #8fb4ff 60%, transparent); background: color-mix(in srgb, #8fb4ff 10%, transparent); }
+.fatSubs { color: #c9a0ff; border-color: color-mix(in srgb, #c9a0ff 55%, transparent); background: color-mix(in srgb, #c9a0ff 9%, transparent); }
+.fatRebOk { color: var(--fat-normal); border-color: color-mix(in srgb, var(--fat-normal) 55%, transparent); }
+.fatColJust .fatCompletar, .fatColJust .fatOutraLoja, .fatColJust .fatSubs, .fatColJust .fatRebOk { display: block; width: fit-content; max-width: 100%; margin-top: 4px; }
+.fatCartaoJust > span, .fatDetJust > span { margin: 0 4px 4px 0; }
+.fatTabPagas col.pChassi { width: 152px; } .fatTabPagas col.pLoja { width: auto; } .fatTabPagas col.pBanco { width: 104px; }
+.fatTabPagas col.pValor { width: 126px; } .fatTabPagas col.pData { width: 100px; } .fatTabPagas col.pConta { width: 112px; }
+.fatTabPagas col.pCred { width: 126px; } .fatTabPagas col.pSit { width: 160px; } .fatTabPagas col.pAcao { width: 190px; }
+@media (max-width: 1100px) { .fatTabPagas { min-width: 1180px; } }
+.fatTabPagas td small { font-size: 0.6875rem; }
+.fatLinhaPaga.fatFalta td:first-child { box-shadow: inset 3px 0 0 var(--fat-atencao); }
+.fatDif { color: var(--fat-normal); font-variant-numeric: tabular-nums; }
+.fatDif.neg { color: var(--fat-grave); }
+.fatBadge.fatPAGA { color: var(--fat-normal); border-color: color-mix(in srgb, var(--fat-normal) 55%, transparent); }
+.fatCartaoPago.fatFalta { border-left: 3px solid var(--fat-atencao); }
+.fatPagBtn, .fatRebBtn { background: transparent; border: 1px solid color-mix(in srgb, var(--fat-normal) 70%, transparent); color: var(--fat-normal); border-radius: var(--radius-sm);
+  padding: 6px 10px; font: inherit; font-size: 0.75rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.fatRebBtn { border-color: color-mix(in srgb, #c9a0ff 70%, transparent); color: #c9a0ff; }
+.fatPagBtn:hover { background: color-mix(in srgb, var(--fat-normal) 12%, transparent); }
+.fatRebBtn:hover { background: color-mix(in srgb, #c9a0ff 12%, transparent); }
+.fatPagBtn:focus-visible, .fatRebBtn:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+.fatColAcao .fatPagBtn, .fatColAcao .fatRebBtn { margin-right: 6px; }
+.fatTab .fatColAcao .fatPagBtn, .fatTab .fatColAcao .fatRebBtn { padding: 6px 9px; }
+.fatPagBtnForte { background: var(--fat-normal); color: #04140a; border-color: var(--fat-normal); }
+.fatRebBtnForte { background: #c9a0ff; color: #170a2b; border-color: #c9a0ff; }
+.fatResumoPagas { grid-template-columns: minmax(180px, 240px) 1fr; }
+.fatPagNums { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; align-content: center; }
+.fatPagNum { background: var(--mod-surface-elevated); border: 1px solid var(--mod-border); border-radius: var(--radius-md); padding: 12px 14px; text-align: left;
+  font: inherit; color: inherit; display: flex; flex-direction: column; gap: 2px; cursor: pointer; }
+.fatPagNum b { font-size: 1.5rem; font-variant-numeric: tabular-nums; }
+.fatPagNum span { font-size: 0.75rem; color: var(--color-text-secondary); }
+button.fatPagNum:first-child b { color: var(--fat-atencao); }
+.fatPagNumOutra b { color: #8fb4ff; }
+.fatPagNumFixo { cursor: default; }
+.fatPagNum.ativa { border-color: var(--mod-accent); }
+button.fatPagNum:hover { border-color: var(--mod-border-strong); }
+button.fatPagNum:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+.fatDetBloco { display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--mod-border-strong); padding-top: 14px; }
+.fatDetFalta { margin: 0; font-size: 0.8125rem; color: var(--color-text-secondary); }
+.fatHistLista li.fatHistPag { border-left: 3px solid var(--fat-normal); }
+.fatHistLista li.fatHistReb { border-left: 3px solid #c9a0ff; }
+.fatCampo, #fatPagMotivo { width: 100%; box-sizing: border-box; background: var(--mod-surface-elevated); color: var(--color-text-primary); border: 1px solid var(--mod-border-strong);
+  border-radius: var(--radius-sm); padding: 9px 12px; font: inherit; font-size: 0.9375rem; min-height: 42px; }
+.fatNumCampo { font-variant-numeric: tabular-nums; }
+#fatPagMotivo { resize: vertical; min-height: 64px; line-height: 1.45; font-size: 0.875rem; }
+.fatCampo:focus-visible, #fatPagMotivo:focus-visible { outline: var(--focus-ring); outline-offset: 1px; }
+.fatFormPag .fatTextoRot, .fatFormReb .fatTextoRot { margin-bottom: -6px; }
+.fatOutraForm { margin: -4px 0 0; padding: 6px 10px; border-radius: var(--radius-sm); font-size: 0.8125rem; }
+.fatOutraForm[hidden], #fatPagMotivoBox[hidden] { display: none; }
+#fatPagMotivoBox { display: flex; flex-direction: column; gap: 12px; }
+.fatContador.fatDifAviso { color: var(--fat-atencao); text-align: left; }
+.fatRebTabela { display: block !important; overflow-x: auto; }
+.fatRebTabela .fatTab { table-layout: auto; min-width: 0; width: auto; }
+.fatRebTabela .fatTab th, .fatRebTabela .fatTab td { padding: 0 14px; }
+.fatRebTabela .fatTab th, .fatRebTabela .fatTab td { height: 40px; }
+.fatRebTabela .fatTab tfoot th, .fatRebTabela .fatTab tfoot td { border-top: 1px solid var(--mod-border-strong); }
+.fatRebTabela small { color: var(--mod-muted); }
+@media (max-width: 860px) {
+  .fatResumoPagas { grid-template-columns: 1fr; }
+}
+@media (max-width: 760px) {
+  .fatPagNums { grid-template-columns: 1fr; }
+  .fatPagNum { flex-direction: row; align-items: baseline; gap: 10px; }
+  .fatPagNum b { font-size: 1.25rem; }
+  .fatVisao { margin-top: calc(var(--mod-space-section-gap) * -0.3) !important; }
+  .fatVisao > .fatRotulo { flex-basis: 100%; }
+  .fatVisaoSeg { width: 100%; }
+  .fatVisaoBtn { flex: 1 1 0; min-width: 0; padding-top: 8px; padding-bottom: 8px; }
+  .fatApoio { padding-left: 0; }
+  .fatCartaoAcoes { flex-wrap: wrap; }
+  .fatCartaoAcoes > button { flex: 1 1 140px; }
+}

@@ -525,6 +525,28 @@
       return false;
     })[0] || null;
   }
+  // 19/11/2026 (fase 2a): a mesma loja pode ter mais de um analista na competência --
+  // atendimento duplo (comissão espelhada) ou troca de responsável no meio do período
+  // (uma janela por pessoa). A linha certa é a da MESMA pessoa e da MESMA janela;
+  // campos ausentes (banco antigo) não restringem, então o resultado antigo se mantém.
+  function mesmaLinhaAnalista(x, r) {
+    if (x.store !== r.store) return false;
+    if (x.analyst_user_id != null && r.analyst_user_id != null && x.analyst_user_id !== r.analyst_user_id) return false;
+    if ((x.janela_inicio || null) !== (r.janela_inicio || null)) return false;
+    if (x.transfer != null && !!x.transfer !== !!r.transfer) return false;
+    if (x.coverage_id != null && r.coverage_id != null && x.coverage_id !== r.coverage_id) return false;
+    return true;
+  }
+  function analystFaixaFor(r) {
+    if (!faixaRows || !Array.isArray(faixaRows.rows) || !r) return null;
+    return faixaRows.rows.filter(function (x) { return x.perfil === 'ANALISTA' && mesmaLinhaAnalista(x, r); })[0] || null;
+  }
+  // Etiqueta da linha do analista: cobertura (ausência) ou janela de responsabilidade.
+  function analystBadgeHtml(r) {
+    if (r.transfer) return '<span class="modBadge modBadgeInfo">Cobertura</span>';
+    if (r.janela_inicio) return '<span class="modBadge modBadgeInfo">' + esc(fmtDateBR(r.janela_inicio)) + ' a ' + esc(fmtDateBR(r.janela_fim)) + '</span>';
+    return '';
+  }
 
   // RH-5F.3: fallback match for the AUTHENTICATED ANALYST's own row only,
   // sourced from ownCommission (self-scoped server data) rather than
@@ -541,7 +563,8 @@
     if (!ctx || ctx.perfil !== 'ANALISTA') return null;
     if (!ownCommission || !Array.isArray(ownCommission.rows)) return null;
     return ownCommission.rows.filter(function (x) {
-      return x.perfil === 'ANALISTA' && x.store === r.store && !!x.transfer === !!r.transfer;
+      return x.perfil === 'ANALISTA' && x.store === r.store && !!x.transfer === !!r.transfer &&
+        (x.janela_inicio || null) === (r.janela_inicio || null);
     })[0] || null;
   }
 
@@ -648,6 +671,8 @@
     var coverageWindows = ((dashboard && dashboard.analystMetrics && dashboard.analystMetrics.rows) || [])
       .filter(function (r) { return r.store === row.store && r.transfer === true; })
       .map(function (r) { return { start: r.covered_start, end: r.covered_end }; });
+    // 19/11/2026 (fase 2a): linha de janela de responsabilidade = só as operações da janela.
+    var janela = (!row.transfer && row.janela_inicio && row.janela_fim) ? { start: row.janela_inicio, end: row.janela_fim } : null;
     analystDetailsModal = { row: row, state: 'LOADING', data: null, error: null, operations: null };
     render(outletRef);
     // A loja vai para o servidor: o limite de linhas passa a valer só para a loja, não para o grupo todo.
@@ -662,6 +687,7 @@
         if (row.transfer) {
           return !!(op.date && row.covered_start && row.covered_end && inWindow(op.date, row.covered_start, row.covered_end));
         }
+        if (janela && !(op.date && inWindow(op.date, janela.start, janela.end))) return false;
         return !coverageWindows.some(function (w) {
           return !!(w.start && w.end && op.date && inWindow(op.date, w.start, w.end));
         });
@@ -1450,9 +1476,9 @@
     return (financed / sold) * 100;
   }
   function analystRowDesktopHtml(r) {
-    var faixaMatch = faixaFor('ANALISTA', r.store, null, null) || ownAnalystFaixaMatch(r);
+    var faixaMatch = analystFaixaFor(r) || ownAnalystFaixaMatch(r);
     return '<tr>' +
-      '<td>' + esc(r.analyst_name || '—') + (r.transfer ? ' <span class="modBadge modBadgeInfo">Cobertura</span>' : '') + '</td>' +
+      '<td>' + esc(r.analyst_name || '—') + (analystBadgeHtml(r) ? ' ' + analystBadgeHtml(r) : '') + '</td>' +
       '<td class="modNumCol">' + fmtInt(r.sold_count) + '</td>' +
       '<td class="modNumCol">' + fmtInt(r.financed_count) + '</td>' +
       '<td class="modNumCol">' + conversionCellHtml(analystConversionPercent(r)) + '</td>' +
@@ -1461,7 +1487,7 @@
       '<td class="modNumCol modCurrencyCol">' + fmtMoney(r.spf_value) + '</td>' +
       '<td class="modNumCol">' + faixaCellHtml(faixaMatch) + '</td>' +
       '<td class="modNumCol modCurrencyCol">' + comissaoTotalCellHtml(faixaMatch) + '</td>' +
-      '<td class="modActionCol"><button type="button" class="modBtn modBtnGhost modBtnSm" data-analyst-details data-analyst-store="' + esc(r.store || '') + '" data-analyst-coverage="' + esc(r.coverage_id || '') + '">Detalhes</button></td>' +
+      '<td class="modActionCol"><button type="button" class="modBtn modBtnGhost modBtnSm" data-analyst-details data-analyst-store="' + esc(r.store || '') + '" data-analyst-coverage="' + esc(r.coverage_id || '') + '" data-analyst-uid="' + esc(r.analyst_user_id || '') + '" data-analyst-janela="' + esc(r.janela_inicio || '') + '">Detalhes</button></td>' +
       '</tr>';
   }
   function analystRowsDesktopTableHtml(rows) {
@@ -1475,9 +1501,9 @@
   function analystRowsMobileCardsHtml(rows) {
     if (!rows || !rows.length) return '';
     var cards = rows.map(function (r) {
-      var faixaMatch = faixaFor('ANALISTA', r.store, null, null) || ownAnalystFaixaMatch(r);
+      var faixaMatch = analystFaixaFor(r) || ownAnalystFaixaMatch(r);
       return '<div class="salCard salAnalystCard"><div class="salCardTop"><span class="salCardName">' + esc(r.analyst_name || '—') + '</span>' +
-        (r.transfer ? '<span class="modBadge modBadgeInfo">Cobertura</span>' : '') + '</div>' +
+        analystBadgeHtml(r) + '</div>' +
         '<dl class="salCardFields">' +
         '<dt>Vendidas / Financiadas</dt><dd>' + fmtInt(r.sold_count) + ' / ' + fmtInt(r.financed_count) + '</dd>' +
         '<dt>Conversão</dt><dd>' + conversionCellHtml(analystConversionPercent(r)) + '</dd>' +
@@ -1487,7 +1513,7 @@
         '<dt>% Comissão</dt><dd>' + faixaCellHtml(faixaMatch) + '</dd>' +
         '<dt>Comissão Total</dt><dd class="salCommissionTotalValue">' + comissaoTotalCellHtml(faixaMatch) + '</dd>' +
         '</dl>' +
-        '<button type="button" class="modBtn modBtnGhost modBtnSm" data-analyst-details data-analyst-store="' + esc(r.store || '') + '" data-analyst-coverage="' + esc(r.coverage_id || '') + '">Detalhes</button>' +
+        '<button type="button" class="modBtn modBtnGhost modBtnSm" data-analyst-details data-analyst-store="' + esc(r.store || '') + '" data-analyst-coverage="' + esc(r.coverage_id || '') + '" data-analyst-uid="' + esc(r.analyst_user_id || '') + '" data-analyst-janela="' + esc(r.janela_inicio || '') + '">Detalhes</button>' +
         '</div>';
     }).join('');
     // No .salMobileOnly on this wrapper -- it already lives inside the
@@ -1896,7 +1922,7 @@
   function analystDetailsModalHtml() {
     if (!analystDetailsModal) return '';
     var row = analystDetailsModal.row;
-    var faixaMatch = faixaFor('ANALISTA', row.store, null, null);
+    var faixaMatch = analystFaixaFor(row) || ownAnalystFaixaMatch(row);
     var body;
     if (analystDetailsModal.state === 'LOADING') {
       body = '<div class="modLoadingState"><span class="modLoadingDot"></span> Carregando detalhes…</div>';
@@ -1909,6 +1935,7 @@
         '<div class="salOpMetric"><span class="salOpMetricLabel">SPF (UND)</span><span class="salOpMetricValue">' + fmtInt(row.spf_count) + ' UND</span></div>' +
         '<div class="salOpMetric"><span class="salOpMetricLabel">% Comissão</span><span class="salOpMetricValue">' + faixaCellHtml(faixaMatch) + '</span></div>' +
         '<div class="salOpMetric"><span class="salOpMetricLabel">Comissão Total</span><span class="salOpMetricValue salCommissionTotalValue">' + comissaoTotalCellHtml(faixaMatch) + '</span></div>' +
+        (!row.transfer && row.janela_inicio ? '<div class="salOpMetric"><span class="salOpMetricLabel">Responsável no período</span><span class="salOpMetricValue">' + esc(fmtDateBR(row.janela_inicio)) + ' – ' + esc(fmtDateBR(row.janela_fim)) + '</span></div>' : '') +
         (row.transfer ? '<div class="salOpMetric"><span class="salOpMetricLabel">Período de cobertura</span><span class="salOpMetricValue">' + esc(fmtDateBR(row.covered_start)) + ' – ' + esc(fmtDateBR(row.covered_end)) + '</span></div>' : '') +
         '</div>';
       if (!ops.length) {
@@ -1977,7 +2004,9 @@
         var store = btn.getAttribute('data-analyst-store');
         var coverageId = btn.getAttribute('data-analyst-coverage') || null;
         var rows = (dashboard && dashboard.analystMetrics && dashboard.analystMetrics.rows) || [];
-        var row = rows.filter(function (r) { return r.store === store && (r.coverage_id || null) === coverageId; })[0];
+        var uid = btn.getAttribute('data-analyst-uid') || null;
+        var jan = btn.getAttribute('data-analyst-janela') || null;
+        var row = rows.filter(function (r) { return r.store === store && (r.coverage_id || null) === coverageId && (!uid || (r.analyst_user_id || null) === uid) && (r.janela_inicio || null) === jan; })[0];
         if (row) openAnalystDetails(row);
       });
     });

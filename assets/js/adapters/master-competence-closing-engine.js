@@ -152,12 +152,18 @@
         spfQty: Number(row.spf_count) || 0,
         items: []
       };
-      const c = commissionCalc('ANALISTA', m, 'analyst', cfg);
+      // 19/11/2026 (fase 2a): janela de responsabilidade (troca de analista no meio do período) --
+      // vendas/retorno/SPF são da janela, mas a faixa usa a conversão da loja no período inteiro
+      // (faixa_sold_count/faixa_financed_count, enviados pelo servidor só nessas linhas).
+      const temBase = row.faixa_sold_count != null && row.faixa_financed_count != null;
+      const mFaixa = temBase ? Object.assign({}, m, { vendidas: Number(row.faixa_sold_count) || 0, financiadas: Number(row.faixa_financed_count) || 0 }) : m;
+      const c = commissionCalc('ANALISTA', mFaixa, 'analyst', cfg);
       linhas.push({
         perfil: 'ANALISTA', loja: row.store, nome: row.analyst_name, usuario_id: row.analyst_user_id || null,
         status: row.transfer ? 'ANALISTA COBERTURA' : 'ANALISTA',
         m, c, comissao: c.comissaoTotal,
-        obs: row.transfer ? ('Cobertura ' + (row.covered_start || '') + ' a ' + (row.covered_end || '') + ' · redistribuído por operational_analyst_commission_metrics_v2') : ''
+        obs: row.transfer ? ('Cobertura ' + (row.covered_start || '') + ' a ' + (row.covered_end || '') + ' · redistribuído por operational_analyst_commission_metrics_v2')
+          : (row.janela_inicio ? ('Responsável ' + row.janela_inicio + ' a ' + (row.janela_fim || '') + ' · faixa pela conversão da loja no período inteiro') : '')
       });
     });
 

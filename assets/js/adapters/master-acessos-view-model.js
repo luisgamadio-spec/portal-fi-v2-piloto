@@ -70,8 +70,21 @@
     { perfil: 'ANALISTA', departamento: 'TODOS', label: 'Analista', sub: '' },
     { perfil: 'RH', departamento: 'TODOS', label: 'RH', sub: '' },
     { perfil: 'DIRETOR_NOVOS', departamento: 'TODOS', label: 'Diretor', sub: 'Novos' },
-    { perfil: 'DIRETOR_SEMINOVOS', departamento: 'TODOS', label: 'Diretor', sub: 'Seminovos' }
+    { perfil: 'DIRETOR_SEMINOVOS', departamento: 'TODOS', label: 'Diretor', sub: 'Seminovos' },
+    // 19/11/2026 (OK do Luis): FINANCEIRO. Só "Coparticipados / Subsidiados" é gerenciável; as outras células
+    // ficam travadas -- o servidor recusa salvá-las e nunca dá esses módulos ao Financeiro, mesmo marcados.
+    { perfil: 'FINANCEIRO', departamento: 'TODOS', label: 'Financeiro', sub: '', gerenciaveis: ['coparticipadoPortal'] }
   ];
+  var TRAVADA_TXT = 'Bloqueado no servidor para o Financeiro';
+
+  // 23/11/2026 (pedido do Luis): linhas SÓ DE LEITURA para módulos com regra fixa no servidor (fora da matriz).
+  // Mostram o acesso real; não entram em localPermissions nem no salvamento -- a regra continua no servidor.
+  // Análise de Faturamentos: auth-core FATURAMENTOS + banco _fat_perfil2 = Master, Analista e Financeiro.
+  var FIXED_ROWS = [
+    { id: 'analiseFaturamentos', label: 'Análise de Faturamentos', tag: 'regra fixa',
+      acesso: { 'ANALISTA|TODOS': true, 'FINANCEIRO|TODOS': true } }
+  ];
+  function fixedAllowed(row, col) { return !!(row.acesso && row.acesso[col.perfil + '|' + col.departamento]); }
 
   function cellKey(moduloId, perfil, departamento) {
     return moduloId + '|' + perfil + '|' + departamento;
@@ -81,6 +94,11 @@
     var col = COLUMNS.filter(function (c) { return c.perfil === perfil && c.departamento === departamento; })[0];
     if (!col) return perfil + ' — ' + departamento;
     return col.sub ? (col.label + ' — ' + col.sub) : col.label;
+  }
+
+  // célula travada: a coluna limita os módulos gerenciáveis e este módulo não está entre eles
+  function cellLocked(moduloId, col) {
+    return !!(col && col.gerenciaveis && col.gerenciaveis.indexOf(moduloId) < 0);
   }
 
   function moduleLabel(moduloId) {
@@ -189,6 +207,10 @@
     MODULE_LABELS: MODULE_LABELS,
     COLUMNS: COLUMNS,
     cellKey: cellKey,
+    cellLocked: cellLocked,
+    FIXED_ROWS: FIXED_ROWS,
+    fixedAllowed: fixedAllowed,
+    TRAVADA_TXT: TRAVADA_TXT,
     columnLabel: columnLabel,
     moduleLabel: moduleLabel,
     availabilityFor: availabilityFor,

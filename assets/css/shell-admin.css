@@ -834,3 +834,15 @@ col.absColStatus { width: 86px; }    /* badge content ~62px + cell padding, view
 .gsPfPjFalta li { margin: 2px 0; }
 .gsPfPjOk { color: var(--color-success, #1b7f4b); }
 .gsPjRow b { font-weight: 600; }
+
+/* 19/11/2026: FINANCEIRO na matriz de acessos -- células travadas no servidor (só Coparticipados é gerenciável) */
+.mamCellLocked { opacity: .3; cursor: not-allowed; }
+.mamFinNotice { margin-top: 8px; }
+.mamMobileLocked { opacity: .6; }
+.mamMobileLocked small { font-size: 0.6875rem; color: var(--mod-muted); }
+
+/* 23/11/2026: linhas só de leitura (regra fixa no servidor) na matriz de acessos */
+.mamFixedTag { margin-top: 3px; font-size: 0.6875rem; font-weight: 400; color: var(--mod-muted); letter-spacing: .02em; }
+.mamMobileCardHead .mamFixedTag { margin-top: 0; }
+.mamFixedRow .mamRowLabel { color: var(--color-text-secondary); }
+.mamCellFixed:checked { opacity: .55; }

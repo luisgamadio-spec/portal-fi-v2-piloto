@@ -897,9 +897,39 @@
     var key = vm.cellKey(moduleId, col.perfil, col.departamento);
     var checked = acessosState.localPermissions[key] ? ' checked' : '';
     var label = vm.moduleLabel(moduleId) + ' — ' + vm.columnLabel(col.perfil, col.departamento);
+    // 19/11/2026: célula travada (Financeiro fora dos Coparticipados) -- sempre desmarcada e sem edição
+    if (vm.cellLocked && vm.cellLocked(moduleId, col)) {
+      return '<input type="checkbox" class="mamCell mamCellLocked" disabled data-locked="1" title="' + esc(vm.TRAVADA_TXT) + '"' +
+        ' aria-label="' + esc(label + ' — ' + vm.TRAVADA_TXT) + '"' + (acessosState.localPermissions[key] ? ' checked' : '') + '>';
+    }
     return '<input type="checkbox" class="mamCell" data-module="' + esc(moduleId) +
       '" data-perfil="' + esc(col.perfil) + '" data-departamento="' + esc(col.departamento) +
       '" aria-label="' + esc(label) + '"' + checked + (acessosState.saving ? ' disabled' : '') + '>';
+  }
+
+  // 23/11/2026: linhas só de leitura (regra fixa no servidor) -- caixas travadas, sem data-module (não editam nem salvam)
+  function acessosFixedBox(row, col) {
+    var vm = window.NX_MASTER_ACESSOS_VIEW_MODEL;
+    var ok = vm.fixedAllowed(row, col);
+    return '<input type="checkbox" class="mamCellLocked mamCellFixed" disabled' + (ok ? ' checked' : '') +
+      ' title="Regra fixa no servidor (não editável aqui)" aria-label="' + esc(row.label + ' — ' + vm.columnLabel(col.perfil, col.departamento) + ': ' + (ok ? 'acessa' : 'não acessa') + ' (regra fixa)') + '">';
+  }
+  function acessosFixedRowsDesktop() {
+    var vm = window.NX_MASTER_ACESSOS_VIEW_MODEL;
+    return (vm.FIXED_ROWS || []).map(function (row) {
+      return '<tr class="mamFixedRow"><td class="mamRowLabel">' + esc(row.label) + '<div class="mamFixedTag">' + esc(row.tag) + '</div></td>' +
+        vm.COLUMNS.map(function (c) { return '<td class="mamCellTd">' + acessosFixedBox(row, c) + '</td>'; }).join('') + '</tr>';
+    }).join('');
+  }
+  function acessosFixedRowsMobile() {
+    var vm = window.NX_MASTER_ACESSOS_VIEW_MODEL;
+    return (vm.FIXED_ROWS || []).map(function (row) {
+      return '<div class="mamMobileCard mamFixedRow"><div class="mamMobileCardHead"><span class="mamModuleLabel">' + esc(row.label) + '</span>' +
+        '<span class="mamFixedTag">' + esc(row.tag) + '</span></div>' +
+        vm.COLUMNS.map(function (c) {
+          return '<label class="mamMobileScopeRow mamMobileLocked">' + acessosFixedBox(row, c) + '<span>' + esc(vm.columnLabel(c.perfil, c.departamento)) + '</span></label>';
+        }).join('') + '</div>';
+    }).join('');
   }
 
   function availBadgeHtml(avail) {
@@ -913,8 +943,8 @@
     }).join('');
     var rows = acessosState.modules.map(function (m) {
       var cells = vm.COLUMNS.map(function (c) { return '<td class="mamCellTd">' + acessosCheckbox(m.id, c) + '</td>'; }).join('');
-      return '<tr><td class="mamRowLabel">' + esc(vm.moduleLabel(m.id)) + availBadgeHtml(vm.availabilityFor(m.id)) + '</td>' + cells + '</tr>';
-    }).join('');
+      return '<tr><td class="mamRowLabel">' + esc(vm.moduleLabel(m.id)) + '</td>' + cells + '</tr>';
+    }).join('') + acessosFixedRowsDesktop();
     return '<div class="maDesktopOnly"><div class="modTableWrap"><table class="modTable mamTable">' +
       '<thead><tr><th scope="col">Módulo</th>' + headCols + '</tr></thead><tbody>' + rows + '</tbody></table></div></div>';
   }
@@ -923,11 +953,13 @@
     var vm = window.NX_MASTER_ACESSOS_VIEW_MODEL;
     var cards = acessosState.modules.map(function (m) {
       var scopes = vm.COLUMNS.map(function (c) {
-        return '<label class="mamMobileScopeRow">' + acessosCheckbox(m.id, c) + '<span>' + esc(vm.columnLabel(c.perfil, c.departamento)) + '</span></label>';
+        var trav = vm.cellLocked && vm.cellLocked(m.id, c);
+        return '<label class="mamMobileScopeRow' + (trav ? ' mamMobileLocked' : '') + '">' + acessosCheckbox(m.id, c) + '<span>' + esc(vm.columnLabel(c.perfil, c.departamento)) +
+          (trav ? ' <small>🔒 bloqueado</small>' : '') + '</span></label>';
       }).join('');
       return '<div class="mamMobileCard"><div class="mamMobileCardHead"><span class="mamModuleLabel">' + esc(vm.moduleLabel(m.id)) + '</span>' +
-        availBadgeHtml(vm.availabilityFor(m.id)) + '</div>' + scopes + '</div>';
-    }).join('');
+        '</div>' + scopes + '</div>';
+    }).join('') + acessosFixedRowsMobile();
     return '<div class="maMobileOnly">' + cards + '</div>';
   }
 
@@ -950,6 +982,8 @@
     }
     html += '<p class="modSubtitle">Defina quais módulos ficam disponíveis para cada perfil. Alterações de acesso não modificam o escopo de dados permitido dentro de cada módulo.</p>';
     html += '<div class="mamMasterNotice">🔒 <b>MASTER</b> possui acesso permanente aos módulos configuráveis e não pode ser restringido por esta configuração.</div>';
+    html += '<div class="mamMasterNotice mamFinNotice">🔒 <b>FINANCEIRO</b>: só "Coparticipados / Subsidiados" (consulta e exportação) pode ser ligado ou desligado aqui; os demais módulos ficam bloqueados no servidor. ' +
+      'A Análise de Faturamentos aparece na última linha como regra fixa (Master, Analistas e Financeiro; não editável aqui) e a Brabus IA não é liberada para o Financeiro.</div>';
     if (acessosState.dirty) {
       html += '<div class="mamDirtyBanner">Alterações não salvas — o banco de dados continua com os valores originais.</div>';
     }

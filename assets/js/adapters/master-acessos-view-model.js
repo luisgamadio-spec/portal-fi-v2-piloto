@@ -83,10 +83,10 @@
   var FIXED_ROWS = [
     { id: 'analiseFaturamentos', label: 'Análise de Faturamentos', tag: 'regra fixa',
       acesso: { 'ANALISTA|TODOS': true, 'FINANCEIRO|TODOS': true } },
-    // Prospecção (23/11/2026, Luis): auth-core PROSPECCAO + banco _prospeccao_quem = Master, Gerente, Analista e Vendedor
-    // de qualquer departamento; RH, Diretores e Financeiro recusados. Só exibição: nada aqui muda o acesso.
+    // Prospecção (24/11/2026, Luis): SÓ O MASTER até ele liberar (banco: configuracoes.prospeccao_perfis_liberados = 'MASTER').
+    // Todos os perfis desmarcados. Só exibição: nada aqui muda o acesso. Ao religar um perfil, marcar a coluna aqui também.
     { id: 'prospeccao', label: 'Prospecção', tag: 'regra fixa',
-      acesso: { 'VENDEDOR|NOVOS': true, 'VENDEDOR|SEMINOVOS': true, 'GERENTE|NOVOS': true, 'GERENTE|SEMINOVOS': true, 'ANALISTA|TODOS': true } }
+      acesso: {} }
   ];
   function fixedAllowed(row, col) { return !!(row.acesso && row.acesso[col.perfil + '|' + col.departamento]); }
 

@@ -530,6 +530,25 @@
     if (linha && (e.key === 'Enter' || e.key === ' ') && e.target === linha) { e.preventDefault(); S.focarOp = linha.getAttribute('data-op'); abrir(S.focarOp); }
   }
 
+  // 24/11/2026 (Luis): quem entra (além do Master) é decidido no banco (configuracoes.prospeccao_perfis_liberados).
+  // Uma consulta por login; recusa, erro ou rede fora = fechado. Liberar/bloquear vale para quem recarregar a página.
+  var acessoPsp = { chave: null, liberado: false };
+  function liberadoPeloBanco(ctx) {
+    var chave = ctx ? String(ctx.authUserId || ctx.userId || '') : '';
+    if (!chave) return false;
+    if (acessoPsp.chave !== chave) {
+      acessoPsp = { chave: chave, liberado: false };
+      rpc('prospeccao_acesso', {}).then(function (r) {
+        if (acessoPsp.chave !== chave || !r || r.liberado !== true) return;
+        acessoPsp.liberado = true;
+        try { window.dispatchEvent(new CustomEvent('nx:acesso-ia')); } catch (e) { /* a tela inicial atualiza na próxima navegação */ }
+      }, function () {});
+    }
+    return acessoPsp.liberado;
+  }
+  window.NX_SEPARATE_AUTHORITY = window.NX_SEPARATE_AUTHORITY || {};
+  window.NX_SEPARATE_AUTHORITY.prospeccao = liberadoPeloBanco;
+
   window.NX_PROSPECCAO_PAGE = {
     getState: function () { return S; },
     render: function (outlet) {

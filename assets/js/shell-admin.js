@@ -983,7 +983,7 @@
     html += '<p class="modSubtitle">Defina quais módulos ficam disponíveis para cada perfil. Alterações de acesso não modificam o escopo de dados permitido dentro de cada módulo.</p>';
     html += '<div class="mamMasterNotice">🔒 <b>MASTER</b> possui acesso permanente aos módulos configuráveis e não pode ser restringido por esta configuração.</div>';
     html += '<div class="mamMasterNotice mamFinNotice">🔒 <b>FINANCEIRO</b>: só "Coparticipados / Subsidiados" (consulta e exportação) pode ser ligado ou desligado aqui; os demais módulos ficam bloqueados no servidor. ' +
-      'A Análise de Faturamentos aparece na última linha como regra fixa (Master, Analistas e Financeiro; não editável aqui) e a Brabus IA não é liberada para o Financeiro.</div>';
+      'A Análise de Faturamentos e a Prospecção aparecem nas últimas linhas como regra fixa (não editáveis aqui): Faturamentos para Master, Analistas e Financeiro; Prospecção para Master, Vendedores, Gerentes e Analistas. A Brabus IA não é liberada para o Financeiro.</div>';
     if (acessosState.dirty) {
       html += '<div class="mamDirtyBanner">Alterações não salvas — o banco de dados continua com os valores originais.</div>';
     }

@@ -1,0 +1,180 @@
+/* PORTAL-NEXT V2 — Prospecção (23/11/2026). Sobre module-system.css e os tokens do Portal.
+   Regras de UX: o tempo é a navegação (5 faixas); vermelho só para ação principal e urgência; números tabulares;
+   sem rolagem lateral no computador nem no celular. */
+.pspPagina { padding-bottom: 88px; font-variant-numeric: tabular-nums; }
+.pspTopo { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+.pspTitulo { font-size: 20px; font-weight: 700; margin: 0 0 2px; line-height: 1.25; }
+.pspSub { margin: 0; font-size: 13px; color: var(--color-text-muted, #9a9aa2); }
+.pspExportar { flex: none; }
+
+/* ---- faixas: a navegação principal */
+.pspFaixas { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.pspFaixa { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; padding: 10px 12px; border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.10); background: rgba(255,255,255,.025); color: inherit; cursor: pointer; text-align: left; position: relative; }
+.pspFaixa::before { content: ""; position: absolute; left: 0; top: 10px; bottom: 10px; width: 3px; border-radius: 3px; background: transparent; }
+.pspFaixa.urg-alta::before { background: var(--color-accent-primary, #e30613); }
+.pspFaixa.urg-media::before { background: #f0b429; }
+.pspFaixa:hover { border-color: rgba(255,255,255,.22); }
+.pspFaixa:focus-visible, .pspChaveOp:focus-visible, .pspLinha:focus-visible, .pspCartaoAbre:focus-visible, .pspLinkSec:focus-visible {
+  outline: 2px solid var(--color-accent-primary, #e30613); outline-offset: 2px; }
+.pspFaixa.isOn { border-color: var(--color-accent-primary, #e30613); box-shadow: inset 0 0 0 1px var(--color-accent-primary, #e30613); background: rgba(227,6,19,.08); }
+.pspFaixaN { font-size: 26px; font-weight: 700; line-height: 1.1; }
+.pspFaixa.urg-alta .pspFaixaN { color: #ff6b73; }
+.pspFaixa.urg-media .pspFaixaN { color: #f5c451; }
+.pspFaixa.isZero .pspFaixaN { color: var(--color-text-muted, #9a9aa2); }
+.pspFaixaR { font-size: 12.5px; color: var(--color-text-secondary, #c9c9cf); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.pspCurto { display: none; }
+.pspLinkSec { background: none; border: 0; padding: 4px 0; color: var(--color-text-muted, #9a9aa2); font-size: 12.5px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.pspLinkSec:hover, .pspLinkSec.isOn { color: var(--color-text-primary, #f2f2f2); }
+
+/* ---- aviso de distribuição (gerente/analista/Master) */
+.pspAviso { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 10px 14px; margin-bottom: 12px;
+  border: 1px solid rgba(240,180,41,.35); background: rgba(240,180,41,.07); border-radius: 12px; font-size: 13.5px; }
+.pspAviso p { margin: 0; min-width: 0; flex: 1 1 360px; }
+.pspAvisoAcoes { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ---- filtros: chips de tipo + busca + selects na mesma linha */
+.pspFiltros { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 10px; }
+.pspFaixas { margin-bottom: 12px; }
+/* chave NOVOS | SEMINOVOS (duas posições, uma sempre ligada) */
+.pspChave { display: inline-flex; padding: 3px; border-radius: 999px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.03); flex: none; }
+.pspChaveOp { height: 30px; min-width: 104px; padding: 0 16px; border-radius: 999px; border: 0; background: transparent; color: var(--color-text-muted, #9a9aa2); font-size: 12.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; cursor: pointer; }
+.pspChaveOp.isOn { background: rgba(255,255,255,.14); color: var(--color-text-primary, #f2f2f2); box-shadow: inset 0 0 0 1px rgba(255,255,255,.22); }
+.pspCampos { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; flex: 1 1 420px; min-width: 0; }
+.pspCampos select, .pspBusca { height: 34px; border-radius: 8px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.04); color: inherit; padding: 0 10px; font-size: 13px; min-width: 0; }
+.pspBusca { flex: 1 1 200px; }
+.pspCheck { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--color-text-secondary, #c9c9cf); cursor: pointer; }
+.pspCheck input, .pspSel, .pspSelCol input { width: 18px; height: 18px; accent-color: var(--color-accent-primary, #e30613); cursor: pointer; }
+
+/* ---- lista (computador) */
+.pspTabela { width: 100%; border-collapse: collapse; font-size: 13.5px; table-layout: fixed; }
+.pspTabela th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .4px; color: var(--color-text-muted, #9a9aa2); font-weight: 600; padding: 8px; border-bottom: 1px solid rgba(255,255,255,.10); }
+.pspTabela th:nth-child(1).pspSelCol { width: 36px; }
+.pspTabela td { padding: 10px 8px; border-bottom: 1px solid rgba(255,255,255,.06); vertical-align: top; overflow-wrap: anywhere; }
+.isGestor .pspTabela th:nth-child(2) { width: 34%; } .isGestor .pspTabela th:nth-child(6) { width: 19%; }
+.isVendedor .pspTabela th:nth-child(1) { width: 46%; }
+.pspTabela th:last-child { width: 28px; }
+.pspLinha { cursor: pointer; }
+.pspLinha:hover td { background: rgba(255,255,255,.03); }
+.pspLinha.isSel td { background: rgba(227,6,19,.06); }
+.pspLinha.isAberta td { border-bottom-color: transparent; background: rgba(255,255,255,.035); }
+.pspNum { text-align: right; white-space: nowrap; }
+.pspNome { font-weight: 700; }
+.pspNome2 { font-weight: 600; }
+.pspData, .pspValor { font-weight: 700; }
+.pspMini { font-size: 12px; color: var(--color-text-muted, #9a9aa2); margin-top: 2px; }
+.pspOuro { color: #e8c15a; font-weight: 700; }
+.pspTraco { color: var(--color-text-muted, #9a9aa2); }
+.pspTags { margin-top: 4px; }
+.pspTag { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 2px 7px; border-radius: 5px; margin: 2px 4px 0 0; background: rgba(255,255,255,.08); color: #d7d7dc; }
+.pspTag.amb { background: rgba(240,180,41,.14); color: #f5c451; }
+.pspTag.red { background: rgba(227,6,19,.18); color: #ff7b82; }
+.pspTag.ok { background: rgba(46,204,113,.14); color: #6fdc9c; }
+.pspSemVend { display: inline-block; font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 6px; border: 1px dashed rgba(255,255,255,.35); color: var(--color-text-secondary, #c9c9cf); }
+.pspSeta { color: var(--color-text-muted, #9a9aa2); text-align: center; }
+.pspSelCol { width: 36px; }
+.pspSr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.pspDetLinha td { padding: 0 8px 12px; background: rgba(255,255,255,.035); border-bottom: 1px solid rgba(255,255,255,.08); }
+
+/* ---- detalhe */
+.pspDet { padding: 4px 4px 2px 44px; }
+.isVendedor .pspDet { padding-left: 4px; }
+.pspFrase { margin: 0 0 10px; font-size: 14.5px; line-height: 1.5; color: var(--color-text-primary, #f2f2f2); max-width: 900px; }
+.pspAndamento { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.pspAndamento .pspMini { white-space: nowrap; margin: 0; }
+.pspBarra { flex: 0 1 280px; height: 6px; border-radius: 6px; background: rgba(255,255,255,.10); overflow: hidden; }
+.pspBarra span { display: block; height: 100%; background: rgba(255,255,255,.55); border-radius: 6px; }
+.pspBlocos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px; }
+.pspBlocos h4 { margin: 0 0 6px; font-size: 11px; text-transform: uppercase; letter-spacing: .4px; color: var(--color-text-muted, #9a9aa2); }
+.pspBlocos dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; margin: 0; font-size: 13px; }
+.pspBlocos dt { color: var(--color-text-muted, #9a9aa2); } .pspBlocos dd { margin: 0; }
+.pspVazio { margin: 0; font-size: 13px; color: var(--color-text-muted, #9a9aa2); }
+.pspDetRodape { display: flex; justify-content: space-between; align-items: center; gap: 10px 16px; flex-wrap: wrap; margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.08); }
+.pspDoc { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pspDocTxt { font-family: ui-monospace, Consolas, monospace; font-size: 12.5px; }
+.pspDetAcoes { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pspAtribuir { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--color-text-secondary, #c9c9cf); min-width: 0; }
+.pspAtribuir select { height: 32px; border-radius: 8px; border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.06); color: inherit; font-size: 13px; max-width: 220px; min-width: 0; }
+/* 23/11: listas abertas legíveis em qualquer navegador — o fundo translúcido deixava as opções em fundo BRANCO com texto claro.
+   Fundo sólido do tema + color-scheme escuro (Chrome/Edge/Safari desenham a lista escura) + cores explícitas nas opções. */
+.pspPagina select, .pspBarraSel select, .pspModal select { background-color: var(--mod-surface-elevated, #1c1c21); color: var(--color-text-primary, #f2f2f2); color-scheme: dark; }
+.pspPagina select option, .pspBarraSel select option, .pspModal select option { background-color: var(--mod-surface-elevated, #1c1c21); color: var(--color-text-primary, #f2f2f2); }
+.pspPagina select option:checked, .pspBarraSel select option:checked, .pspModal select option:checked { background-color: #3a3a44; color: #ffffff; font-weight: 700; }
+
+/* ---- rodapé: mais, mensagens, estados */
+.pspMais { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin: 14px 0 4px; font-size: 13px; color: var(--color-text-muted, #9a9aa2); }
+.pspMsg { padding: 8px 12px; margin-bottom: 10px; border-radius: 10px; background: rgba(255,255,255,.06); font-size: 13px; }
+.pspEstado { border: 1px dashed rgba(255,255,255,.18); border-radius: 12px; padding: 32px 20px; text-align: center; display: flex; flex-direction: column; gap: 4px; }
+.pspEstado b { font-size: 15.5px; } .pspEstado span { color: var(--color-text-muted, #9a9aa2); font-size: 13.5px; }
+.pspCartoes { display: none; }
+
+/* ---- barra de seleção fixa no rodapé (só com seleção) */
+.pspBarraSel { position: fixed; left: 50%; transform: translateX(-50%); bottom: 16px; z-index: 40; width: min(980px, calc(100vw - 24px)); box-sizing: border-box;
+  display: flex; align-items: center; gap: 10px 12px; flex-wrap: wrap; padding: 10px 14px; border-radius: 14px;
+  background: #19191d; border: 1px solid rgba(227,6,19,.45); box-shadow: 0 10px 30px rgba(0,0,0,.55); font-size: 13.5px; }
+
+/* ---- modal "Dividir entre a equipe" */
+.pspModalFundo { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 50; }
+.pspModal { position: fixed; z-index: 51; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(520px, calc(100vw - 24px)); max-height: calc(100vh - 40px); overflow: auto; box-sizing: border-box;
+  background: #151518; border: 1px solid rgba(255,255,255,.14); border-radius: 16px; padding: 18px; }
+.pspModal h3 { margin: 0 0 6px; font-size: 17px; }
+.pspDivLoja { border: 1px solid rgba(255,255,255,.10); border-radius: 10px; margin: 10px 0 0; padding: 8px 12px; display: flex; flex-direction: column; gap: 8px; }
+.pspDivLoja legend { font-size: 12px; color: var(--color-text-muted, #9a9aa2); padding: 0 4px; }
+.pspDivConta { font-size: 13.5px; margin: 12px 0 0; }
+.pspOk { margin-top: 10px; padding: 8px 10px; border-radius: 8px; background: rgba(46,160,67,.14); color: #8fd19e; font-size: 13px; }
+.pspModalAcoes { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+
+/* ---- celular */
+@media (max-width: 760px) {
+  .pspTitulo { font-size: 17px; } .pspSub { display: none; }
+  .pspTopo { margin-bottom: 10px; }
+  .pspFaixas { gap: 4px; }
+  .pspFaixa { padding: 7px 6px 7px 8px; border-radius: 10px; }
+  .pspFaixa::before { top: 7px; bottom: 7px; width: 2px; }
+  .pspFaixaN { font-size: 18px; }
+  .pspFaixaR { font-size: 11px; }
+  .pspLongo { display: none; } .pspCurto { display: inline; }
+  .pspAviso { padding: 8px 10px; font-size: 12.5px; }
+  .pspAviso p { flex-basis: 100%; }
+  .pspAvisoAcoes { width: 100%; flex-wrap: nowrap; } .pspAvisoAcoes .modBtn { flex: 1 1 0; min-width: 0; padding: 0 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pspFiltros { gap: 6px; margin-bottom: 8px; }
+  .pspChave { display: flex; width: 100%; }
+  .pspChaveOp { flex: 1 1 50%; min-width: 0; height: 34px; }
+  .pspCampos { flex-basis: 100%; }
+  .pspCampos select { flex: 1 1 45%; } .pspBusca { flex-basis: 100%; }
+  .pspTabela { display: none; } .pspCartoes { display: block; }
+  .pspSelTodosM { margin: 2px 0 8px; }
+  .pspCartao { border: 1px solid rgba(255,255,255,.10); border-radius: 12px; margin-bottom: 8px; overflow: hidden; }
+  .pspCartao.isSel { border-color: rgba(227,6,19,.5); }
+  .pspCartaoTopo { display: flex; align-items: flex-start; gap: 10px; padding: 12px 12px 10px; }
+  .pspCartaoTopo .pspSel { margin-top: 3px; width: 22px; height: 22px; flex: none; }
+  .pspCartaoAbre { flex: 1; min-width: 0; background: none; border: 0; color: inherit; text-align: left; padding: 0; display: flex; flex-direction: column; gap: 3px; cursor: pointer; font: inherit; }
+  .pspCartaoL1 { display: flex; justify-content: space-between; gap: 10px; }
+  .pspCartaoL1 .pspNome { min-width: 0; overflow-wrap: anywhere; } .pspCartaoL1 .pspData { flex: none; }
+  .pspCartaoL2 { font-size: 13px; }
+  .pspCartaoVend { font-size: 12.5px; }
+  .pspCartaoVend .pspNome2, .pspCartaoVend .pspMini { display: inline; margin: 0 6px 0 0; }
+  .pspCartao .pspDet { padding: 4px 12px 12px; border-top: 1px solid rgba(255,255,255,.08); }
+  .pspBlocos { grid-template-columns: 1fr; }
+  .pspDetRodape { flex-direction: column; align-items: stretch; }
+  .pspDetAcoes { flex-wrap: wrap; align-items: flex-end; }
+  .pspDetAcoes .modBtn { min-height: 40px; }
+  .pspDetAcoes .pspAtribuir { flex: 1 1 0; flex-direction: column; align-items: stretch; min-width: 0; }
+  .pspDetAcoes [data-acao=nao-contatar], .pspDetAcoes [data-acao=tirar-um] { flex: 1 1 100%; } .pspAtribuir select { max-width: none; height: 40px; }
+  .pspBarraSel { bottom: 8px; padding: 10px 12px; gap: 8px; }   /* o botão da Brabus IA sobe acima dela (fim do arquivo) */
+  .pspBarraSel .pspLinkSec { flex: 1 1 100%; text-align: center; }
+  .pspPagina { padding-bottom: 200px; }
+  .pspBarraSel .pspAtribuir { flex: 1 1 100%; flex-direction: row; align-items: center; } .pspBarraSel .pspAtribuir select { flex: 1; height: 38px; }
+  .pspBarraSel .modBtn { flex: 1 1 auto; min-height: 38px; }
+  .pspMais { flex-direction: column; text-align: center; }
+}
+
+/* ---- botão flutuante da Brabus IA (23/11): nesta tela a lista reserva espaço à direita e o botão sobe quando a barra de
+   seleção aparece (nada fica escondido embaixo dele). Só vale enquanto a Prospecção está aberta (:has). */
+body:has(.pspPagina) .pspTabela { width: calc(100% - 56px); }
+body:has(.pspPagina) .pspMais { margin-right: 56px; }
+body:has(.pspBarraSel) .baiLauncherBtn { bottom: calc(var(--space-4, 16px) + 76px); }
+@media (max-width: 760px) {
+  body:has(.pspPagina) .pspCartoes, body:has(.pspPagina) .pspMais, body:has(.pspPagina) .pspEstado { margin-right: 52px; }
+  body:has(.pspBarraSel) .baiLauncherBtn { bottom: calc(var(--space-4, 16px) + 176px); }
+}

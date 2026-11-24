@@ -82,7 +82,11 @@
   // Análise de Faturamentos: auth-core FATURAMENTOS + banco _fat_perfil2 = Master, Analista e Financeiro.
   var FIXED_ROWS = [
     { id: 'analiseFaturamentos', label: 'Análise de Faturamentos', tag: 'regra fixa',
-      acesso: { 'ANALISTA|TODOS': true, 'FINANCEIRO|TODOS': true } }
+      acesso: { 'ANALISTA|TODOS': true, 'FINANCEIRO|TODOS': true } },
+    // Prospecção (23/11/2026, Luis): auth-core PROSPECCAO + banco _prospeccao_quem = Master, Gerente, Analista e Vendedor
+    // de qualquer departamento; RH, Diretores e Financeiro recusados. Só exibição: nada aqui muda o acesso.
+    { id: 'prospeccao', label: 'Prospecção', tag: 'regra fixa',
+      acesso: { 'VENDEDOR|NOVOS': true, 'VENDEDOR|SEMINOVOS': true, 'GERENTE|NOVOS': true, 'GERENTE|SEMINOVOS': true, 'ANALISTA|TODOS': true } }
   ];
   function fixedAllowed(row, col) { return !!(row.acesso && row.acesso[col.perfil + '|' + col.departamento]); }
 

@@ -334,6 +334,8 @@
         case 'ANALISTA_OR_MASTER': return context.isMaster === true || context.perfil === 'ANALISTA';
         // Análise de Faturamentos (10/11/2026): Master, Analistas e Financeiro; o banco confere de novo a cada chamada
         case 'FATURAMENTOS': return context.isMaster === true || context.perfil === 'ANALISTA' || context.perfil === 'FINANCEIRO';
+        // Prospecção (23/11/2026): Master, Gerente, Analista e Vendedor; o banco recorta e confere de novo a cada chamada (Financeiro/RH negados)
+        case 'PROSPECCAO': return context.isMaster === true || context.perfil === 'GERENTE' || context.perfil === 'ANALISTA' || context.perfil === 'VENDEDOR';
         // The module's own server decides (e.g. the IA function's BI_PERFIS):
         // the module registers a check in NX_SEPARATE_AUTHORITY[id]; none
         // registered, or not yet confirmed by the server, means denied.

@@ -35,6 +35,7 @@
     'simulador-novos': '<path d="M3 13.4l1.2-3.8A1.8 1.8 0 0 1 5.9 8.3h8.2a1.8 1.8 0 0 1 1.7 1.3l1.2 3.8"/><path d="M2.6 13.4h14.8v1.9a.8.8 0 0 1-.8.8h-1a1.1 1.1 0 0 1-1.1-1.1v-.3H5.5v.3a1.1 1.1 0 0 1-1.1 1.1h-1a.8.8 0 0 1-.8-.8v-1.9z"/><circle cx="6" cy="13.6" r="1"/><circle cx="14" cy="13.6" r="1"/>',
     'simulador-seminovos': '<path d="M2.5 13.2l.9-2.9A1.5 1.5 0 0 1 4.8 9.2h5.5"/><path d="M2.2 13.2h9.3v1.5a.7.7 0 0 1-.7.7h-.7a1 1 0 0 1-1-1v-.2H4.9v.2a1 1 0 0 1-1 1h-.7a.7.7 0 0 1-.7-.7v-1.5z"/><circle cx="4.4" cy="13.4" r=".9"/><circle cx="9.4" cy="13.4" r=".9"/><path d="M14.2 6.3a2.8 2.8 0 1 1-2.5 4.2"/><path d="M14.2 4.4v1.9h-1.9"/>',
     'analise-faturamentos': '<path d="M5 2.8h7l3 3v11.4H5z"/><circle cx="10" cy="11.5" r="3"/><path d="M10 10v1.6l1 .8"/>',
+    prospeccao: '<circle cx="9" cy="9" r="5.5"/><path d="M13 13l4 4"/><path d="M9 6.5v2.7l1.8 1.1"/>',
     'shell-admin': '<path d="M10 3.2l5.5 1.8v4.4c0 3.6-2.3 5.9-5.5 6.4-3.2-.5-5.5-2.8-5.5-6.4V5l5.5-1.8z"/><path d="M7.4 10l1.8 1.8L13 7.8"/>'
   };
   function navIconHtml(id) {
@@ -52,7 +53,7 @@
      see docs). brabus-intelligence is not part of the approved groups
      for this Wave and is intentionally omitted from the sidebar. */
   var NAV_GROUPS = [
-    { label: 'Visão Geral', moduleIds: ['dashbi', 'gestao', 'analise-faturamentos'] },
+    { label: 'Visão Geral', moduleIds: ['dashbi', 'gestao', 'analise-faturamentos', 'prospeccao'] },
     { label: 'Remuneração', moduleIds: ['score', 'coparticipado', 'salarios-comissoes'] },
     { label: 'Simuladores', moduleIds: ['simulador-novos', 'simulador-seminovos'] },
     { label: 'Administração', moduleIds: ['shell-admin'] }

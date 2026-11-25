@@ -92,6 +92,7 @@
     var cpf = normalizeCpf(sellerCpf);
     var name = String(sellerName || '').trim().toUpperCase();
     var candidates = (storeChanges || []).filter(function (r) {
+      if (r.ativo === false) return false;   // 25/11/2026: inativo não conta (o banco só encadeia registros ativos)
       if (cpf && normalizeCpf(r.cpf_vendedor) === cpf) return true;
       if (!cpf && name && String(r.nome_vendedor || '').trim().toUpperCase() === name) return true;
       return false;

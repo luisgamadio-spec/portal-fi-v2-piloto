@@ -96,6 +96,16 @@
     const linhas = [];
 
     // VENDEDOR
+    // 25/11/2026 (Luis): vendedor que muda de loja no meio da competência -> a FAIXA é decidida pela soma das lojas dele
+    // no período; o valor de cada loja continua o da própria linha (retorno + SPF líquido da loja) x faixa.
+    const somaVend = {};
+    vendRows.forEach(row => {
+      const id = row.seller_id; if (!id) return;
+      const s = somaVend[id] || (somaVend[id] = { lojas: {}, vendidas: 0, financiadas: 0, retorno: 0, spf: 0 });
+      s.lojas[row.store] = true;
+      s.vendidas += Number(row.sold_count) || 0; s.financiadas += Number(row.financed_count) || 0;
+      s.retorno += Number(row.return_value) || 0; s.spf += Number(row.spf_value) || 0;
+    });
     vendRows.forEach(row => {
       const m = {
         vendidas: Number(row.sold_count) || 0,
@@ -108,8 +118,16 @@
       };
       if (!(m.vendidas > 0 || m.financiadas > 0 || m.retorno > 0 || m.spf > 0)) return;
       const status = row.department || '';
-      const c = commissionCalc(status, m, 'seller', cfg);
-      linhas.push({ perfil: 'VENDEDOR', loja: row.store, nome: row.seller_name, usuario_id: row.seller_id || null, status, m, c, comissao: c.comissaoTotal });
+      const soma = row.seller_id ? somaVend[row.seller_id] : null;
+      const variasLojas = !!soma && Object.keys(soma.lojas).length > 1;
+      let c = commissionCalc(status, m, 'seller', cfg);
+      if (variasLojas) {
+        const cSoma = commissionCalc(status, Object.assign({}, m, { vendidas: soma.vendidas, financiadas: soma.financiadas, retorno: soma.retorno, spf: soma.spf }), 'seller', cfg);
+        const principal = c.rentTotal * cSoma.faixa;
+        c = Object.assign({}, c, { faixa: cSoma.faixa, comissaoPrincipal: principal, comissaoTotal: principal + c.comissaoSpf });
+      }
+      linhas.push({ perfil: 'VENDEDOR', loja: row.store, nome: row.seller_name, usuario_id: row.seller_id || null, status, m, c, comissao: c.comissaoTotal,
+        obs: variasLojas ? 'Mudou de loja no período · faixa pela soma das lojas (' + Object.keys(soma.lojas).join(' + ') + ')' : undefined });
     });
 
     // GERENTE -- sums seller buckets by store+department; a seller with

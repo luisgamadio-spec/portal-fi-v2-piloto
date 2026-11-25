@@ -229,6 +229,10 @@
   function createStoreChange(fields, params) {
     return manage('CREATE', buildCreatePayload(fields), params);
   }
+  // 25/11/2026: corrigir datas de uma mudança (SET_DATES) sem inativar e criar outra
+  function setDates(id, originStart, originEnd, destinationStart, params) {
+    return manage('SET_DATES', { id: id, origin_start: originStart, origin_end: originEnd, destination_start: destinationStart }, params);
+  }
   function setDepartments(id, originDepartment, destinationDepartment, params) {
     return manage('SET_DEPARTMENTS', { id: id, origin_department: originDepartment, destination_department: destinationDepartment }, params);
   }
@@ -240,6 +244,7 @@
   }
 
   window.NX_MASTER_STORE_CHANGE_PROVIDER = {
+    setDates: setDates,
     listStoreChanges: listStoreChanges,
     listPeopleDirectory: listPeopleDirectory,
     buildCreatePayload: buildCreatePayload,

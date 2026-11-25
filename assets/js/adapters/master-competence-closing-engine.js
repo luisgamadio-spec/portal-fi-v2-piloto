@@ -134,10 +134,13 @@
     // a combined "NOVOS/SEMINOVOS" department contributes to both groups.
     const gerenteBuckets = {};
     vendRows.forEach(row => {
-      const dep = String(row.department || '').toUpperCase();
+      // 25/11/2026 (decisão do Luis): departamento por IGUALDADE exata, igual ao banco (RH-5C.3 em
+      // operational_commission_faixa_rows). Antes, includes('NOVOS') também casava com 'SEMINOVOS' e o
+      // GERENTE NOVOS era calculado sobre a loja toda. NOVOS/SEMINOVOS continua contando nos dois.
+      const dep = String(row.department || '').trim().toUpperCase();
       const grupos = [];
-      if (dep.includes('NOVOS')) grupos.push('NOVOS');
-      if (dep.includes('SEMINOVOS')) grupos.push('SEMINOVOS');
+      if (dep === 'NOVOS' || dep === 'NOVOS/SEMINOVOS') grupos.push('NOVOS');
+      if (dep === 'SEMINOVOS' || dep === 'NOVOS/SEMINOVOS') grupos.push('SEMINOVOS');
       grupos.forEach(g => {
         const key2 = row.store + '|' + g;
         if (!gerenteBuckets[key2]) gerenteBuckets[key2] = { store: row.store, dep: g, m: { vendidas: 0, financiadas: 0, producao: 0, retorno: 0, spf: 0, spfQty: 0, items: [] } };
